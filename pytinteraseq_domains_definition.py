@@ -145,7 +145,23 @@ class DomainsDefinition(InputCheck):
         self.end = self.bed.sequence(fi=self.fasta).save_seqs(self.out + '_blastnclonesmerge.fasta')
         return self.out + '_blastnclonesmerge.fasta'
 
+    def bedtoolsannotate(self, clonesformatbed, annotation):
+        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        try:
+            with open(self.out + '_clonesannotated.bed', 'w') as f:
+                subprocess.check_call(['bedtools', 'annotate', '-i', clonesformatbed, '-files', annotation], stdout=f)
+            f.close()
+        except subprocess.CalledProcessError:
+            self.filelog.write(msg75)
+            sys.exit(0)
+        else:
+            self.filelog.write(msg76)
+            return self.out + '_clonesannotated.bed'
 
-
-
+    def bedtoolsannotatefiltering(self, bedtoolsannotateout, percthr):
+        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.df1 = pd.read_csv(bedtoolsannotateout, sep="\t", header=None)
+        self.df2 = self.df1.loc[self.df1[6] >= float(percthr)].sort_values(1).reset_index(drop=True)
+        self.df2[[0, 1, 2, 3, 4, 5]].to_csv(self.out + '_clonesannotatedfiltered.bed', sep="\t", header=None, index=False)
+        return self.out + '_clonesannotatedfiltered.bed'
 

@@ -144,9 +144,13 @@ if __name__ == '__main__':
             DictInfo["clustering"] = '/Users/simone/output_test/26695_picked/26695_newid_otus.txt'
             DictInfo["blastedclones"] = '/Users/simone/output_test/26695_blastnclones.tab'
             DictInfo["bedparsed"] = DomainsDefinition(optparseinstance=options).bedparsing(DictInfo["blastedclones"])
+            DictInfo["clonesannotated"] = DomainsDefinition(optparseinstance=options).bedtoolsannotatefiltering(
+                DomainsDefinition(optparseinstance=options).bedtoolsannotate(
+                    DictInfo["bedparsed"], DictInfo["annotation"]), 0.7)
             DictInfo["clustercount"] = DomainsDefinition(optparseinstance=options).clonescount(DictInfo["clustering"])
-            DictInfo["clonescounted"] = DomainsDefinition(optparseinstance=options).mergingcount(DictInfo["bedparsed"],DictInfo["clustercount"])
-            #go to domain
+            DictInfo["clonescounted"] = DomainsDefinition(optparseinstance=options).mergingcount(
+                DictInfo["bedparsed"], DictInfo["clustercount"])
+            # #go to domain
             DictInfo["clonescountedfiltered"] = DomainsDefinition(optparseinstance=options).filteringclonescount(DictInfo["clonescounted"], 10)
 
             DictInfo["clonescountedmerged"] = DomainsDefinition(optparseinstance=options).pybedtoolsmerge(
