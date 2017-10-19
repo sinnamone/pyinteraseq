@@ -1,0 +1,23 @@
+    # def cropping_five(self):
+    #     try:
+    #         subprocess.check_call([self.cutadapt, '-u', len(str(self.primer_five)),  '--trim-n', '-m', str(self.lenght),'--quiet',
+    #                                '-o', str(self.out_path + self.namefile_forward + '_temp' + self.suffix_forward), str(self.pathname_forward)],
+    #             stderr=self.FNULL)
+    #     except subprocess.CalledProcessError:
+    #         sys.stdout.write('Error during trimming 5\'primers(cropping). Exit\n')
+    #         sys.exit(0)
+    #     else:
+    #         sys.stdout.write('Trimming of 5\' primers of %s file is complete.\n' % self.namefile_forward)
+    #
+    # def cropping_three(self):
+    #     try:
+    #         subprocess.check_call([self.cutadapt, '-u', '-'+str(len(str(self.primer_three))), '-m', str(self.lenght), '--quiet',
+    #                                '-o', str(self.out_path + self.namefile_forward + '_trimmed' + self.suffix_forward),
+    #                                str(self.out_path + self.namefile_forward + '_temp' + self.suffix_forward)],
+    #             stderr=self.FNULL)
+    #     except subprocess.CalledProcessError:
+    #         sys.stdout.write('Error during trimming 3\'primers(cropping). Exit\n')
+    #         sys.exit(0)
+    #     else:
+    #         sys.stdout.write('Trimming of 3\' primers of %s file is complete.\n' % (
+    #         str(self.out_path + self.namefile_forward + '_temp' + self.suffix_forward)))
