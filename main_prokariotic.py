@@ -155,8 +155,9 @@ if __name__ == '__main__':
 
             DictInfo["clonescountedmerged"] = DomainsDefinition(optparseinstance=options).pybedtoolsmerge(
                 DictInfo["clonescountedfiltered"])
-            DomainsDefinition(optparseinstance=options).pybedtoolstofasta(DictInfo["clonescountedmerged"], DictInfo["fasta"])
-
+            DictInfo["clonesmergedfasta"] = DomainsDefinition(optparseinstance=options).pybedtoolstofasta(DictInfo["clonescountedmerged"], DictInfo["fasta"])
+            DomainsDefinition(optparseinstance=options).adddescription(
+                DictInfo["clonescountedmerged"], DictInfo["annotation"], 0.7)
             # print DictInfo
         elif options.readforwardtype == "fasta":
             print 'Single-End e fasta'

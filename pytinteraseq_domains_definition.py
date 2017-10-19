@@ -163,5 +163,31 @@ class DomainsDefinition(InputCheck):
         self.df1 = pd.read_csv(bedtoolsannotateout, sep="\t", header=None)
         self.df2 = self.df1.loc[self.df1[6] >= float(percthr)].sort_values(1).reset_index(drop=True)
         self.df2[[0, 1, 2, 3, 4, 5]].to_csv(self.out + '_clonesannotatedfiltered.bed', sep="\t", header=None, index=False)
+        self.filelog.write(msg77)
         return self.out + '_clonesannotatedfiltered.bed'
+
+    def adddescription(self, clonesmerged, annotation, percthr):
+        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        try:
+            self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+            self.clones = pybedtools.BedTool(clonesmerged)
+            self.annotation = pybedtools.BedTool(annotation)
+            self.intersection = self.clones.intersect(self.annotation, wao=True, f=float(percthr))
+            self.df1 = pd.read_table(self.intersection.fn,
+                                     names=['chr', 'clonestart', 'cloneend',
+                                            'chr2', 'start', 'end', 'geneid',
+                                            'cog', 'strand', 'genename', 'description','clonelength'])
+            self.df1[['chr', 'clonestart', 'cloneend',
+                      'clonelength', 'start', 'end', 'geneid',
+                      'strand', 'genename', 'description']].to_csv(self.out + '_clonesannotated.bed', sep="\t",
+                                                                   header=None)
+        except IOError:
+            self.filelog.write(msg78)
+            sys.exit(0)
+        else:
+            self.filelog.write(msg79)
+            return self.out + '_clonesannotated.bed'
+
+
+
 
