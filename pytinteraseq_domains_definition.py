@@ -145,7 +145,7 @@ class DomainsDefinition(InputCheck):
         self.end = self.bed.sequence(fi=self.fasta).save_seqs(self.out + '_blastnclonesmerge.fasta')
         return self.out + '_blastnclonesmerge.fasta'
 
-    def annotationclones(self):
+
 
 
 
