@@ -176,17 +176,18 @@ class DomainsDefinition(InputCheck):
             self.df1 = pd.read_table(self.intersection.fn,
                                      names=['chr', 'clonestart', 'cloneend',
                                             'chr2', 'start', 'end', 'geneid',
-                                            'cog', 'strand', 'genename', 'description','clonelength'])
-            self.df1[['chr', 'clonestart', 'cloneend',
+                                            'cog', 'strand', 'genename', 'description', 'clonelength'])
+            self.df2 = self.df1.loc[self.df1['clonelength'] != int(0)].sort_values('clonestart').reset_index(drop=True)
+            self.df2[['chr', 'clonestart', 'cloneend',
                       'clonelength', 'start', 'end', 'geneid',
-                      'strand', 'genename', 'description']].to_csv(self.out + '_clonesannotated.bed', sep="\t",
-                                                                   header=None)
+                      'strand', 'genename', 'description']].to_csv(self.out + '_clonesdescription.bed', sep="\t",
+                                                                   header=None, index=False)
         except IOError:
             self.filelog.write(msg78)
             sys.exit(0)
         else:
             self.filelog.write(msg79)
-            return self.out + '_clonesannotated.bed'
+            return self.out + '_clonesdescription.bed'
 
 
 
