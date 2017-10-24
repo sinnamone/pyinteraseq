@@ -3,6 +3,8 @@ from pyinteraseq_trimming import *
 from pyinteraseq_mapping import *
 from pytinteraseq_domains_definition import *
 from pyinteraseq_genomefileparsing import *
+from Bio import SeqIO
+from Bio.Alphabet import IUPAC
 
 parser = optparse.OptionParser(usage='python %prog Main PyInteract', version='1.0',)
 parser.add_option('--readforward', action="store", dest="readforward", default=None,
@@ -138,9 +140,35 @@ if __name__ == '__main__':
             #                                                                                  DictInfo["blastoutputnohashfilteredfasta"])
             # DictInfo["pickedreadscleand"] = DomainsDefinition(optparseinstance=options).pysed(DictInfo["pickedreads"],
             #                                                                                   '_clean.fasta', '-', '')
-            # print DictInfo["pickedreadscleand"],DictInfo["fasta"]
             # DictInfo["blastedclones"] = BlastNlucleotide(optparseinstance=options).blastnclones(
             #     DictInfo["pickedreadscleand"], DictInfo["fasta"])
+            # DictInfo["clustering"] = '/Users/simone/output_test/26695_picked/26695_newid_otus.txt'
+            # DictInfo["blastedclones"] = '/Users/simone/output_test/26695_blastnclones.tab'
+            # DictInfo["bedparsed"] = DomainsDefinition(optparseinstance=options).bedparsing(DictInfo["blastedclones"])
+            # DictInfo["clonesannotated"] = DomainsDefinition(optparseinstance=options).bedtoolsannotatefiltering(
+            #     DomainsDefinition(optparseinstance=options).bedtoolsannotate(
+            #         DictInfo["bedparsed"], DictInfo["annotation"]), 0.7)
+            # DictInfo["clustercount"] = DomainsDefinition(optparseinstance=options).clonescount(DictInfo["clustering"])
+            # DictInfo["clonescounted"] = DomainsDefinition(optparseinstance=options).mergingcount(
+            #     DictInfo["bedparsed"], DictInfo["clustercount"])
+            # # #go to domain
+            # #
+            # DictInfo["clonescountedfiltered"] = DomainsDefinition(optparseinstance=options).filteringclonescount(
+            #     DictInfo["clonescounted"], 10)
+            # #
+            # DictInfo["clonescountedmerged"] = DomainsDefinition(optparseinstance=options).pybedtoolsmerge(
+            #     DictInfo["clonescountedfiltered"])
+            # #
+            # DictInfo["clonesmergedfasta"] = DomainsDefinition(optparseinstance=options).pybedtoolstofasta(
+            #     DictInfo["clonescountedmerged"], DictInfo["fasta"])
+            # #
+            # DictInfo["tabwithdescription"] = DomainsDefinition(optparseinstance=options).adddescription(
+            #     DictInfo["clonescountedmerged"], DictInfo["annotation"], 0.7)
+            #
+            # DictInfo["clonenseqfasta"] = BlastNlucleotide(optparseinstance=options).fasta2tabular(
+            #     imp=DictInfo["clonesmergedfasta"], prefix='_clonestabular')
+            # DictInfo["tabwithsequence"] = DomainsDefinition(optparseinstance=options).addsequence(
+            #     outputfromdescription=DictInfo["tabwithdescription"], outputfasta2tab=DictInfo["clonenseqfasta"])
             DictInfo["clustering"] = '/Users/simone/output_test/26695_picked/26695_newid_otus.txt'
             DictInfo["blastedclones"] = '/Users/simone/output_test/26695_blastnclones.tab'
             DictInfo["bedparsed"] = DomainsDefinition(optparseinstance=options).bedparsing(DictInfo["blastedclones"])
@@ -151,13 +179,27 @@ if __name__ == '__main__':
             DictInfo["clonescounted"] = DomainsDefinition(optparseinstance=options).mergingcount(
                 DictInfo["bedparsed"], DictInfo["clustercount"])
             # #go to domain
-            DictInfo["clonescountedfiltered"] = DomainsDefinition(optparseinstance=options).filteringclonescount(DictInfo["clonescounted"], 10)
-
+            #
+            DictInfo["clonescountedfiltered"] = DomainsDefinition(optparseinstance=options).filteringclonescount(
+                DictInfo["clonescounted"], 10)
+            #
             DictInfo["clonescountedmerged"] = DomainsDefinition(optparseinstance=options).pybedtoolsmerge(
                 DictInfo["clonescountedfiltered"])
-            DictInfo["clonesmergedfasta"] = DomainsDefinition(optparseinstance=options).pybedtoolstofasta(DictInfo["clonescountedmerged"], DictInfo["fasta"])
-            DomainsDefinition(optparseinstance=options).adddescription(
+            #
+            DictInfo["clonesmergedfasta"] = DomainsDefinition(optparseinstance=options).pybedtoolstofasta(
+                DictInfo["clonescountedmerged"], DictInfo["fasta"])
+            #
+            DictInfo["tabwithdescription"] = DomainsDefinition(optparseinstance=options).adddescription(
                 DictInfo["clonescountedmerged"], DictInfo["annotation"], 0.7)
+
+            DictInfo["clonenseqfasta"] = BlastNlucleotide(optparseinstance=options).fasta2tabular(
+                imp=DictInfo["clonesmergedfasta"], prefix='_clonestabular')
+            DictInfo["tabwithsequence"] = DomainsDefinition(optparseinstance=options).addsequence(
+                outputfromdescription=DictInfo["tabwithdescription"], outputfasta2tab=DictInfo["clonenseqfasta"])
+            #inputfile = '/Users/simone/output_test/26695_blastnclonesmerge.fasta'
+            for seq_record in SeqIO.parse(DictInfo["clonesmergedfasta"], "fasta", alphabet=IUPAC.ambiguous_dna):
+                DictInfo["allframes"] = DomainsDefinition(optparseinstance=options).translatednaframes(
+                    seq_record, DictInfo["clonesmergedfasta"])
             # print DictInfo
         elif options.readforwardtype == "fasta":
             print 'Single-End e fasta'

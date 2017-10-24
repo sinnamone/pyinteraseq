@@ -70,6 +70,25 @@ class BlastNlucleotide(InputCheck):
             fp_out.close()
             f.close()
             return self.out + '2.tab'
+        elif nameid == "domains":
+            with open(fasta, 'r') as fp:
+                for line in fp:
+                    if line.startswith('>'):
+                        self.out_lines.append(self.temp_line)
+                        self.temp_line = line.strip() + '\t'
+                    else:
+                        self.temp_line += line.strip()
+            with open(self.out + '_domain.tab', 'w') as fp_out:
+                fp_out.write('\n'.join(self.out_lines))
+            with open(self.out + '_domain.tab', 'r+') as f:  # open in read / write mode
+                f.readline()  # read the first line and throw it out
+                data = f.read()  # read the rest
+                f.seek(0)  # set the cursor to the top of the file
+                f.write(data)  # write the data back
+                f.truncate()  # set the file size to the current size
+            fp_out.close()
+            f.close()
+            return self.out + '_domains.tab'
 
     def seqrename(self, tabular, readirection):
         print readirection
@@ -85,36 +104,35 @@ class BlastNlucleotide(InputCheck):
             return self.out + '_2_newid.tab'
 
     def tab2fasta(self, tabular, readirection):
-            with open(tabular, 'r') as f:
-                if readirection == "forward":
-                    with open(self.out + '_1_newid.fasta', 'w') as f_out:
-                        for line in f:
-                            line = line.strip().split('\t')
-                            self.header = '>' + '_'.join([line[i] for i in self.id])
-                            f_out.write(self.header + '\n')
-                            f_out.write(line[self.seqix] + '\n')
-                    f_out.close()
-                    return self.out + '_1_newid.fasta'
-                elif readirection == "reverse":
-                    with open(self.out + '_2_newid.fasta', 'w') as f_out:
-                        for line in f:
-                            line = line.strip().split('\t')
-                            self.header = '>' + '_'.join([line[i] for i in self.id])
-                            f_out.write(self.header + '\n')
-                            f_out.write(line[self.seqix] + '\n')
-                    f_out.close()
-                    return self.out + '_2_newid.fasta'
-                elif readirection == "single":
-                    with open(self.out + '_newid.fasta', 'w') as f_out:
-                        for line in f:
-                            line = line.strip().split('\t')
-                            self.header = '>' + '_'.join([line[i] for i in self.id])
-                            f_out.write(self.header + '\n')
-                            f_out.write(line[self.seqix] + '\n')
-                    f_out.close()
-                    return self.out + '_newid.fasta'
-            f.close()
-
+        print readirection
+        with open(tabular, 'r') as f:
+            if readirection == "forward":
+                with open(self.out + '_1_newid.fasta', 'w') as f_out:
+                    for line in f:
+                        line = line.strip().split('\t')
+                        self.header = '>' + '_'.join([line[i] for i in self.id])
+                        f_out.write(self.header + '\n')
+                        f_out.write(line[self.seqix] + '\n')
+                f_out.close()
+                return self.out + '_1_newid.fasta'
+            elif readirection == "reverse":
+                with open(self.out + '_2_newid.fasta', 'w') as f_out:
+                    for line in f:
+                        line = line.strip().split('\t')
+                        self.header = '>' + '_'.join([line[i] for i in self.id])
+                        f_out.write(self.header + '\n')
+                        f_out.write(line[self.seqix] + '\n')
+                f_out.close()
+                return self.out + '_2_newid.fasta'
+            elif readirection == "single":
+                with open(self.out + '_newid.fasta', 'w') as f_out:
+                    for line in f:
+                        line = line.strip().split('\t')
+                        self.header = '>' + '_'.join([line[i] for i in self.id])
+                        f_out.write(self.header + '\n')
+                        f_out.write(line[self.seqix] + '\n')
+                f_out.close()
+                return self.out + '_newid.fasta'
 
     def concatenateforrev(self, readlist):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
@@ -183,6 +201,12 @@ class BlastNlucleotide(InputCheck):
         else:
             self.filelog.write(msg61)
             return self.out + '_blastnclones.tab'
+
+    def fasta2tabular(self, imp, prefix):
+        SeqIO.convert(imp, 'fasta', self.out + prefix + '.tab', 'tab')
+        return self.out + prefix + '.tab'
+
+
 
 
 

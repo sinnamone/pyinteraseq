@@ -3,6 +3,7 @@ from Bio import SeqIO
 import pandas as pd
 import sys
 from output_message import *
+import pysam
 from pyinteraseq_inputcheck import InputCheck
 
 
@@ -14,6 +15,7 @@ class GenomeFile(InputCheck):
         self.PathFasta = os.path.dirname(self.fastasequence)
         self.genome = None
         self.ref = None
+        self.index = None
         for self.seq_record in SeqIO.parse(self.fastasequence, "fasta"):
             self.chromosomename = self.seq_record.id.split("|")[-2] #TODO #richiede stringa intera non modificare file fasta
             self.chromosomelength = len(self.seq_record)
@@ -41,6 +43,7 @@ class GenomeFile(InputCheck):
             sys.exit(0)
         else:
             self.filelog.write(msg44)
+            self.index = pysam.Fastafile(self.outputfolder + self.chromosomename + '.fasta')
             return self.outputfolder + self.chromosomename + '.fasta'
 
 
@@ -62,7 +65,7 @@ class AnnotationFile(GenomeFile):
             self.dfAnno['End'] = self.aux.apply(lambda x: x[1])
             self.dfAnno['Chr'] = self.chromosomename
             self.dfAnno[['Chr', 'Start', 'End', 'Synonym', 'COG', 'Strand', 'Gene',
-                         'Product']].to_csv(self.outputfolder + self.chromosomename + 'proteome.bed',
+                         'Product']].to_csv(self.outputfolder + self.chromosomename + '_proteome.bed',
                                             header=None, sep='\t', index=False)
         except OSError:
             self.filelog.write(msg41)
@@ -70,7 +73,3 @@ class AnnotationFile(GenomeFile):
         else:
             self.filelog.write(msg42)
             return self.outputfolder + self.chromosomename + '_proteome.bed'
-
-
-
-

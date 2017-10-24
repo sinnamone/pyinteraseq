@@ -5,6 +5,11 @@ import sys
 import subprocess
 import re
 import pybedtools
+import os
+from Bio import SeqIO
+from Bio.Alphabet import ProteinAlphabet
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 class DomainsDefinition(InputCheck):
 
@@ -16,6 +21,10 @@ class DomainsDefinition(InputCheck):
         self.dflen = None
         self.dfstart = None
         self.dfMerge = None
+        self.allPossibilities = []
+        self.df1 = None
+        self.df2 = None
+        self.df3 = None
 
     def hashclean(self, blastnout):
         with open(blastnout) as oldfile, open(self.out + 'blastn_nohash.tab', 'w') as newfile:
@@ -189,6 +198,49 @@ class DomainsDefinition(InputCheck):
             self.filelog.write(msg79)
             return self.out + '_clonesdescription.bed'
 
+    def addsequence(self, outputfromdescription, outputfasta2tab):
+        self.df1 = pd.read_csv(outputfromdescription,
+                               sep="\t", header=None,
+                               names=['chr', 'clonestart', 'cloneend', 'clonelength',
+                                      'start', 'end', 'geneid',
+                                      'strand', 'genename', 'description'])
+        self.df2 = pd.read_csv(outputfasta2tab, sep="\t", header=None, names=['id_tab', 'nseq'])
+        self.df1['temp_id_tab'] = self.df1[['clonestart', 'cloneend']].astype(str).apply(lambda x: '-'.join(x), axis=1)
+        self.df1['id_tab'] = self.df1[['chr', 'temp_id_tab']].astype(str).apply(lambda x: ':'.join(x), axis=1)
+        self.df1.drop('temp_id_tab', axis=1, inplace=True)
+        self.df3 = pd.merge(self.df1, self.df2, on='id_tab')
+        self.df3[['chr', 'clonestart', 'cloneend',
+                  'clonelength', 'start', 'end',
+                  'geneid', 'strand', 'genename',
+                  'description', 'nseq']].to_csv(self.out + '_clonesdescriptionsequence.bed', sep="\t",
+                                                 header=None, index=False)
+        return self.out + '_clonesdescriptionsequence.bed'
 
+    def translatednaframes(self, seq, inputfile):
+        input_handle = open(inputfile, "r")
+        output_handle = open(self.out + '_allframes.tab', "a+")
+
+        allpossibilities = []
+
+        for frame in range(3):
+            trans = str(seq.seq[frame:].translate(11))
+            allpossibilities.append(trans)
+        for frame in range(3):
+            trans = str(seq.seq.reverse_complement()[frame:].translate(11))
+            allpossibilities.append(trans)
+        i = 0
+        for currentFrame in allpossibilities:
+            i = i + 1
+            currentprotein = Seq(currentFrame, alphabet=ProteinAlphabet)
+
+            currentproteinrecord = SeqRecord(currentprotein, seq.name)
+            currentproteinrecord.id = currentproteinrecord.id + "." + str(i)
+            currentproteinrecord.description = seq.description + "; frame " + str(i)
+
+            SeqIO.write(currentproteinrecord, output_handle, "tab")
+
+        input_handle.close()
+        output_handle.close()
+        return self.out + '_allframes.tab'
 
 
