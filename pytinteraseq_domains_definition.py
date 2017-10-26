@@ -53,12 +53,11 @@ class DomainsDefinition(InputCheck):
         self.dfOp = self.df[(self.df.op <= 1)]
         self.filelog.write(msg63 + str(len(self.dfOp)))
         # trasform mismatch in percentage of mismatch using clone length
-        self.dfOp['mismatch'] = (self.dfOp['mismatch'] / self.dfOp['length']) * 100
-        # self.dfOp.loc[self.dfOp.mismatch > 0,'mismatch'] = self.dfOp['mismatch']*100 /self.dfOp['length'] #TODO
+        self.dfOp['pmismatch'] = (self.dfOp.mismatch.div(self.dfOp.length).mul(100))
         # trasform into numeric field
-        self.dfOp[['mismatch']].apply(pd.to_numeric)
+        self.dfOp[['pmismatch']].apply(pd.to_numeric)
         # filter on percentage of mismatch
-        self.dfMM = self.dfOp[(self.dfOp['mismatch'] < 5.1)]
+        self.dfMM = self.dfOp[(self.dfOp['pmismatch'] < 5.1)]
         self.filelog.write(msg64 + str(len(self.dfMM)))
         # lenght filtering
         self.dflen = self.dfMM[(self.dfMM.length >= 149)]
@@ -70,7 +69,7 @@ class DomainsDefinition(InputCheck):
         self.filelog.write(msg66 + str(len(self.dfstart)))
         if self.sequencingtype == 'Paired-End':
             # split field seq in two columns
-            self.dfstart['read'], self.dfstart['seqid'] = self.dfstart['seq'].str.split('_', 2).str[0:2].str
+            self.dfstart['read'], self.dfstart['seqid'] = self.dfstart['seq'].str.split(':', 2).str[0:2].str
             # split into two df read1 and read2
             self.df1 = self.dfstart[(self.dfstart['read'] == 'seq1')]
             self.df2 = self.dfstart[(self.dfstart['read'] == 'seq2')]
