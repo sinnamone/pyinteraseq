@@ -11,6 +11,7 @@ from Bio.Alphabet import ProteinAlphabet
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
+
 class DomainsDefinition(InputCheck):
 
     def __init__(self, optparseinstance):
@@ -25,13 +26,22 @@ class DomainsDefinition(InputCheck):
         self.df1 = None
         self.df2 = None
         self.df3 = None
+        self.dfplus = None
+        self.dfminus = None
+        self.input = None
+        self.output = None
+        self.end = None
+        self.bed = None
+        self.fasta = None
+        self.clones = None
+        self.intersection = None
 
-    def hashclean(self, blastnout):
-        with open(blastnout) as oldfile, open(self.out + 'blastn_nohash.tab', 'w') as newfile:
+    def hashclean(self, blastnout, prefix):
+        with open(blastnout) as oldfile, open(self.out + prefix + '.tab', 'w') as newfile:
             for line in oldfile:
                 if not line.startswith('#'):
                     newfile.write(line)
-        return self.out + 'blastn_nohash.tab'
+        return self.out + prefix + '.tab'
 
     def blastnfiltering(self, blastnout):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
@@ -78,14 +88,15 @@ class DomainsDefinition(InputCheck):
             self.dfstart[['seq', 'nseq']].to_csv(self.out + '_filtered_single.tab', header=None, sep='\t', index=False)
             return self.out + '_filtered_single.tab'
 
-    def clustering(self, blastnout):
+    def clustering(self, blastnout, idx):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
-            subprocess.check_call(['pick_otus.py', '-i', blastnout, '-o', self.out + '_picked', '-s', '0.97', '-g', '10'])
+            subprocess.check_call(['pick_otus.py', '-i', blastnout, '-o',
+                                   self.out + '_picked', '-s', '0.97', '-g', '10'])
         except subprocess.CalledProcessError:
             self.filelog.write(msg71)
             sys.exit(0)
-        return self.out + '_picked/' + self.outputid + '_newid_otus.txt'
+        return self.out + '_picked/' + self.outputid + idx + '_otus.txt'
 
     def pickrepseq(self, pickotus, fasta):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
@@ -101,17 +112,18 @@ class DomainsDefinition(InputCheck):
             self.filelog.write(msg73)
             return self.out + '_otus_most_abundant.fa'
 
-    def pysed(self, pickrepseqoutput, id, old, new):
+    def pysed(self, pickrepseqoutput, idx, old, new):
         with open(pickrepseqoutput) as f:
-            with open(self.out+id, 'w') as g:
+            with open(self.out+idx, 'w') as g:
                 for line in f:
                     g.write(re.sub(old, new, line))
             g.close()
-        return self.out+id
+        return self.out + idx
 
     def bedparsing(self, blastnclonesinput):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
-        self.df1 = pd.read_csv(blastnclonesinput, sep="\t", header=None, names=['chr', 'start', 'end', 'clonename', 'score', 'strand'])
+        self.df1 = pd.read_csv(blastnclonesinput, sep="\t", header=None,
+                               names=['chr', 'start', 'end', 'clonename', 'score', 'strand'])
         self.df2 = self.df1.replace({'minus': '-', 'plus': '+'}, regex=True).sort_values('start').reset_index(drop=True)
         self.dfplus = self.df2.loc[self.df2['strand'] == '+'].reset_index(drop=True)
         self.dfminus = self.df2.loc[self.df2['strand'] == '-'].reset_index(drop=True)
@@ -119,7 +131,8 @@ class DomainsDefinition(InputCheck):
         self.dfminus = self.dfminus.rename(
             columns={'chr': 'chr', 'end': 'start', 'start': 'end', 'clonesname': 'clonesname', 'score': 'score',
                      'strand': 'strand'})
-        self.df1 = pd.concat([self.dfplus, self.dfminus], ignore_index=True).sort_values('start').reset_index(drop=True)
+        self.df1 = pd.concat([self.dfplus, self.dfminus],
+                             ignore_index=True).sort_values('start').reset_index(drop=True)
         self.df1.to_csv(self.out+'_blastclonesparsed.bed', sep="\t", header=None, index=False)
         self.filelog.write(msg74)
         return self.out+'_blastclonesparsed.bed'
@@ -130,7 +143,8 @@ class DomainsDefinition(InputCheck):
         return self.out+'_cluster_count.txt'
 
     def mergingcount(self, bedparsed, clonescounted):
-        self.df1 = pd.read_csv(bedparsed, sep="\t", header=None, names=['chr', 'start', 'end', 'clonename', 'score', 'strand'])
+        self.df1 = pd.read_csv(bedparsed, sep="\t", header=None,
+                               names=['chr', 'start', 'end', 'clonename', 'score', 'strand'])
         self.df2 = pd.read_csv(clonescounted, sep="\t", header=None, names=['clonename', 'count'])
         self.df3 = pd.merge(self.df1, self.df2, on='clonename')
         self.df3 = self.df3[['chr', 'start', 'end', 'clonename', 'count', 'strand']]
@@ -138,7 +152,8 @@ class DomainsDefinition(InputCheck):
         return self.out+'_blastnclonescounted.bed'
 
     def filteringclonescount(self, mergingcountoutput, frequency):
-        self.df1 = pd.read_csv(mergingcountoutput, sep="\t", header=None, names=['chr', 'start', 'end', 'clonename', 'count', 'strand'])
+        self.df1 = pd.read_csv(mergingcountoutput, sep="\t", header=None,
+                               names=['chr', 'start', 'end', 'clonename', 'count', 'strand'])
         self.df2 = self.df1.loc[self.df1['count'] >= int(frequency)].sort_values('start').reset_index(drop=True)
         self.df2.to_csv(self.out+'_blastnclonescountedfiltered.bed', sep="\t", header=None, index=False)
         return self.out+'_blastnclonescountedfiltered.bed'
@@ -171,7 +186,8 @@ class DomainsDefinition(InputCheck):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         self.df1 = pd.read_csv(bedtoolsannotateout, sep="\t", header=None)
         self.df2 = self.df1.loc[self.df1[6] >= float(percthr)].sort_values(1).reset_index(drop=True)
-        self.df2[[0, 1, 2, 3, 4, 5]].to_csv(self.out + '_clonesannotatedfiltered.bed', sep="\t", header=None, index=False)
+        self.df2[[0, 1, 2, 3, 4, 5]].to_csv(self.out + '_clonesannotatedfiltered.bed', sep="\t",
+                                            header=None, index=False)
         self.filelog.write(msg77)
         return self.out + '_clonesannotatedfiltered.bed'
 
@@ -217,11 +233,10 @@ class DomainsDefinition(InputCheck):
         return self.out + '_clonesdescriptionsequence.bed'
 
     def translatednaframes(self, seq, inputfile):
+        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         input_handle = open(inputfile, "r")
         output_handle = open(self.out + '_allframes.tab', "a+")
-
         allpossibilities = []
-
         for frame in range(3):
             trans = str(seq.seq[frame:].translate(11))
             allpossibilities.append(trans)
@@ -236,11 +251,59 @@ class DomainsDefinition(InputCheck):
             currentproteinrecord = SeqRecord(currentprotein, seq.name)
             currentproteinrecord.id = currentproteinrecord.id + "." + str(i)
             currentproteinrecord.description = seq.description + "; frame " + str(i)
-
             SeqIO.write(currentproteinrecord, output_handle, "tab")
-
+        self.filelog.write(msg83)
         input_handle.close()
         output_handle.close()
         return self.out + '_allframes.tab'
 
+    def translatednaframesfiltering(self, outputranslatednaframes):
+        self.df1 = pd.read_csv(outputranslatednaframes, sep="\t", header=None, names=['seqid', 'nseq'])
+        self.df2 = self.df1[self.df1['nseq'].str.contains('\*') == False]
+        self.df2.to_csv(self.out + '_allframesfiltered.tab', sep="\t",
+                        header=None, index=False)
+        return self.out + '_allframesfiltered.tab'
 
+    def blastpfilterinf(self, outputnohashblastp):
+        self.df1 = pd.read_csv(outputnohashblastp, sep="\t", header=None,
+                               names=['chrstartend', 'proteinID', 'percmatch', 'length', 'mismatch', 'gapopen',
+                                      'qstart', 'qend', 'sstart', 'send', 'evalue', 'bitscore', 'sseq'])
+        # find the best match
+        self.df2 = self.df1.groupby(['chrstartend'], as_index=False)[['percmatch', ]].max()
+        # primary key for merging
+        self.df2['index'] = self.df2['chrstartend'].map(str) + '_' + self.df2['percmatch'].map(str)
+        self.df1['index'] = self.df1['chrstartend'].map(str) + '_' + self.df1['percmatch'].map(str)
+        #
+        self.df3 = pd.merge(self.df1, self.df2, on="index")
+        self.df3 = self.df3.loc[self.df3['mismatch'] < 2].reset_index(drop=True)
+        self.df3['chr'] = self.df3['chrstartend_x'].str.split(':', 1).str[0]
+        self.df3['temp'] = self.df3['chrstartend_x'].str.split(':', 1).str[1]
+        self.df3['start'] = self.df3['temp'].str.split('-', 1).str[0]
+        self.df3['temp_end'] = self.df3['temp'].str.split('-', 1).str[1]
+        self.df3['end'] = self.df3['temp_end'].str.split('.', 1).str[0]
+        self.df3['frame'] = self.df3['temp_end'].str.split('.', 1).str[1]
+        # self.df3['dupli'] = self.df3.duplicated('index')
+        self.df3[['chr', 'start', 'end', 'proteinID', 'frame', 'sstart', 'send', 'sseq']].to_csv(
+            self.out + '_blastpnohashfiltered.tab', header=None, sep='\t', index=False)
+        return self.out + '_blastpnohashfiltered.tab'
+
+    def outputparsing(self, outputfromaddsequence, outputfromblastpfilterinf):
+        self.df1 = pd.read_csv(outputfromaddsequence, sep="\t", header=None,
+                               names=['chr', 'clonestart', 'cloneend', 'clonelength', 'start', 'end', 'geneid',
+                                      'strand', 'genename', 'description', 'nseq'])
+        self.df2 = pd.read_csv(outputfromblastpfilterinf, sep="\t", header=None,
+                               names=['chr', 'clonestart', 'cloneend', 'proteinID', 'frame', 'sstart', 'send', 'sseq'])
+        self.df3 = pd.merge(self.df1, self.df2, on='clonestart')
+        self.df3[['chr_x', 'clonestart', 'cloneend_x', 'clonelength', 'start', 'end', 'geneid', 'strand', 'genename',
+                  'description', 'nseq', 'proteinID', 'frame', 'sstart', 'send', 'sseq']].to_csv(
+            self.out + '_domaindetection_step1.tab', header=None, sep='\t', index=False)
+        return self.out + '_domaindetection_step1.tab'
+
+    def cleantempfile(self, filedict):
+        try:
+            for c in filedict.items():
+                os.remove(c[1])
+        except OSError:
+            pass
+        else:
+            return

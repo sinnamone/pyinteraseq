@@ -7,7 +7,6 @@ import sys
 from pyinteraseq_inputcheck import InputCheck
 
 
-
 class BlastNlucleotide(InputCheck):
 
     def __init__(self, optparseinstance):
@@ -20,7 +19,8 @@ class BlastNlucleotide(InputCheck):
         self.id = [(int(x) - 1) for x in self.id]
         self.header = None
         self.dbid = os.path.basename(self.fastasequence.split('/')[-1])
-        self.blastnformat7 = '7 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore sseq'
+        self.blastnformat7 = '7 qseqid sseqid pident length mismatch gapopen ' \
+                             'qstart qend sstart send evalue bitscore sseq'
         self.blastnformat6 = '6 sseqid sstart send qseqid score sstrand'
 
     def fastq2fasta(self, fastq, nameid):
@@ -91,7 +91,6 @@ class BlastNlucleotide(InputCheck):
             return self.out + '_domains.tab'
 
     def seqrename(self, tabular, readirection):
-        print readirection
         if readirection == "forward":
             self.df1 = pd.read_csv(tabular, header=None, sep='\t')
             self.df1['seq_id'] = self.df1.apply(lambda x: "seq1:1:" + str(x.name), axis=1)
@@ -103,36 +102,16 @@ class BlastNlucleotide(InputCheck):
             self.df1[['seq_id', 1]].to_csv(self.out + '_2_newid.tab', header=None, sep='\t', index=False)
             return self.out + '_2_newid.tab'
 
-    def tab2fasta(self, tabular, readirection):
-        print readirection
+    def tab2fasta(self, tabular, prefixoutput):
         with open(tabular, 'r') as f:
-            if readirection == "forward":
-                with open(self.out + '_1_newid.fasta', 'w') as f_out:
-                    for line in f:
-                        line = line.strip().split('\t')
-                        self.header = '>' + '_'.join([line[i] for i in self.id])
-                        f_out.write(self.header + '\n')
-                        f_out.write(line[self.seqix] + '\n')
-                f_out.close()
-                return self.out + '_1_newid.fasta'
-            elif readirection == "reverse":
-                with open(self.out + '_2_newid.fasta', 'w') as f_out:
-                    for line in f:
-                        line = line.strip().split('\t')
-                        self.header = '>' + '_'.join([line[i] for i in self.id])
-                        f_out.write(self.header + '\n')
-                        f_out.write(line[self.seqix] + '\n')
-                f_out.close()
-                return self.out + '_2_newid.fasta'
-            elif readirection == "single":
-                with open(self.out + '_newid.fasta', 'w') as f_out:
-                    for line in f:
-                        line = line.strip().split('\t')
-                        self.header = '>' + '_'.join([line[i] for i in self.id])
-                        f_out.write(self.header + '\n')
-                        f_out.write(line[self.seqix] + '\n')
-                f_out.close()
-                return self.out + '_newid.fasta'
+            with open(self.out + prefixoutput + '.fasta', 'w') as f_out:
+                for line in f:
+                    line = line.strip().split('\t')
+                    self.header = '>' + '_'.join([line[i] for i in self.id])
+                    f_out.write(self.header + '\n')
+                    f_out.write(line[self.seqix] + '\n')
+            f_out.close()
+        return self.out + prefixoutput + '.fasta'
 
     def concatenateforrev(self, readlist):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
@@ -166,6 +145,23 @@ class BlastNlucleotide(InputCheck):
             self.filelog.write(msg59)
             return self.outputfolder + self.dbid + 'blastn.db'
 
+    def makeblastprot(self, proteinfasta):
+        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        try:
+            subprocess.check_call(
+                ['makeblastdb',
+                 '-in', proteinfasta,
+                 '-dbtype',
+                 'prot',
+                 '-out', self.out + '_blastp'],
+                stderr=self.filelog, stdout=self.filelog)
+        except subprocess.CalledProcessError:
+            self.filelog.write(msg58)
+            sys.exit(0)
+        else:
+            self.filelog.write(msg59)
+            return self.out + '_blastp'
+
     def blastn(self, fastainpu, fasta):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
@@ -183,6 +179,24 @@ class BlastNlucleotide(InputCheck):
         else:
             self.filelog.write(msg61)
             return self.out + '_blastn.tab'
+
+    def blastp(self, fastainpu, proteinfasta):
+        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        try:
+            subprocess.check_call(['blastp', '-out', self.out + '_blastp.tab',
+                                   '-outfmt',
+                                   self.blastnformat7,
+                                   '-query', fastainpu,
+                                   '-db', self.makeblastprot(proteinfasta),
+                                   '-evalue', '0.001',
+                                   '-num_threads', self.thread],
+                                  stderr=self.filelog, stdout=self.filelog)
+        except subprocess.CalledProcessError:
+            self.filelog.write(msg80)
+            sys.exit(0)
+        else:
+            self.filelog.write(msg81)
+            return self.out + '_blastp.tab'
 
     def blastnclones(self, fastainpu, fasta):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
@@ -205,8 +219,3 @@ class BlastNlucleotide(InputCheck):
     def fasta2tabular(self, imp, prefix):
         SeqIO.convert(imp, 'fasta', self.out + prefix + '.tab', 'tab')
         return self.out + prefix + '.tab'
-
-
-
-
-
