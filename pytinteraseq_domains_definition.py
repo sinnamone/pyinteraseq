@@ -73,8 +73,10 @@ class DomainsDefinition(InputCheck):
             # split into two df read1 and read2
             self.df1 = self.dfstart[(self.dfstart['read'] == 'seq1')]
             self.df2 = self.dfstart[(self.dfstart['read'] == 'seq2')]
+            self.df1['nread'] = self.df1['seq'].str.split(':', 2).str[2]
+            self.df2['nread'] = self.df2['seq'].str.split(':', 2).str[2]
             # merge df
-            self.dfMerge = pd.merge(self.df1, self.df2, on='seqid')
+            self.dfMerge = pd.merge(self.df1, self.df2, on='nread')
             # write output
             self.dfMerge[['seq_x', 'nseq_x']].to_csv(self.out + '_p1.tab', header=None, sep='\t',
                                                      index=False)
