@@ -16,8 +16,9 @@ class GenomeFile(InputCheck):
         self.genome = None
         self.ref = None
         self.index = None
+        self.dir = os.listdir(self.outputfolder)
         for self.seq_record in SeqIO.parse(self.fastasequence, "fasta"):
-            self.chromosomename = self.seq_record.id.split("|")[-2] #TODO #richiede stringa intera non modificare file fasta
+            self.chromosomename = self.seq_record.id.split("|")[-2]  # TODO richiede stringa non modificare file fasta
             self.chromosomelength = len(self.seq_record)
 
     def genomefilewrite(self):
@@ -42,6 +43,9 @@ class GenomeFile(InputCheck):
             self.filelog.write(msg43)
             sys.exit(0)
         else:
+            for item in self.dir:
+                if item.endswith(".fai"):
+                    os.remove(self.outputfolder+item)
             self.filelog.write(msg44)
             self.index = pysam.Fastafile(self.outputfolder + self.chromosomename + '.fasta')
             return self.outputfolder + self.chromosomename + '.fasta'

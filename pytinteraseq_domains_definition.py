@@ -1,4 +1,5 @@
 from pyinteraseq_inputcheck import InputCheck
+from pyinteraseq_trimming import TrimmingPaired
 from output_message import *
 import pandas as pd
 import sys
@@ -10,12 +11,14 @@ from Bio import SeqIO
 from Bio.Alphabet import ProteinAlphabet
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+import warnings
 
 
 class DomainsDefinition(InputCheck):
 
     def __init__(self, optparseinstance):
         InputCheck.__init__(self, optparseinstance)
+        warnings.filterwarnings("ignore")
         self.df = None
         self.dfOp = None
         self.dfMM = None
@@ -45,49 +48,57 @@ class DomainsDefinition(InputCheck):
 
     def blastnfiltering(self, blastnout):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
-        self.df = pd.read_csv(blastnout, sep='\t', header=None,
-                              names=['seq', 'chr', 'percmatch', 'length', 'mismatch', 'op', 'cstart', 'cend',
-                                     'start', 'end', 'evalue', 'bitscore', 'nseq'])
-        self.filelog.write(msg62 + str(len(self.df)))
-        # filter open gap
-        self.dfOp = self.df[(self.df.op <= 1)]
-        self.filelog.write(msg63 + str(len(self.dfOp)))
-        # trasform mismatch in percentage of mismatch using clone length
-        self.dfOp['pmismatch'] = (self.dfOp.mismatch.div(self.dfOp.length).mul(100))
-        # trasform into numeric field
-        self.dfOp[['pmismatch']].apply(pd.to_numeric)
-        # filter on percentage of mismatch
-        self.dfMM = self.dfOp[(self.dfOp['pmismatch'] < 5.1)]
-        self.filelog.write(msg64 + str(len(self.dfMM)))
-        # lenght filtering
-        self.dflen = self.dfMM[(self.dfMM.length >= 149)]
-        self.filelog.write(msg65 + str(len(self.dflen)))
-        # filter in start clone
-        self.dfstart = self.dflen[(self.dflen.cstart <= 1)]
-        # drop duplicate
-        self.dfstart = self.dfstart.drop_duplicates(subset='seq', keep=False)
-        self.filelog.write(msg66 + str(len(self.dfstart)))
-        if self.sequencingtype == 'Paired-End':
-            # split field seq in two columns
-            self.dfstart['read'], self.dfstart['seqid'] = self.dfstart['seq'].str.split(':', 2).str[0:2].str
-            # split into two df read1 and read2
-            self.df1 = self.dfstart[(self.dfstart['read'] == 'seq1')]
-            self.df2 = self.dfstart[(self.dfstart['read'] == 'seq2')]
-            self.df1['nread'] = self.df1['seq'].str.split(':', 2).str[2]
-            self.df2['nread'] = self.df2['seq'].str.split(':', 2).str[2]
-            # merge df
-            self.dfMerge = pd.merge(self.df1, self.df2, on='nread')
-            # write output
-            self.dfMerge[['seq_x', 'nseq_x']].to_csv(self.out + '_p1.tab', header=None, sep='\t',
-                                                     index=False)
-            self.dfMerge[['seq_y', 'nseq_y']].to_csv(self.out + '_p2.tab', header=None, sep='\t',
-                                                     index=False)
-            self.dfMerge.to_csv(self.out + '_filtered_pairs.tab', header=None, sep='\t', index=False)
-            return self.out + '_filtered_pairs.tab'
+        try:
+            self.df = pd.read_csv(blastnout, sep='\t', header=None,
+                                  names=['seq', 'chr', 'percmatch', 'length', 'mismatch', 'op', 'cstart', 'cend',
+                                         'start', 'end', 'evalue', 'bitscore', 'nseq'])
+            self.filelog.write(msg62 + str(len(self.df)))
+            # filter open gap
+            self.dfOp = self.df[(self.df.op <= 1)]
+            self.filelog.write(msg63 + str(len(self.dfOp)))
+            # trasform mismatch in percentage of mismatch using clone length
+            self.dfOp['pmismatch'] = (self.dfOp.mismatch.div(self.dfOp.length).mul(100))
+            # trasform into numeric field
+            self.dfOp[['pmismatch']].apply(pd.to_numeric)
+            # filter on percentage of mismatch
+            self.dfMM = self.dfOp[(self.dfOp['pmismatch'] < 5.1)]
+            self.filelog.write(msg64 + str(len(self.dfMM)))
+            # lenght filtering
+            self.dflen = self.dfMM[(self.dfMM.length >= 149)]
+            self.filelog.write(msg65 + str(len(self.dflen)))
+            # filter in start clone
+            self.dfstart = self.dflen[(self.dflen.cstart <= 1)]
+            # drop duplicate
+            self.dfstart = self.dfstart.drop_duplicates(subset='seq', keep=False)
+            self.filelog.write(msg66 + str(len(self.dfstart)))
+            if self.sequencingtype == 'Paired-End':
+                # split field seq in two columns
+                self.dfstart['read'], self.dfstart['seqid'] = self.dfstart['seq'].str.split(':', 2).str[0:2].str
+                # split into two df read1 and read2
+                self.df1 = self.dfstart[(self.dfstart['read'] == 'seq1')]
+                self.df2 = self.dfstart[(self.dfstart['read'] == 'seq2')]
+                self.df1['nread'] = self.df1['seq'].str.split(':', 2).str[2]
+                self.df2['nread'] = self.df2['seq'].str.split(':', 2).str[2]
+                # merge df
+                self.dfMerge = pd.merge(self.df1, self.df2, on='nread')
+                # write output
+                self.dfForw = self.dfMerge[['seq_x', 'nseq_x']]
+                self.dfRev = self.dfMerge[['seq_y', 'nseq_y']]
+                self.dfForw = self.dfForw.rename(columns={'seq_x': 'seq', 'nseq_x': 'nseq'})
+                self.dfRev = self.dfRev.rename(columns={'seq_y': 'seq', 'nseq_y': 'nseq'})
+                self.dfMerge2 = self.dfForw.append(self.dfRev, ignore_index=True)
+                self.dfMerge2[['seq', 'nseq']].to_csv(self.out + '_filtered_paired.tab', header=None, sep='\t',
+                                                      index=False)
+                self.dfMerge.to_csv(self.out + '_filtered_paired_complete.tab', header=None, sep='\t', index=False)
+                return self.out + '_filtered_paired.tab'
+            elif self.sequencingtype == 'Single-End':
+                self.dfstart.to_csv(self.out + '_filtered_single_complete.tab', header=None, sep='\t', index=False)
+                self.dfstart[['seq', 'nseq']].to_csv(self.out + '_filtered_single.tab', header=None, sep='\t', index=False)
+                return self.out + '_filtered_single.tab'
+        except Warning:
+            self.filelog.write('\nWarning')
         else:
-            self.dfstart.to_csv(self.out + '_filtered_single_complete.tab', header=None, sep='\t', index=False)
-            self.dfstart[['seq', 'nseq']].to_csv(self.out + '_filtered_single.tab', header=None, sep='\t', index=False)
-            return self.out + '_filtered_single.tab'
+            self.filelog.write('\nOk')
 
     def clustering(self, blastnout, idx):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")

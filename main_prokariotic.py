@@ -71,6 +71,7 @@ if __name__ == '__main__':
     if options.readreverse is not None:
         if (options.readforwardtype == "fastq") and (options.readreversetype == "fastq"):
             DictInfo = dict()
+            DictFile = dict()
             MergeFileList = []
             DictInfo.update({
                 "LogFilePath": TrimmingPaired(optparseinstance=options).logfilecreation(),
@@ -83,44 +84,106 @@ if __name__ == '__main__':
             #
             DictInfo["annotation"] = AnnotationFile(optparseinstance=options).annotationbuild()
             #
-            DictInfo["Trimmed5paired"] = TrimmingPaired(optparseinstance=options).trimming5paired()
-            #
-            DictInfo["FastaReadsForward"] = BlastNlucleotide(optparseinstance=options).fastq2fasta(
-                fastq=DictInfo["Trimmed5paired"][0], nameid="forward")
-            #
-            DictInfo["FastaReadsReverse"] = BlastNlucleotide(optparseinstance=options).fastq2fasta(
-                fastq=DictInfo["Trimmed5paired"][1], nameid="reverse")
-            #
-            DictInfo["TabularReadsForward"] = BlastNlucleotide(optparseinstance=options).fasta2tab(
-                fasta=DictInfo["FastaReadsForward"], nameid="forward")
-            #
-            DictInfo["TabularReadsReverse"] = BlastNlucleotide(optparseinstance=options).fasta2tab(
-                fasta=DictInfo["FastaReadsReverse"], nameid="reverse")
-            #
-            DictInfo["TabularRenamedForward"] = BlastNlucleotide(optparseinstance=options).seqrename(
-                DictInfo["TabularReadsForward"], "forward")
-            #
-            DictInfo["TabularRenamedReverse"] = BlastNlucleotide(optparseinstance=options).seqrename(
-                DictInfo["TabularReadsReverse"], "reverse")
-            #
-            DictInfo["FastaRenamedForward"] = BlastNlucleotide(optparseinstance=options).tab2fasta(
-                DictInfo["TabularRenamedForward"], "_forward")
-            #
-            DictInfo["FastaRenamedReverse"] = BlastNlucleotide(optparseinstance=options).tab2fasta(
-                DictInfo["TabularRenamedReverse"], "_reverse")
-            #
-            DictInfo["Trimmedreadconcatenated"] = TrimmingPaired(optparseinstance=options).concatenateforrev(
-                [DictInfo["FastaRenamedForward"], DictInfo["FastaRenamedReverse"]])
-            #
-            DictInfo["blastoutput"] = BlastNlucleotide(optparseinstance=options).blastn(
-                DictInfo["Trimmedreadconcatenated"], DictInfo["fasta"])
-            #
-            DictInfo["blastoutputnohash"] = DomainsDefinition(optparseinstance=options).hashclean(
-                DictInfo["blastoutput"], "_blastn_nohash")
-            #DictInfo["blastoutputnohash"] = "/Users/simone/output_test/26695_blastn_nohash.tab"
-            #
+            # DictInfo["Trimmed5paired"] = TrimmingPaired(optparseinstance=options).trimming5paired()
+            # #
+            # DictInfo["FastaReadsForward"] = BlastNlucleotide(optparseinstance=options).fastq2fasta(
+            #     fastq=DictInfo["Trimmed5paired"][0], nameid="forward")
+            # #
+            # DictInfo["FastaReadsReverse"] = BlastNlucleotide(optparseinstance=options).fastq2fasta(
+            #     fastq=DictInfo["Trimmed5paired"][1], nameid="reverse")
+            # #
+            # DictInfo["TabularReadsForward"] = BlastNlucleotide(optparseinstance=options).fasta2tab(
+            #     fasta=DictInfo["FastaReadsForward"], nameid="forward")
+            # #
+            # DictInfo["TabularReadsReverse"] = BlastNlucleotide(optparseinstance=options).fasta2tab(
+            #     fasta=DictInfo["FastaReadsReverse"], nameid="reverse")
+            # #
+            # DictInfo["TabularRenamedForward"] = BlastNlucleotide(optparseinstance=options).seqrename(
+            #     DictInfo["TabularReadsForward"], "forward")
+            # #
+            # DictInfo["TabularRenamedReverse"] = BlastNlucleotide(optparseinstance=options).seqrename(
+            #     DictInfo["TabularReadsReverse"], "reverse")
+            # #
+            # DictInfo["FastaRenamedForward"] = BlastNlucleotide(optparseinstance=options).tab2fasta(
+            #     DictInfo["TabularRenamedForward"], "_forward")
+            # #
+            # DictInfo["FastaRenamedReverse"] = BlastNlucleotide(optparseinstance=options).tab2fasta(
+            #     DictInfo["TabularRenamedReverse"], "_reverse")
+            # #
+            # DictInfo["Trimmedreadconcatenated"] = TrimmingPaired(optparseinstance=options).concatenateforrev(
+            #     [DictInfo["FastaRenamedForward"], DictInfo["FastaRenamedReverse"]])
+            # #
+            # DictInfo["blastoutput"] = BlastNlucleotide(optparseinstance=options).blastn(
+            #     DictInfo["Trimmedreadconcatenated"], DictInfo["fasta"])
+            # #
+            # DictInfo["blastoutputnohash"] = DomainsDefinition(optparseinstance=options).hashclean(
+            #     DictInfo["blastoutput"], "_blastn_nohash")
+            # #
+            DictInfo["blastoutputnohash"] = '/Users/simone/output_test/26695_blastn_nohash.tab'
             DictInfo["blastoutputnohashfiltered"] = DomainsDefinition(optparseinstance=options).blastnfiltering(
                 DictInfo["blastoutputnohash"])
+
+            DictInfo["blastoutputnohashfilteredfasta"] = BlastNlucleotide(optparseinstance=options).tab2fasta(
+                DictInfo["blastoutputnohashfiltered"], "_paired")
+
+            DictInfo["clustering"] = DomainsDefinition(optparseinstance=options).clustering(
+                DictInfo["blastoutputnohashfilteredfasta"], "_paired")
+            #
+            DictInfo["pickedreads"] = DomainsDefinition(optparseinstance=options).pickrepseq(
+                DictInfo["clustering"], DictInfo["blastoutputnohashfilteredfasta"])
+
+            DictInfo["pickedreadscleand"] = DomainsDefinition(optparseinstance=options).pysed(
+                DictInfo["pickedreads"], '_clean.fasta', '-', '')
+            #
+            DictInfo["blastedclones"] = BlastNlucleotide(optparseinstance=options).blastnclones(
+                DictInfo["pickedreadscleand"], DictInfo["fasta"])
+            #
+            DictInfo["bedparsed"] = DomainsDefinition(optparseinstance=options).bedparsing(DictInfo["blastedclones"])
+            #
+            DictInfo["clonesannotated"] = DomainsDefinition(optparseinstance=options).bedtoolsannotatefiltering(
+                DomainsDefinition(optparseinstance=options).bedtoolsannotate(
+                    DictInfo["bedparsed"], DictInfo["annotation"]), 0.7)
+            #
+            DictInfo["clustercount"] = DomainsDefinition(optparseinstance=options).clonescount(
+                DictInfo["clustering"])
+            #
+            DictInfo["clonescounted"] = DomainsDefinition(optparseinstance=options).mergingcount(
+                DictInfo["bedparsed"], DictInfo["clustercount"])
+            # #go to domain##########################################################
+            #
+            DictInfo["clonescountedfiltered"] = DomainsDefinition(optparseinstance=options).filteringclonescount(
+                DictInfo["clonescounted"], 10)
+            #
+            DictInfo["clonescountedmerged"] = DomainsDefinition(optparseinstance=options).pybedtoolsmerge(
+                DictInfo["clonescountedfiltered"])
+            #
+            DictInfo["clonesmergedfasta"] = DomainsDefinition(optparseinstance=options).pybedtoolstofasta(
+                DictInfo["clonescountedmerged"], DictInfo["fasta"])
+            #
+            DictInfo["tabwithdescription"] = DomainsDefinition(optparseinstance=options).adddescription(
+                DictInfo["clonescountedmerged"], DictInfo["annotation"], 0.7)
+            #
+            DictInfo["clonenseqfasta"] = BlastNlucleotide(optparseinstance=options).fasta2tabular(
+                imp=DictInfo["clonesmergedfasta"], prefix='_clonestabular')
+            DictInfo["tabwithsequence"] = DomainsDefinition(optparseinstance=options).addsequence(
+                outputfromdescription=DictInfo["tabwithdescription"], outputfasta2tab=DictInfo["clonenseqfasta"])
+            for seq_record in SeqIO.parse(DictInfo["clonesmergedfasta"], "fasta", alphabet=IUPAC.ambiguous_dna):
+                DictInfo["allframes"] = DomainsDefinition(optparseinstance=options).translatednaframes(
+                    seq_record, DictInfo["clonesmergedfasta"])
+            DictInfo["allframesfiltered"] = DomainsDefinition(optparseinstance=options).translatednaframesfiltering(
+                DictInfo["allframes"])
+            DictInfo["allframesfilteredfasta"] = BlastNlucleotide(optparseinstance=options).tab2fasta(
+                DictInfo["allframesfiltered"], "_allframesfiltered")
+            DictInfo["blastpoutput"] = BlastNlucleotide(optparseinstance=options).blastp(
+                DictInfo["allframesfilteredfasta"],
+                '/Users/simone/output_test/GCF_000008525.1_ASM852v1_protein.faa')
+            DictInfo["blastpoutputnohash"] = DomainsDefinition(optparseinstance=options).hashclean(
+                DictInfo["blastpoutput"], "_blastp_nohash")
+            DictInfo["blastpoutputnohashfiltered"] = DomainsDefinition(optparseinstance=options).blastpfilterinf(
+                DictInfo["blastpoutputnohash"])
+            DictInfo["outputdomaindetection"] = DomainsDefinition(optparseinstance=options).outputparsing(
+                DictInfo["tabwithsequence"], DictInfo["blastpoutputnohashfiltered"])
+            DomainsDefinition(optparseinstance=options).cleantempfile(DictFile)
     else:
         DictInfo = dict()
         DictFile = dict()
