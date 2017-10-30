@@ -98,6 +98,12 @@ class InputCheck(object):
         else:
             sys.stdout.write(msg12)
             sys.exit(0)
+        # check if the name of chromosome was given by the user
+        if self.inputistance.chromosomename is not None:
+            self.chromosomename = self.inputistance.chromosomename
+        else:
+            sys.stdout.write(msg12)
+            sys.exit(0)
         self.out = self.outputfolder+self.outputid
         self.awk = None
         self.pick_otus = None

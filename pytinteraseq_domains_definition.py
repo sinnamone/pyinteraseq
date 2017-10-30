@@ -227,6 +227,7 @@ class DomainsDefinition(InputCheck):
             return self.out + '_clonesdescription.bed'
 
     def addsequence(self, outputfromdescription, outputfasta2tab):
+        # ex clones description sequence
         self.df1 = pd.read_csv(outputfromdescription,
                                sep="\t", header=None,
                                names=['chr', 'clonestart', 'cloneend', 'clonelength',
@@ -240,9 +241,9 @@ class DomainsDefinition(InputCheck):
         self.df3[['chr', 'clonestart', 'cloneend',
                   'clonelength', 'start', 'end',
                   'geneid', 'strand', 'genename',
-                  'description', 'nseq']].to_csv(self.out + '_clonesdescriptionsequence.bed', sep="\t",
+                  'description', 'nseq']].to_csv(self.out + '_domaindetection_step1.tab', sep="\t",
                                                  header=None, index=False)
-        return self.out + '_clonesdescriptionsequence.bed'
+        return self.out + '_domaindetection_step1.tab'
 
     def translatednaframes(self, seq, inputfile):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
@@ -264,9 +265,9 @@ class DomainsDefinition(InputCheck):
             currentproteinrecord.id = currentproteinrecord.id + "." + str(i)
             currentproteinrecord.description = seq.description + "; frame " + str(i)
             SeqIO.write(currentproteinrecord, output_handle, "tab")
-        self.filelog.write(msg83)
         input_handle.close()
         output_handle.close()
+        self.filelog.write(msg83)
         return self.out + '_allframes.tab'
 
     def translatednaframesfiltering(self, outputranslatednaframes):
@@ -309,7 +310,7 @@ class DomainsDefinition(InputCheck):
         self.df3[['chr_x', 'clonestart', 'cloneend_x', 'clonelength', 'start', 'end', 'geneid', 'strand', 'genename',
                   'description', 'nseq', 'proteinID', 'frame', 'sstart', 'send', 'sseq']].to_csv(
             self.out + '_domaindetection_step1.tab', header=None, sep='\t', index=False)
-        return self.out + '_domaindetection_step1.tab'
+        return self.out + '_domaindetection_step1_clones_sequence.tab'
 
     def cleantempfile(self, filedict):
         try:
