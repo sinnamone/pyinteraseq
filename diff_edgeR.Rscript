@@ -1,0 +1,80 @@
+#####!/Volumes/Users/lucapetiti/apps/R_versions/R-3.1.2/bin/Rscript
+#!/opt/R/R-3.0.2/bin/R
+#require(edgeR)
+
+
+suppressMessages(library(edgeR))
+
+args = commandArgs(trailingOnly = TRUE)
+
+infile_cond1 = args[1]
+infile_cond2 = args[2]
+name_cond1 = args[3]
+name_cond2 = args[4]
+output_destination=args[5]
+threshold_fdr = 0.05
+
+# infile_cond1 = "HSPC.2liv.raw.bed"
+# infile_cond2 = "EPP.2liv.raw.bed"
+# name_cond1 = "HSPC"
+# name_cond2 = "EPP"
+
+print(paste("cond1: ",name_cond1,"; cond2: ",name_cond2,sep=""))
+
+bed_cond1 =  read.table(infile_cond1,header=FALSE)
+counts_cond1 = bed_cond1[,4:5]
+colnames(counts_cond1) = c("ID",name_cond1)
+counts_cond1 = counts_cond1[order(counts_cond1[,1]),]
+
+bed_cond2 =  read.table(infile_cond2,header=FALSE)
+counts_cond2 = bed_cond2[,4:5]
+colnames(counts_cond2) = c("ID",name_cond2)
+counts_cond2 = counts_cond2[order(counts_cond2[,1]),]
+
+counts = merge(counts_cond1,counts_cond2,by="ID")
+rownames(counts) = counts[,1]
+counts = counts[,c(2:3)]
+# filtering out lines with both zeros
+# counts = counts[counts[,1]!=0 | counts[,2]!=0,]
+group = factor(c(1,2))
+dge = DGEList(counts=counts,group=group)
+y = calcNormFactors(dge)
+et2 = exactTest(y, dispersion=(0.3)^2)
+
+counts = counts[order(rownames(counts)),]
+diff = et2$table
+diff = diff[order(rownames(diff)),]
+norm = counts
+norm[,1] = counts[,1]*(y$samples[name_cond1,"norm.factors"])
+norm[,2] = counts[,2]*(y$samples[name_cond2,"norm.factors"])
+output = cbind(counts,norm,diff)
+
+# chr = sapply(strsplit(rownames(output),":"),FUN=function(x){return(x[1])})
+# coords = sapply(strsplit(rownames(output),":"),FUN=function(x){return(x[2])})
+# start = as.numeric(sapply(strsplit(coords,"-"),FUN=function(x){return(x[1])}))
+# end = as.numeric(sapply(strsplit(coords,"-"),FUN=function(x){return(x[2])}))
+
+output = output[order(rownames(output)),]
+bed_cond1= bed_cond1[order(bed_cond1[,4]),]
+bed_cond2= bed_cond2[order(bed_cond2[,4]),]
+
+chr = bed_cond1[,1]
+start = bed_cond1[,2]
+end = bed_cond1[,3]
+
+output = cbind(chr,start,end,output)
+output = output[order(output[,1],output[,2]),]
+
+colnames(output)[4:5] = paste(colnames(output)[4:5],"_raw",sep="")
+colnames(output)[6:7] = paste(colnames(output)[6:7],"_norm",sep="")
+
+ID = rownames(output)
+AdjPValue = p.adjust(output$PValue,method="fdr")
+output = cbind(ID,output,AdjPValue)
+
+write.table(output,file=paste(output_destination,name_cond1,name_cond1,"_",name_cond2,".txt",sep=""),quote=FALSE,sep="\t",row.names=FALSE)
+
+output_sign = output[output[,"AdjPValue"]<threshold_fdr,]
+
+write.table(output_sign,file=paste(output_destination,name_cond1,"_",name_cond2,".sign_genes_adjpvalue_",threshold_fdr,".txt",sep=""),quote=FALSE,sep="\t",row.names=FALSE)
+
