@@ -22,6 +22,7 @@ class BlastNlucleotide(InputCheck):
         self.blastnformat7 = '7 qseqid sseqid pident length mismatch gapopen ' \
                              'qstart qend sstart send evalue bitscore sseq'
         self.blastnformat6 = '6 sseqid sstart send qseqid score sstrand'
+        self.splitLen = 200000
 
     def fastq2fasta(self, fastq, nameid):
         if nameid == "forward":
@@ -124,6 +125,26 @@ class BlastNlucleotide(InputCheck):
         # self.filelog.write(msg56 + self.fastqcount(self.out + '_con.fasta',
         #                                            self.readforwardtype))
         return self.out + '_con.fasta'
+
+    def splitfasta(self, fastareadyforblastn):
+        """
+        split function
+        :param fastareadyforblastn:
+        :return:
+        """
+        fastareadyforblastn = open(fastareadyforblastn, 'r').read().split('\n')
+        at = 1
+        for lines in range(0, len(fastareadyforblastn), self.splitLen):
+            # First, get the list slice
+            outputdata = fastareadyforblastn[lines:lines + self.splitLen]
+            # Now open the output file, join the new slice with newlines
+            output = open(self.out + '_split' + str(at) + '.txt', 'w')
+            # and write it out. Then close the file.
+            output.write('\n'.join(outputdata))
+            output.close()
+            # Increment the counter
+            at += 1
+        return True
 
     def makeblastnucl(self, fasta):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")

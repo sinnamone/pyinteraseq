@@ -89,6 +89,13 @@ class AnnotationFile(GenomeFile):
             self.filelog.write(msg42)
             return self.outputfolder + self.chromosomename + '_proteome.bed'
 
+    def getcdsfasta(self):
+        annotation = pybedtools.BedTool(self.annotationbuild())
+        fastasequence = pybedtools.BedTool(self.fastareference())
+        self.fastacds = annotation.sequence(fi=fastasequence, s=True).save_seqs(
+            self.outputfolder + self.chromosomename + '_fastacds.fasta')
+        return self.outputfolder + self.chromosomename + '_fastacds.fasta'
+
 
 # class ProteomeParsing(AnnotationFile):
 #

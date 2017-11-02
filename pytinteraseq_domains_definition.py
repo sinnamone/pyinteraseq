@@ -70,6 +70,7 @@ class DomainsDefinition(InputCheck):
             self.dfstart = self.dflen[(self.dflen.cstart <= 1)]
             # drop duplicate
             self.dfstart = self.dfstart.drop_duplicates(subset='seq', keep=False)
+            # self.dfstart.to_csv(self.out + '_fileforenriched.tab', header=None, sep='\t', index=False)
             self.filelog.write(msg66 + str(len(self.dfstart)))
             if self.sequencingtype == 'Paired-End':
                 # split field seq in two columns
@@ -93,7 +94,8 @@ class DomainsDefinition(InputCheck):
                 return self.out + '_filtered_paired.tab'
             elif self.sequencingtype == 'Single-End':
                 self.dfstart.to_csv(self.out + '_filtered_single_complete.tab', header=None, sep='\t', index=False)
-                self.dfstart[['seq', 'nseq']].to_csv(self.out + '_filtered_single.tab', header=None, sep='\t', index=False)
+                self.dfstart[['seq', 'nseq']].to_csv(self.out + '_filtered_single.tab', header=None, sep='\t',
+                                                     index=False)
                 return self.out + '_filtered_single.tab'
         except Warning:
             self.filelog.write('\nWarning')
@@ -312,11 +314,7 @@ class DomainsDefinition(InputCheck):
             self.out + '_domaindetection_step1.tab', header=None, sep='\t', index=False)
         return self.out + '_domaindetection_step1_clones_sequence.tab'
 
-    def cleantempfile(self, filedict):
-        try:
-            for c in filedict.items():
-                os.remove(c[1])
-        except OSError:
-            pass
-        else:
-            return
+    def cleantemporaryfile(self, filedict):
+        for key, value in filedict.iteritems():
+            os.remove(str(value))
+        return 0
