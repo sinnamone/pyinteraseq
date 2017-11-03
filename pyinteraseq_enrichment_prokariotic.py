@@ -2,6 +2,9 @@ from pyinteraseq_genomefileparsing import *
 import optparse
 import pandas as pd
 import pybedtools
+from rpy2.robjects.packages import importr
+import rpy2.robjects as robjects
+from rpy2.robjects import *
 from output_message import *
 
 parser = optparse.OptionParser(usage='python %prog Enrichment Prokariotyc', version='1.0',)
@@ -122,6 +125,57 @@ class EnrichmentProkaryotic(object):
                                                    sep="\t", header=None, index=False)
         return self.out + idex + '.bed'
 
+    # def edger(self, edgerinputformatparsingtarget, edgerinputformatparsingbackground):
+    #     edgeR = importr('edgeR')
+    #     r.assign('infile_cond1', '/Users/simone/output_test/SelA_versus_26695_targetedgeready.bed')
+    #     r.assign('infile_cond2', '/Users/simone/output_test/SelA_versus_26695_backedgeready.bed')
+    #     r.assign('name_cond1', 'target')
+    #     r.assign('name_cond2', 'background')
+    #     r.assign('output_destination', self.outputfolder)
+    #     r.assign('threshold_fdr', 0.05)
+    #     r('bed_cond1 =  read.table(infile_cond1,header=FALSE)')
+    #     r('counts_cond1 = bed_cond1[,4:5]')
+    #     r('colnames(counts_cond1) = c("ID",name_cond1)')
+    #     r('counts_cond1 = counts_cond1[order(counts_cond1[,1]),]')
+    #     r('bed_cond2 =  read.table(infile_cond2,header=FALSE)')
+    #     r('counts_cond2 = bed_cond2[,4:5]')
+    #     r('colnames(counts_cond2) = c("ID",name_cond2)')
+    #     r('counts_cond2 = counts_cond2[order(counts_cond2[,1]),]')
+    #     r('counts = merge(counts_cond1, counts_cond2, by="ID")')
+    #     r('rownames(counts) = counts[, 1]')
+    #     r('counts = counts[, c(2:3)]')
+    #     r('group = factor(c(1, 2))')
+    #     r('dge = DGEList(counts=counts, group=group)')
+    #     res = r('y = calcNormFactors(dge)')
+    #     print res
+        # robjects.r('et2 = exactTest(y, dispersion="auto")')
+        # res15 = robjects.r('counts = counts[order(rownames(counts)),]')
+        # res16 = robjects.r('diff = et2$table')
+        # res17 = robjects.r('diff = diff[order(rownames(diff)),]')
+        # res18 = robjects.r('norm = counts')
+        # res19 = robjects.r('norm[, 1] = counts[, 1]*(y$samples[name_cond1, "norm.factors"])')
+        # res20 = robjects.r('norm[, 2] = counts[, 2]*(y$samples[name_cond2, "norm.factors"])')
+        # res21 = robjects.r('output = cbind(counts, norm, diff)')
+        # res22 = robjects.r('output = output[order(rownames(output)),]')
+        # res23 = robjects.r('bed_cond1 = bed_cond1[order(bed_cond1[, 4]), ]')
+        # res24 = robjects.r('bed_cond2 = bed_cond2[order(bed_cond2[, 4]), ]')
+        # res25 = robjects.r('chr = bed_cond1[, 1]')
+        # res26 = robjects.r('start = bed_cond1[, 2]')
+        # res27 = robjects.r('end = bed_cond1[, 3]')
+        # res28 = robjects.r('output = cbind(chr, start, end, output)')
+        # res29 = robjects.r('output = output[order(output[, 1], output[, 2]), ]')
+        # res30 = robjects.r('colnames(output)[4:5] = paste(colnames(output)[4:5], "_raw", sep="")')
+        # res31 = robjects.r('colnames(output)[6:7] = paste(colnames(output)[6:7], "_norm", sep="")')
+        # res32 = robjects.r('ID = rownames(output)')
+        # res33 = robjects.r('AdjPValue = p.adjust(output$PValue, method = "fdr")')
+        # res34 = robjects.r('output = cbind(ID, output, AdjPValue)')
+        # res35 = robjects.r('write.table(output, file=paste(output_destination, name_cond1, name_cond1, "_", name_cond2, ".txt", sep=""),'
+        #                    'quote=FALSE, sep="\t", row.names = FALSE)')
+        #
+        # res36 = robjects.r('output_sign = output[output[, "AdjPValue"] < threshold_fdr,]')
+        # res37 = robjects.r('write.table(output_sign,file=paste(output_destination, name_cond1, "_", '
+        #                    'name_cond2, ".sign_genes_adjpvalue_", threshold_fdr,".txt", sep=""), '
+        #                    'quote=FALSE, sep="\t", row.names = FALSE)')
 
 if __name__ == '__main__':
     DictEnrichment = dict()
@@ -140,3 +194,5 @@ if __name__ == '__main__':
         edgerinputformatparsing(DictEnrichment["bedcoveragebackground"], '_backedgeready')
     DictEnrichment["bedcoveragetargetready"] = EnrichmentProkaryotic(optparseinstance=options).edgerinputformatparsing(
         DictEnrichment["bedcoveragetarget"], '_targetedgeready')
+    # EnrichmentProkaryotic(optparseinstance=options).edger(
+    #     DictEnrichment["bedcoveragetargetready"], DictEnrichment["bedcoveragebackgroundready"])
