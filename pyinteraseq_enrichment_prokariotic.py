@@ -2,6 +2,8 @@ from pyinteraseq_genomefileparsing import *
 import optparse
 import pandas as pd
 import pybedtools
+import os
+import subprocess
 from output_message import *
 
 parser = optparse.OptionParser(usage='python %prog Enrichment Prokariotyc', version='1.0',)
@@ -41,6 +43,7 @@ class EnrichmentProkaryotic(object):
     def __init__(self, optparseinstance):
         self.inputistance = optparseinstance
         self.df1 = None
+        self.path_edgeR = os.path.dirname(os.path.realpath(__file__)) + '/diff_edgeR.Rscript'
         #
         if self.inputistance.outputfolder is not None:
             if self.inputistance.outputfolder.endswith('/') is True:
@@ -122,6 +125,30 @@ class EnrichmentProkaryotic(object):
                                                    sep="\t", header=None, index=False)
         return self.out + idex + '.bed'
 
+    def edger(self, backgroundedgeparsed, targetedgeparsed, idex, outpath):
+        """
+        edgeR function
+        :param backgroundedgeparsed:
+        :param targetedgeparsed:
+        :param idex:
+        :param outpath:
+        :return:
+        """
+        subprocess.check_call(['/Library/Frameworks/R.framework/Versions/3.2/Resources/bin/Rscript', '--vanilla',
+                               self.path_edgeR, backgroundedgeparsed, targetedgeparsed, 'genomic', idex, outpath])
+        return outpath + 'genomic_' + idex + '.sign_genes_adjpvalue_0.05.txt'
+
+    def edgeroutparser(self, edgeroutput, outputdomaindetection):
+        df1 = pd.read_csv(edgeroutput, sep="\t", header=0)
+        df2 = df1.loc[(df1['logFC'] > 0.0)]
+        df3 = pd.read_csv(outputdomaindetection , sep="\t", header=None,
+                          names=['chr_x', 'clonestart', 'cloneend_x', 'clonelength', 'start_x', 'end_x', 'geneid', 'strand',
+                                 'genename', 'description', 'nseq'])
+        df4 = pd.merge(df3, df2, right_on='start', left_on='clonestart')
+        df4[['chr_x', 'clonestart', 'cloneend_x', 'clonelength', 'start', 'end', 'geneid', 'logFC', 'PValue',
+             'AdjPValue', 'strand', 'genename', 'description', 'nseq']].to_csv(
+            self.out+'_enrichment.txt', sep="\t", header=None, index=False)
+        return self.out+'_enrichment.txt'
 
 if __name__ == '__main__':
     DictEnrichment = dict()
@@ -140,3 +167,9 @@ if __name__ == '__main__':
         edgerinputformatparsing(DictEnrichment["bedcoveragebackground"], '_backedgeready')
     DictEnrichment["bedcoveragetargetready"] = EnrichmentProkaryotic(optparseinstance=options).edgerinputformatparsing(
         DictEnrichment["bedcoveragetarget"], '_targetedgeready')
+    DictEnrichment["edgertable"] = EnrichmentProkaryotic(optparseinstance=options).edger(
+        DictEnrichment["bedcoveragebackgroundready"], DictEnrichment["bedcoveragetargetready"],
+        options.outputid, options.outputfolder)
+    EnrichmentProkaryotic(optparseinstance=options).edgeroutparser(
+        DictEnrichment["edgertable"], options.domainstarget)
+
