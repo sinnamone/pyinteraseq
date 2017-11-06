@@ -6,7 +6,7 @@ import os
 import subprocess
 from output_message import *
 
-parser = optparse.OptionParser(usage='python %prog Enrichment Prokariotyc', version='1.0',)
+parser = optparse.OptionParser(usage='python %prog Enrichment Prokaryotic', version='1.0',)
 parser.add_option('--blastnoutputgenomic', action="store", dest="blastnoutputgenomic", default=None,
                   help='Read dataset concatenate derived from pyinteraseq_mapping.py')
 parser.add_option('--blastnoutputarget', action="store", dest="blastnoutputarget", default=None,
@@ -139,6 +139,12 @@ class EnrichmentProkaryotic(object):
         return outpath + 'genomic_' + idex + '.sign_genes_adjpvalue_0.05.txt'
 
     def edgeroutparser(self, edgeroutput, outputdomaindetection):
+        """
+
+        :param edgeroutput:
+        :param outputdomaindetection:
+        :return:
+        """
         df1 = pd.read_csv(edgeroutput, sep="\t", header=0)
         df2 = df1.loc[(df1['logFC'] > 0.0)]
         df3 = pd.read_csv(outputdomaindetection , sep="\t", header=None,
@@ -149,6 +155,7 @@ class EnrichmentProkaryotic(object):
              'AdjPValue', 'strand', 'genename', 'description', 'nseq']].to_csv(
             self.out+'_enrichment.txt', sep="\t", header=None, index=False)
         return self.out+'_enrichment.txt'
+
 
 if __name__ == '__main__':
     DictEnrichment = dict()

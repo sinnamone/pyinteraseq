@@ -309,7 +309,9 @@ class DomainsDefinition(InputCheck):
         self.df2 = pd.read_csv(outputfromblastpfilterinf, sep="\t", header=None,
                                names=['chr', 'clonestart', 'cloneend', 'proteinID', 'frame', 'sstart', 'send', 'sseq'])
         self.df3 = pd.merge(self.df1, self.df2, on='clonestart')
-        self.df3[['chr_x', 'clonestart', 'cloneend_x', 'clonelength', 'start', 'end', 'geneid', 'strand', 'genename',
+        self.df4 = self.df3.loc[(self.df3['clonelength'] > 50)]
+        self.df5 = self.df4.loc[(self.df4['clonelength'] < 1200)]
+        self.df5[['chr_x', 'clonestart', 'cloneend_x', 'clonelength', 'start', 'end', 'geneid', 'strand', 'genename',
                   'description', 'nseq', 'proteinID', 'frame', 'sstart', 'send', 'sseq']].to_csv(
             self.out + '_domaindetection_step1.tab', header=None, sep='\t', index=False)
         return self.out + '_domaindetection_step1_clones_sequence.tab'
