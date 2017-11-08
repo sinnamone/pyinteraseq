@@ -147,11 +147,11 @@ class EnrichmentProkaryotic(object):
         """
         df1 = pd.read_csv(edgeroutput, sep="\t", header=0)
         df2 = df1.loc[(df1['logFC'] > 0.0)]
-        df3 = pd.read_csv(outputdomaindetection , sep="\t", header=None,
-                          names=['chr_x', 'clonestart', 'cloneend_x', 'clonelength', 'start_x', 'end_x', 'geneid', 'strand',
-                                 'genename', 'description', 'nseq'])
+        df3 = pd.read_csv(outputdomaindetection, sep="\t", header=None,
+                          names=['chr', 'clonestart', 'cloneend', 'clonelength', 'start',
+                                 'end', 'geneid','strand', 'genename', 'description', 'nseq'])
         df4 = pd.merge(df3, df2, right_on='start', left_on='clonestart')
-        df4[['chr_x', 'clonestart', 'cloneend_x', 'clonelength', 'start', 'end', 'geneid', 'logFC', 'PValue',
+        df4[['chr_x', 'clonestart', 'cloneend', 'clonelength', 'start_x', 'end_x', 'geneid', 'logFC', 'PValue',
              'AdjPValue', 'strand', 'genename', 'description', 'nseq']].to_csv(
             self.out+'_enrichment.txt', sep="\t", header=None, index=False)
         return self.out+'_enrichment.txt'
