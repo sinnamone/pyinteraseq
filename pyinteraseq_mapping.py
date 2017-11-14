@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import sys
 from pyinteraseq_inputcheck import InputCheck
+from multiprocessing import Pool
 
 
 class BlastNlucleotide(InputCheck):
@@ -19,77 +20,22 @@ class BlastNlucleotide(InputCheck):
         self.id = [(int(x) - 1) for x in self.id]
         self.header = None
         self.dbid = os.path.basename(self.fastasequence.split('/')[-1])
-        self.blastnformat7 = '7 qseqid sseqid pident length mismatch gapopen ' \
-                             'qstart qend sstart send evalue bitscore sseq'
-        self.blastnformat6 = '6 sseqid sstart send qseqid score sstrand'
-        self.splitLen = 200000
+        self.path_multiblastn = os.path.dirname(os.path.realpath(__file__)) + '/pyinteraseq_multblastn.py'
+        self.pool = Pool(processes=int(self.thread))
 
     def fastq2fasta(self, fastq, nameid):
+        """
+        Covert Fastq in Fasta format
+        :param fastq: input Fastq file
+        :param nameid: output name
+        :return:
+        """
         if nameid == "forward":
             SeqIO.convert(fastq, 'fastq', self.out + '1.fasta', 'fasta')
             return self.out + '1.fasta'
         elif nameid == "reverse":
             SeqIO.convert(fastq, 'fastq', self.out + '1.fasta', 'fasta')
             return self.out + '1.fasta'
-
-    def fasta2tab(self, fasta, nameid):
-        if nameid == "forward":
-            with open(fasta, 'r') as fp:
-                for line in fp:
-                    if line.startswith('>'):
-                        self.out_lines.append(self.temp_line)
-                        self.temp_line = line.strip() + '\t'
-                    else:
-                        self.temp_line += line.strip()
-            with open(self.out + '1.tab', 'w') as fp_out:
-                fp_out.write('\n'.join(self.out_lines))
-            with open(self.out + '1.tab', 'r+') as f:  # open in read / write mode
-                f.readline()  # read the first line and throw it out
-                data = f.read()  # read the rest
-                f.seek(0)  # set the cursor to the top of the file
-                f.write(data)  # write the data back
-                f.truncate()  # set the file size to the current size
-            fp_out.close()
-            f.close()
-            return self.out + '1.tab'
-        elif nameid == "reverse":
-            with open(fasta, 'r') as fp:
-                for line in fp:
-                    if line.startswith('>'):
-                        self.out_lines.append(self.temp_line)
-                        self.temp_line = line.strip() + '\t'
-                    else:
-                        self.temp_line += line.strip()
-            with open(self.out + '2.tab', 'w') as fp_out:
-                fp_out.write('\n'.join(self.out_lines))
-            with open(self.out + '2.tab', 'r+') as f:  # open in read / write mode
-                f.readline()  # read the first line and throw it out
-                data = f.read()  # read the rest
-                f.seek(0)  # set the cursor to the top of the file
-                f.write(data)  # write the data back
-                f.truncate()  # set the file size to the current size
-            fp_out.close()
-            f.close()
-            return self.out + '2.tab'
-        elif nameid == "domains":
-            with open(fasta, 'r') as fp:
-                for line in fp:
-                    if line.startswith('>'):
-                        self.out_lines.append(self.temp_line)
-                        self.temp_line = line.strip() + '\t'
-                    else:
-                        self.temp_line += line.strip()
-            with open(self.out + '_domain.tab', 'w') as fp_out:
-                fp_out.write('\n'.join(self.out_lines))
-            with open(self.out + '_domain.tab', 'r+') as f:  # open in read / write mode
-                f.readline()  # read the first line and throw it out
-                data = f.read()  # read the rest
-                f.seek(0)  # set the cursor to the top of the file
-                f.write(data)  # write the data back
-                f.truncate()  # set the file size to the current size
-            fp_out.close()
-            f.close()
-            return self.out + '_domains.tab'
 
     def seqrename(self, tabular, readirection):
         if readirection == "forward":
@@ -126,117 +72,28 @@ class BlastNlucleotide(InputCheck):
         #                                            self.readforwardtype))
         return self.out + '_con.fasta'
 
-    def splitfasta(self, fastareadyforblastn):
-        """
-        split function
-        :param fastareadyforblastn:
-        :return:
-        """
-        fastareadyforblastn = open(fastareadyforblastn, 'r').read().split('\n')
-        at = 1
-        for lines in range(0, len(fastareadyforblastn), self.splitLen):
-            # First, get the list slice
-            outputdata = fastareadyforblastn[lines:lines + self.splitLen]
-            # Now open the output file, join the new slice with newlines
-            output = open(self.out + '_split' + str(at) + '.txt', 'w')
-            # and write it out. Then close the file.
-            output.write('\n'.join(outputdata))
-            output.close()
-            # Increment the counter
-            at += 1
-        return True
-
-    def makeblastnucl(self, fasta):
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
-        try:
-            if os.path.isfile(self.outputfolder + self.dbid + '.db') is False:
-                subprocess.check_call(
-                    ['makeblastdb',
-                     '-in', fasta,
-                     '-dbtype',
-                     'nucl',
-                     '-out', self.outputfolder + self.dbid + 'blastn.db'],
-                    stderr=self.filelog, stdout=self.filelog)
-            else:
-                self.filelog.write(msg57)
-        except subprocess.CalledProcessError:
-            self.filelog.write(msg58)
-            sys.exit(0)
-        else:
-            self.filelog.write(msg59)
-            return self.outputfolder + self.dbid + 'blastn.db'
-
-    def makeblastprot(self, proteinfasta):
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
-        try:
-            subprocess.check_call(
-                ['makeblastdb',
-                 '-in', proteinfasta,
-                 '-dbtype',
-                 'prot',
-                 '-out', self.out + '_blastp'],
-                stderr=self.filelog, stdout=self.filelog)
-        except subprocess.CalledProcessError:
-            self.filelog.write(msg58)
-            sys.exit(0)
-        else:
-            self.filelog.write(msg59)
-            return self.out + '_blastp'
-
-    def blastn(self, fastainpu, fasta):
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
-        try:
-            subprocess.check_call(['blastn', '-out', self.out + '_blastn.tab',
-                                   '-outfmt',
-                                   self.blastnformat7,
-                                   '-query', fastainpu,
-                                   '-db', self.makeblastnucl(fasta),
-                                   '-evalue', '0.001',
-                                   '-num_threads', self.thread],
-                                  stderr=self.filelog, stdout=self.filelog)
-        except subprocess.CalledProcessError:
-            self.filelog.write(msg60)
-            sys.exit(0)
-        else:
-            self.filelog.write(msg61)
-            return self.out + '_blastn.tab'
-
-    def blastp(self, fastainpu, proteinfasta):
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
-        try:
-            subprocess.check_call(['blastp', '-out', self.out + '_blastp.tab',
-                                   '-outfmt',
-                                   self.blastnformat7,
-                                   '-query', fastainpu,
-                                   '-db', self.makeblastprot(proteinfasta),
-                                   '-evalue', '0.001',
-                                   '-num_threads', self.thread],
-                                  stderr=self.filelog, stdout=self.filelog)
-        except subprocess.CalledProcessError:
-            self.filelog.write(msg80)
-            sys.exit(0)
-        else:
-            self.filelog.write(msg81)
-            return self.out + '_blastp.tab'
-
-    def blastnclones(self, fastainpu, fasta):
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
-        try:
-            subprocess.check_call(['blastn', '-out', self.out + '_blastnclones.tab',
-                                   '-outfmt',
-                                   self.blastnformat6,
-                                   '-query', fastainpu,
-                                   '-db', self.makeblastnucl(fasta),
-                                   '-evalue', '0.001',
-                                   '-num_threads', self.thread],
-                                  stderr=self.filelog, stdout=self.filelog)
-        except subprocess.CalledProcessError:
-            self.filelog.write(msg60)
-            sys.exit(0)
-        else:
-            self.filelog.write(msg61)
-            return self.out + '_blastnclones.tab'
-
     def fasta2tabular(self, imp, prefix):
         SeqIO.convert(imp, 'fasta', self.out + prefix + '.tab', 'tab')
         return self.out + prefix + '.tab'
+
+    def callmultiblastn(self, fasta, multifasta, outputformat, suffix):
+        print fasta
+        print multifasta
+        print outputformat
+        print suffix
+        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        try:
+            subprocess.check_call(['python', self.path_multiblastn,
+                                   '--referencefasta', fasta,
+                                   '--multifastasequence', multifasta,
+                                   '--dbname', self.chromosomename,
+                                   '--outputfolder', self.outputfolder,
+                                   '--outputid', self.outputid + suffix,
+                                   '--thread', self.thread,
+                                   '--outformat', outputformat])
+        except subprocess.CalledProcessError:
+            self.filelog.write(msg60)
+            sys.exit(0)
+        else:
+            self.filelog.write(msg61)
+            return self.out + suffix
