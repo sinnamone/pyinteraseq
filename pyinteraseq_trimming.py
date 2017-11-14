@@ -110,7 +110,7 @@ class TrimmingPaired(InputCheck):
 
     def concatenateforrev(self, readlist):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
-        with open(self.out + '_con.'+self.readforwardtype, 'w') as outfile:
+        with open(self.out + '_con.fasta', 'w') as outfile:
             for fname in readlist:
                 with open(fname) as infile:
                     for line in infile:

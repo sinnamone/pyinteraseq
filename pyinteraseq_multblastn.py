@@ -22,7 +22,10 @@ query_opts.add_option('--outputfolder', action="store", dest="outputfolder", def
                       help='Output folder.')
 query_opts.add_option('--outputid', action="store", dest="outputid", default=None,
                       help='Output ID.')
-
+query_opts.add_option('--outformat', action="store", dest="outformat", default=None,
+                      help='Output format for blastn.')
+query_opts.add_option('--suffix', action="store", dest="suffix", default='_blastn.txt',
+                      help='Suffix to add after merging files.')
 parser.add_option_group(query_opts)
 
 reference_opts = optparse.OptionGroup(
@@ -84,24 +87,24 @@ def makeblastdb(outputfolder, dbname, fasta):
         return outputfolder + dbname
 
 
-def blastn(outputname, fastainpu, dbname):
+def blastn(outputname, fastainpu, dbname, outputformat):
     """
     Run blastn
     :param outputname: Prefix given to temp blastn file
     :param fastainpu: Temp fasta input
     :param dbname: Database name
+    :param outputformat: outpformat blast
     :return:
     """
     return (subprocess.check_call(['blastn', '-out', outputname,
                                    '-outfmt',
-                                   '7 qseqid sseqid pident length mismatch'
-                                   ' gapopen qstart qend sstart send evalue bitscore sseq',
+                                   outputformat,
                                    '-query', fastainpu,
                                    '-db', dbname,
                                    '-evalue', '0.001']))
 
 
-def blastmultiprocess(maxchunks, outmerge, chunks, thread, databasename):
+def blastmultiprocess(maxchunks, outmerge, chunks, thread, databasename, outputformat):
     """
     Controller to run multithread blastn
     :param maxchunks: Max chunk
@@ -109,6 +112,7 @@ def blastmultiprocess(maxchunks, outmerge, chunks, thread, databasename):
     :param chunks: Number of line for temp file
     :param thread: Number of processor
     :param databasename: Database name
+    :param outputformat: blstn output format (6=tab,7= hash)
     :return: List with two list, first temp blastn file, second tempo fasta file
     """
     listempfiles = []
@@ -117,13 +121,12 @@ def blastmultiprocess(maxchunks, outmerge, chunks, thread, databasename):
     for i in range(chunks, maxchunks, chunks):
         pool.apply_async(blastn, args=(outmerge + '_{0}.txt'.format(i),
                                        outmerge + '_temp_{0}.fasta'.format(i),
-                                       databasename,
-                                       ),)
+                                       databasename, outputformat),)
         listempfiles.append(outmerge + '_{0}.txt'.format(i))
         listfastatemp.append(outmerge + '_temp_{0}.fasta'.format(i))
     pool.apply_async(blastn, args=(outmerge + '_{0}.txt'.format(maxchunks),
                                    outmerge + '_temp_{0}.fasta'.format(maxchunks),
-                                   databasename),)
+                                   databasename, outputformat),)
     listempfiles.append(outmerge + '_{0}.txt'.format(maxchunks))
     listfastatemp.append(outmerge + '_temp_{0}.fasta'.format(maxchunks))
     pool.close()
@@ -137,12 +140,12 @@ def mergtempfiles(listtemporanyfiles):
     :param listtemporanyfiles: list created by blastmultiprocess
     :return: absolute path + merged file
     """
-    with open(options.outputfolder + options.outputid + '_blasn.txt', 'w') as outfile:
+    with open(options.outputfolder + options.outputid, 'w') as outfile:
         for fname in listtemporanyfiles:
             with open(fname) as infile:
                 for line in infile:
                     outfile.write(line)
-    return options.outputfolder + options.outputid + '_blasn.txt'
+    return listtemporanyfiles
 
 
 def cleantempfiles(listtemporanyfiles):
@@ -157,6 +160,8 @@ def cleantempfiles(listtemporanyfiles):
 
 
 if __name__ == '__main__':
+
+    outformat6 = '6 sseqid sstart send qseqid score sstrand'
     # Check input path
     if options.outputfolder is not None:
         if options.outputfolder.endswith('/') is True:
@@ -171,7 +176,8 @@ if __name__ == '__main__':
                                         idtemp=options.outputid))*options.chunks
     # blastn on multi thread
     blastntemp = blastmultiprocess(maxchunks=numfilesgenerated, outmerge=outp, chunks=options.chunks,
-                                   thread=options.thread, databasename=databname)
+                                   thread=options.thread, databasename=databname,
+                                   outputformat=options.outformat)
     # Merge temp file
     mergtempfiles(listtemporanyfiles=blastntemp[0])
     # Remove temp file

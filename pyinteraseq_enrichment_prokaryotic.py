@@ -25,7 +25,6 @@ query_opts.add_option('--outputid', action="store", dest="outputid", default=Non
 
 parser.add_option_group(query_opts)
 
-parser.add_option_group(query_opts)
 
 reference_opts = optparse.OptionGroup(
     parser, 'Advanced Options',

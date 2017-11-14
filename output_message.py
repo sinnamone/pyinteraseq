@@ -86,4 +86,5 @@ msg83 = "\nTranslation complete."
 msg84 = "\nChromosome name not given. Execution stop."
 msg85 = "\nNo input file given. Intesection error. Execution stop."
 msg86 = "\nOnly one input file found. No intersection will be performed."
+msg87 = "\nChromosome Name is missing.Execution stop."
 

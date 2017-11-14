@@ -12,6 +12,7 @@ from Bio.Alphabet import ProteinAlphabet
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import warnings
+import shutil
 
 
 class DomainsDefinition(InputCheck):
@@ -318,5 +319,44 @@ class DomainsDefinition(InputCheck):
 
     def cleantemporaryfile(self, filedict):
         for key, value in filedict.iteritems():
-            os.remove(str(value))
+            if key == 'Trimmed5single':
+                os.remove(value)
+            elif key == 'TabularRenamedForward':
+                os.remove(value)
+            elif key == 'blastoutputnohashfiltered':
+                os.remove(value)
+            elif key == 'blastoutput':
+                os.remove(value)
+            elif key == 'fasta':
+                os.remove(value)
+            elif key == 'annotation':
+                os.remove(value)
+            elif key == 'TabularReadsForward':
+                os.remove(value)
+            elif key == 'blastoutputnohash':
+                os.remove(value)
+            elif key == 'blastedclones':
+                os.remove(value)
+            elif key == 'clonescounted':
+                os.remove(value)
+            elif key == 'clonescountedfiltered':
+                os.remove(value)
+            elif key == 'clustercount':
+                os.remove(value)
+            elif key == 'pickedreadscleand':
+                os.remove(value)
+            elif key == 'clonesannotated':
+                os.remove(value)
+            elif key == 'bedparsed':
+                os.remove(value)
+            elif key == 'blastoutputnohashfilteredfasta':
+                os.remove(value)
+            elif key == 'clonenseqfasta':
+                os.remove(value)
+            elif key == 'clonenseqfasta':
+                os.remove(value)
+            elif key == 'tabwithdescription':
+                os.remove(value)
+            # shutil.rmtree(self.out + '_picked')
+
         return 0

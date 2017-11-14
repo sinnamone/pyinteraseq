@@ -10,7 +10,7 @@ class InputCheck(object):
     def __init__(self, optparseinstance):
         # import instance with all input flag
         self.inputistance = optparseinstance
-        #put all under this
+        # put all under this
         self.thread = self.inputistance.thread
         self.count = 0
         self.filelog = None
@@ -102,7 +102,7 @@ class InputCheck(object):
         if self.inputistance.chromosomename is not None:
             self.chromosomename = self.inputistance.chromosomename
         else:
-            sys.stdout.write(msg12)
+            sys.stdout.write(msg87)
             sys.exit(0)
         self.out = self.outputfolder+self.outputid
         self.awk = None
@@ -111,6 +111,10 @@ class InputCheck(object):
         self.samtools = None
 
     def logfilecreation(self):
+        """
+        Function that open new log file.
+        :return: path + name file log
+        """
         if os.access(self.outputfolder, os.W_OK) is True:
             self.filelog = open(self.outputfolder+self.outputid+".log", "w")
             self.filelog.close()
@@ -120,6 +124,10 @@ class InputCheck(object):
             sys.exit(0)
 
     def cutadaptchech(self):
+        """
+        Function that verify the installation of cutadapt
+        :return: folder where cutadapt is located.
+        """
         try:
             self.cutadapt = subprocess.check_output(['which', 'cutadapt']).split('\n')[0]
         except subprocess.CalledProcessError:
@@ -129,6 +137,10 @@ class InputCheck(object):
             return self.cutadapt
 
     def pickotuscheck(self):
+        """
+        Function that verify the installation of pick_otus
+        :return:
+        """
         try:
             self.pick_otus = subprocess.check_output(['which', 'pick_otus.py']).split('\n')[0]
         except subprocess.CalledProcessError:
@@ -138,6 +150,10 @@ class InputCheck(object):
             return self.pick_otus
 
     def pickrepseqcheck(self):
+        """
+        Function that verify the installation of pick_rep_set
+        :return:
+        """
         try:
             self.pick_rep_set = subprocess.check_output(['which', 'pick_rep_set.py']).split('\n')[0]
         except subprocess.CalledProcessError:
@@ -147,6 +163,10 @@ class InputCheck(object):
             return self.pick_rep_set
 
     def samtoolscheck(self):
+        """
+        Function that verify the installation of samtools
+        :return: samtools path
+        """
         try:
             self.samtools = subprocess.check_output(['which', 'samtools']).split('\n')[0]
         except subprocess.CalledProcessError:
@@ -156,6 +176,10 @@ class InputCheck(object):
             return self.samtools
 
     def awkcheck(self):
+        """
+        Function that verify the installation of awk
+        :return: awk path
+        """
         try:
             self.awk = subprocess.check_output(['which', 'awk']).split('\n')[0]
         except subprocess.CalledProcessError:
@@ -165,12 +189,22 @@ class InputCheck(object):
             return self.awk
 
     def fastqcount(self, fastq, rtype):
+        """
+        Function to count the number of sequence
+        :param fastq:
+        :param rtype:
+        :return:
+        """
         self.count = 0
         for record in SeqIO.parse(fastq, rtype):
             self.count = self.count + 1
         return str(self.count)
 
     def inputinformationappen(self):
+        """
+        Log compilation
+        :return:
+        """
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         self.filelog.write(datetime.datetime.now().ctime() + '\n')
         self.filelog.write(msg14)
