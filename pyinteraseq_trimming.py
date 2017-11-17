@@ -10,6 +10,10 @@ class TrimmingSingle(InputCheck):
         InputCheck.__init__(self, optparseinstance)
 
     def trimming5single(self):
+        """
+        Function for trimming 5' single-end reads
+        :return:
+        """
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             subprocess.check_call(['cutadapt', '-g', str(self.primer5forward), '--discard-untrimmed',
@@ -18,7 +22,7 @@ class TrimmingSingle(InputCheck):
                                    str(self.readforward)], stderr=self.filelog)
         except subprocess.CalledProcessError:
             self.filelog.write(msg34)
-            sys.exit(0)
+            sys.exit(1)
         else:
             self.filelog.write(msg50 + self.fastqcount(self.out + '_read1.' + self.readforwardtype,
                                                        self.readforwardtype))
@@ -26,6 +30,10 @@ class TrimmingSingle(InputCheck):
             return self.out + '_read1.' + self.readforwardtype
 
     def trimming3single(self):
+        """
+        Function for trimming 3' single-end reads
+        :return:
+        """
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             subprocess.check_call(
@@ -36,7 +44,7 @@ class TrimmingSingle(InputCheck):
                 stderr=self.filelog)
         except subprocess.CalledProcessError:
             self.filelog.write(msg36)
-            sys.exit(0)
+            sys.exit(1)
         else:
             self.filelog.write(msg51 + self.fastqcount(self.out + '_read1_1.' + self.readforwardtype,
                                                        self.readforwardtype))
@@ -52,6 +60,10 @@ class TrimmingPaired(InputCheck):
         self.readtrimmedthree = []
 
     def trimming5paired(self):
+        """
+        Trimming 5' paired-end dataset
+        :return:
+        """
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             subprocess.check_call(['cutadapt',
@@ -69,7 +81,7 @@ class TrimmingPaired(InputCheck):
                                   stderr=self.filelog)
         except subprocess.CalledProcessError:
             self.filelog.write(msg38a)
-            sys.exit(0)
+            sys.exit(1)
         else:
             self.readtrimmedfive.append(self.out + '_read1.' + self.readforwardtype)
             self.readtrimmedfive.append(self.out + '_read2.' + self.readreversetype)
@@ -81,6 +93,10 @@ class TrimmingPaired(InputCheck):
             return self.readtrimmedfive
 
     def trimming3paired(self):
+        """
+        Trimming 3' paired-end
+        :return:
+        """
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             subprocess.check_call(
@@ -97,7 +113,7 @@ class TrimmingPaired(InputCheck):
                 stderr=self.filelog)
         except subprocess.CalledProcessError:
             sys.stdout.write(msg39)
-            sys.exit(0)
+            sys.exit(1)
         else:
             self.readtrimmedthree.append(self.out + '_read1_1.' + self.readforwardtype)
             self.readtrimmedthree.append(self.out + '_read2_2.' + self.readforwardtype)
@@ -107,15 +123,3 @@ class TrimmingPaired(InputCheck):
                                                        self.readreversetype))
             self.filelog.write(msg40)
         return self.readtrimmedthree
-
-    def concatenateforrev(self, readlist):
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
-        with open(self.out + '_con.fasta', 'w') as outfile:
-            for fname in readlist:
-                with open(fname) as infile:
-                    for line in infile:
-                        outfile.write(line)
-        outfile.close()
-        self.filelog.write(msg56 + self.fastqcount(self.out + '_con.' + self.readforwardtype,
-                                                   self.readforwardtype))
-        return self.out + '_con.'+self.readforwardtype

@@ -133,7 +133,7 @@ class EnrichmentProkaryotic(object):
         :param outpath:
         :return:
         """
-        subprocess.check_call(['/Library/Frameworks/R.framework/Versions/3.2/Resources/bin/Rscript', '--vanilla',
+        subprocess.check_call(['Rscript', '--vanilla',
                                self.path_edgeR, backgroundedgeparsed, targetedgeparsed, 'genomic', idex, outpath])
         return outpath + 'genomic_' + idex + '.sign_genes_adjpvalue_0.05.txt'
 

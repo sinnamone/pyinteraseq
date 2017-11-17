@@ -22,7 +22,7 @@ class InputCheck(object):
             self.readforward = self.inputistance.readforward
         else:
             sys.stdout.write(msg1)
-            sys.exit(0)
+            sys.exit(1)
         # check for reverse read and assign sequencing type dataset
         if self.inputistance.readreverse is not None:
             self.readreverse = self.inputistance.readreverse
@@ -123,7 +123,7 @@ class InputCheck(object):
             sys.stdout.write(msg13)
             sys.exit(0)
 
-    def cutadaptchech(self):
+    def cutadaptcheck(self):
         """
         Function that verify the installation of cutadapt
         :return: folder where cutadapt is located.
@@ -132,7 +132,7 @@ class InputCheck(object):
             self.cutadapt = subprocess.check_output(['which', 'cutadapt']).split('\n')[0]
         except subprocess.CalledProcessError:
             self.filelog.write(msg32)
-            sys.exit(0)
+            sys.exit(1)
         else:
             return self.cutadapt
 
@@ -145,7 +145,7 @@ class InputCheck(object):
             self.pick_otus = subprocess.check_output(['which', 'pick_otus.py']).split('\n')[0]
         except subprocess.CalledProcessError:
             self.filelog.write(msg67)
-            sys.exit(0)
+            sys.exit(1)
         else:
             return self.pick_otus
 
@@ -158,7 +158,7 @@ class InputCheck(object):
             self.pick_rep_set = subprocess.check_output(['which', 'pick_rep_set.py']).split('\n')[0]
         except subprocess.CalledProcessError:
             self.filelog.write(msg68)
-            sys.exit(0)
+            sys.exit(1)
         else:
             return self.pick_rep_set
 
@@ -171,7 +171,7 @@ class InputCheck(object):
             self.samtools = subprocess.check_output(['which', 'samtools']).split('\n')[0]
         except subprocess.CalledProcessError:
             self.filelog.write(msg69)
-            sys.exit(0)
+            sys.exit(1)
         else:
             return self.samtools
 
@@ -184,7 +184,7 @@ class InputCheck(object):
             self.awk = subprocess.check_output(['which', 'awk']).split('\n')[0]
         except subprocess.CalledProcessError:
             self.filelog.write(msg70)
-            sys.exit(0)
+            sys.exit(1)
         else:
             return self.awk
 
@@ -235,3 +235,99 @@ class InputCheck(object):
         self.filelog.write(msg0)
         self.filelog.close()
         return True
+
+
+class InputCheckMapping(object):
+    def __init__(self, optparseinstance):
+        # import instance with all input flag
+        self.inputistance = optparseinstance
+        # put all under this
+        self.thread = self.inputistance.thread
+        self.count = 0
+        self.filelog = None
+        self.cloneslength = self.inputistance.minclonelength
+        # check for forward reads
+        if self.inputistance.readforwardtrimmed is not None:
+            self.readforward = self.inputistance.readforwardtrimmed
+        else:
+            sys.stdout.write(msg1)
+            sys.exit(1)
+        # check for reverse read and assign sequencing type dataset
+        if self.inputistance.readreversetrimmed is not None:
+            self.readreverse = self.inputistance.readreversetrimmed
+            self.sequencingtype = 'Paired-End'
+        else:
+            self.sequencingtype = 'Single-End'
+        # Check type of dataset
+        if self.inputistance.readforwardtrimmedtype is not None:
+            self.readforwardtype = self.inputistance.readforwardtrimmedtype
+        else:
+            sys.stdout.write(msg2)
+            sys.exit(1)
+        # Check type of dataset reverse
+        if self.inputistance.readreversetrimmed is not None:
+            if self.inputistance.readreversetrimmedtype is not None:
+                self.readreversetype = self.inputistance.readreversetrimmedtype
+            else:
+                sys.stdout.write(msg3)
+                sys.exit(1)
+        # Check for Dataset typr
+        if self.inputistance.sampletype is not None:
+            self.sampletype = self.inputistance.sampletype
+        else:
+            sys.stdout.write(msg4)
+            sys.exit(0)
+        # check output folder
+        if self.inputistance.outputfolder is not None:
+            if self.inputistance.outputfolder.endswith('/') is True:
+                self.outputfolder = self.inputistance.outputfolder
+            else:
+                self.outputfolder = self.inputistance.outputfolder + '/'
+        else:
+            sys.stdout.write(msg9)
+            sys.exit(0)
+        # check output id
+        if self.inputistance.outputid is not None:
+            self.outputid = self.inputistance.outputid
+        else:
+            sys.stdout.write(msg10)
+            sys.exit(0)
+        # check fasta sequence
+        if self.inputistance.fastasequence is not None:
+            self.fastasequence = self.inputistance.fastasequence
+        else:
+            sys.stdout.write(msg11)
+            sys.exit(0)
+        # check annotation
+        if self.inputistance.annotation is not None:
+            self.annotation = self.inputistance.annotation
+        else:
+            sys.stdout.write(msg12)
+            sys.exit(0)
+        # check if the name of chromosome was given by the user
+        if self.inputistance.chromosomename is not None:
+            self.chromosomename = self.inputistance.chromosomename
+        else:
+            sys.stdout.write(msg87)
+            sys.exit(0)
+        self.out = self.outputfolder+self.outputid
+        # check if log file is already created
+        if self.inputistance.log is None:
+            if os.access(self.outputfolder, os.W_OK) is True:
+                self.filelog = open(self.outputfolder + self.outputid + ".log", "w")
+                self.filelog.close()
+            else:
+                sys.stdout.write(msg13)
+                sys.exit(1)
+
+    def fastqcount(self, fastq, rtype):
+        """
+        Function to count the number of sequence
+        :param fastq:
+        :param rtype:
+        :return:
+        """
+        self.count = 0
+        for record in SeqIO.parse(fastq, rtype):
+            self.count = self.count + 1
+        return str(self.count)

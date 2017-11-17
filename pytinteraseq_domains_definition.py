@@ -1,5 +1,4 @@
 from pyinteraseq_inputcheck import InputCheck
-from pyinteraseq_trimming import TrimmingPaired
 from output_message import *
 import pandas as pd
 import sys
@@ -13,6 +12,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import warnings
 import shutil
+import traceback
 
 
 class DomainsDefinition(InputCheck):
@@ -41,11 +41,25 @@ class DomainsDefinition(InputCheck):
         self.intersection = None
 
     def hashclean(self, blastnout, prefix):
-        with open(blastnout) as oldfile, open(self.out + prefix + '.tab', 'w') as newfile:
-            for line in oldfile:
-                if not line.startswith('#'):
-                    newfile.write(line)
-        return self.out + prefix + '.tab'
+        """
+        Function to clean hash in blastn 7 format output
+        :param blastnout: Blastn output
+        :param prefix: prefix add to output file
+        :return: path + prefix + '.tab' of new file
+        """
+        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        try:
+            with open(blastnout) as oldfile, open(self.out + prefix + '.tab', 'w') as newfile:
+                for line in oldfile:
+                    if not line.startswith('#'):
+                        newfile.write(line)
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg92)
+            sys.exit(0)
+        else:
+            self.filelog.write(msg93)
+            return self.out + prefix + '.tab'
 
     def blastnfiltering(self, blastnout):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
@@ -103,15 +117,15 @@ class DomainsDefinition(InputCheck):
         else:
             self.filelog.write('\nOk')
 
-    def clustering(self, blastnout, idx):
+    def clustering(self, blastnout, prefixoutput):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             subprocess.check_call(['pick_otus.py', '-i', blastnout, '-o',
-                                   self.out + '_picked', '-s', '0.97', '-g', '10'])
+                                   self.out + '_picked', '-s', '0.97'])
         except subprocess.CalledProcessError:
             self.filelog.write(msg71)
             sys.exit(0)
-        return self.out + '_picked/' + self.outputid + idx + '_otus.txt'
+        return self.out + '_picked/' + self.outputid + prefixoutput + '_otus.txt'
 
     def pickrepseq(self, pickotus, fasta):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
@@ -179,10 +193,23 @@ class DomainsDefinition(InputCheck):
         return self.out+'_blastnclonesmerge.bed'
 
     def pybedtoolstofasta(self, pybedtoolsmergeoutput, fastqsequence):
-        self.bed = pybedtools.BedTool(pybedtoolsmergeoutput)
-        self.fasta = pybedtools.BedTool(fastqsequence)
-        self.end = self.bed.sequence(fi=self.fasta).save_seqs(self.out + '_blastnclonesmerge.fasta')
-        return self.out + '_blastnclonesmerge.fasta'
+        """
+        Function that produce Fasta file from Bed
+        :param pybedtoolsmergeoutput: Output of function pybedtoolsmerge
+        :param fastqsequence: Input fasta file
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        try:
+            self.bed = pybedtools.BedTool(pybedtoolsmergeoutput)
+            self.fasta = pybedtools.BedTool(fastqsequence)
+            self.end = self.bed.sequence(fi=self.fasta).save_seqs(self.out + '_blastnclonesmerge.fasta')
+        except traceback:
+            self.filelog.write(msg88)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg91)
+            return self.out + '_blastnclonesmerge.fasta'
 
     def bedtoolsannotate(self, clonesformatbed, annotation):
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
@@ -207,6 +234,13 @@ class DomainsDefinition(InputCheck):
         return self.out + '_clonesannotatedfiltered.bed'
 
     def adddescription(self, clonesmerged, annotation, percthr):
+        """
+        Function that attach description to bed6 table
+        :param clonesmerged: bed6 with clone information
+        :param annotation: annotation file
+        :param percthr: Overlap intersection
+        :return:
+        """
         self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
@@ -222,7 +256,8 @@ class DomainsDefinition(InputCheck):
                       'clonelength', 'start', 'end', 'geneid',
                       'strand', 'genename', 'description']].to_csv(self.out + '_clonesdescription.bed', sep="\t",
                                                                    header=None, index=False)
-        except IOError:
+        except traceback:
+            self.filelog.write(traceback.format_exc())
             self.filelog.write(msg78)
             sys.exit(0)
         else:
@@ -317,46 +352,50 @@ class DomainsDefinition(InputCheck):
             self.out + '_domaindetection_step1.tab', header=None, sep='\t', index=False)
         return self.out + '_domaindetection_step1_clones_sequence.tab'
 
-    def cleantemporaryfile(self, filedict):
+    def cleantemporaryfilesinglend(self, filedict):
         for key, value in filedict.iteritems():
             if key == 'Trimmed5single':
                 os.remove(value)
             elif key == 'TabularRenamedForward':
                 os.remove(value)
-            elif key == 'blastoutputnohashfiltered':
+            elif key == 'FastaReadsForward':
                 os.remove(value)
-            elif key == 'blastoutput':
-                os.remove(value)
-            elif key == 'fasta':
-                os.remove(value)
-            elif key == 'annotation':
-                os.remove(value)
-            elif key == 'TabularReadsForward':
+            elif key == 'FastaRenamedForward':
                 os.remove(value)
             elif key == 'blastoutputnohash':
                 os.remove(value)
-            elif key == 'blastedclones':
+            elif key == 'pickedreads':
                 os.remove(value)
-            elif key == 'clonescounted':
-                os.remove(value)
-            elif key == 'clonescountedfiltered':
-                os.remove(value)
-            elif key == 'clustercount':
+            elif key == 'blastoutputnohashfiltered':
                 os.remove(value)
             elif key == 'pickedreadscleand':
                 os.remove(value)
-            elif key == 'clonesannotated':
+            elif key == 'blastedclones':
                 os.remove(value)
             elif key == 'bedparsed':
                 os.remove(value)
-            elif key == 'blastoutputnohashfilteredfasta':
+            elif key == 'clonesannotated':
+                os.remove(value)
+            elif key == 'clustercount':
+                os.remove(value)
+            elif key == 'clonescounted':
                 os.remove(value)
             elif key == 'clonenseqfasta':
                 os.remove(value)
-            elif key == 'clonenseqfasta':
+            elif key == 'clonesmergedfasta':
+                os.remove(value)
+            elif key == 'clonescountedmerged':
                 os.remove(value)
             elif key == 'tabwithdescription':
                 os.remove(value)
-            # shutil.rmtree(self.out + '_picked')
-
+            elif key == 'clonescountedfiltered':
+                os.remove(value)
+            elif key == 'blastoutput':
+                os.remove(value)
+            elif key == 'blastoutputnohashfilteredfasta':
+                os.remove(value)
+            shutil.rmtree(self.out + '_picked', ignore_errors=True)
+            filelist = [f for f in os.listdir(self.outputfolder) if f.startswith(self.chromosomename)]
+            for f in filelist:
+                os.remove(os.path.join(self.outputfolder, f))
         return 0
