@@ -7,12 +7,13 @@ import sys
 from pyinteraseq_inputcheck import InputCheckMapping
 from multiprocessing import Pool
 import traceback
-
+import warnings
 
 class BlastNlucleotide(InputCheckMapping):
 
     def __init__(self, optparseinstance):
         InputCheckMapping.__init__(self, optparseinstance)
+        warnings.filterwarnings("ignore")
         self.out_lines = []
         self.temp_line = ''
         self.df1 = None
@@ -23,6 +24,16 @@ class BlastNlucleotide(InputCheckMapping):
         self.dbid = os.path.basename(self.fastasequence.split('/')[-1])
         self.path_multiblastn = os.path.dirname(os.path.realpath(__file__)) + '/pyinteraseq_multblastn.py'
         self.pool = Pool(processes=int(self.thread))
+        self.df = None
+        self.df2 = None
+        self.dfOp = None
+        self.dfMM = None
+        self.dflen = None
+        self.dfstart = None
+        self.dfMerge = None
+        self.dfForw = None
+        self.dfRev = None
+        self.dfMerge2 = None
 
     def fastq2fasta(self, fastq, nameid):
         """
@@ -160,3 +171,90 @@ class BlastNlucleotide(InputCheckMapping):
         else:
             self.filelog.write(msg61)
             return self.out + suffix
+
+    def hashclean(self, blastnout, prefix):
+        """
+        Function to clean hash in blastn 7 format output
+        :param blastnout: Blastn output
+        :param prefix: prefix add to output file
+        :return: path + prefix + '.tab' of new file
+        """
+        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        try:
+            with open(blastnout) as oldfile, open(self.out + prefix + '.tab', 'w') as newfile:
+                for line in oldfile:
+                    if not line.startswith('#'):
+                        newfile.write(line)
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg92)
+            sys.exit(0)
+        else:
+            self.filelog.write(msg93)
+            return self.out + prefix + '.tab'
+
+    def blastnfiltering(self, blastnout):
+        """
+        Function that takes as input blastn no hash created with function hashclean and filter out , 1 opengap,
+         5 %of mismatch
+        :param blastnout:
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        try:
+            self.df = pd.read_csv(blastnout, sep='\t', header=None,
+                                  names=['seq', 'chr', 'percmatch', 'length', 'mismatch', 'op', 'cstart', 'cend',
+                                         'start', 'end', 'evalue', 'bitscore', 'nseq'])
+            self.filelog.write(msg62 + str(len(self.df)))
+            # filter open gap
+            self.dfOp = self.df[(self.df.op <= int(self.opengap))]
+            self.filelog.write(msg63 + str(len(self.dfOp)))
+            # trasform mismatch in percentage of mismatch using clone length
+            self.dfOp['pmismatch'] = (self.dfOp.mismatch.div(self.dfOp.length).mul(100))
+            # trasform into numeric field
+            self.dfOp[['pmismatch']].apply(pd.to_numeric)
+            # filter on percentage of mismatch
+            self.dfMM = self.dfOp[(self.dfOp['pmismatch'] < float(self.mismatch))]
+            self.filelog.write(msg64 + str(len(self.dfMM)))
+            # lenght filtering
+            self.dflen = self.dfMM[(self.dfMM.length >= int(self.cloneslength))]
+            self.filelog.write(msg65 + str(len(self.dflen)))
+            # filter in start clone
+            self.dfstart = self.dflen[(self.dflen.cstart <= 1)]
+            # drop duplicate
+            self.dfstart = self.dfstart.drop_duplicates(subset='seq', keep=False)
+            # self.dfstart.to_csv(self.out + '_fileforenriched.tab', header=None, sep='\t', index=False)
+            self.filelog.write(msg66 + str(len(self.dfstart)))
+            if self.sequencingtype == 'Paired-End':
+                # split field seq in two columns
+                self.dfstart['read'], self.dfstart['seqid'] = self.dfstart['seq'].str.split(':', 2).str[0:2].str
+                # split into two df read1 and read2
+                self.df1 = self.dfstart[(self.dfstart['read'] == 'seq1')]
+                self.df2 = self.dfstart[(self.dfstart['read'] == 'seq2')]
+                self.df1['nread'] = self.df1['seq'].str.split(':', 2).str[2]
+                self.df2['nread'] = self.df2['seq'].str.split(':', 2).str[2]
+                # merge df
+                self.dfMerge = pd.merge(self.df1, self.df2, on='nread')
+                # write output
+                self.dfForw = self.dfMerge[['seq_x', 'nseq_x']]
+                self.dfRev = self.dfMerge[['seq_y', 'nseq_y']]
+                self.dfForw = self.dfForw.rename(columns={'seq_x': 'seq', 'nseq_x': 'nseq'})
+                self.dfRev = self.dfRev.rename(columns={'seq_y': 'seq', 'nseq_y': 'nseq'})
+                self.dfMerge2 = self.dfForw.append(self.dfRev, ignore_index=True)
+                self.dfMerge2[['seq', 'nseq']].to_csv(self.out + '_filtered_paired.tab', header=None, sep='\t',
+                                                      index=False)
+                self.dfMerge.to_csv(self.out + '_filtered_paired_complete.tab', header=None, sep='\t', index=False)
+                return self.out + '_filtered_paired.tab'
+            elif self.sequencingtype == 'Single-End':
+                self.dfstart.to_csv(self.out + '_filtered_single_complete.tab', header=None, sep='\t', index=False)
+                self.dfstart[['seq', 'nseq']].to_csv(self.out + '_filtered_single.tab', header=None, sep='\t',
+                                                     index=False)
+                return self.out + '_filtered_single.tab'
+        except Warning:
+            self.filelog.write('\nWarning')
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg102)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg103)

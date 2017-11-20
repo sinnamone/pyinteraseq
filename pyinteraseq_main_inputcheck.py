@@ -5,7 +5,7 @@ from pytinteraseq_domains_definition import *
 from pyinteraseq_genomefileparsing import *
 
 
-parser = optparse.OptionParser(usage='python %prog Main PyInteract', version='1.0',)
+parser = optparse.OptionParser(usage='python %prog pyinteraseq_main_inputcheck.py', version='1.0',)
 parser.add_option('--readforward', action="store", dest="readforward", default=None,
                   help='Read dataset input forward')
 parser.add_option('--readreverse', action="store", dest="readreverse", default=None,
@@ -62,8 +62,6 @@ reference_opts = optparse.OptionGroup(
     )
 reference_opts.add_option('--minclonelength', action="store", dest="minclonelength", default='100',
                           help='Minumum clones length.')
-reference_opts.add_option('--overlapintersect', action="store", dest="overlapintersect", type="float",
-                          default=0.7, help='Parameters -f of bedtools intersect.')
 reference_opts.add_option('--thread', action="store", dest="thread", default='1',
                           help='Number of thread.')
 parser.add_option_group(reference_opts)
@@ -72,10 +70,6 @@ options, args = parser.parse_args()
 
 if __name__ == '__main__':
     DictInfo = dict()
-    # DictFile = dict()
-    # outformat6 = '6 sseqid sstart send qseqid score sstrand'
-    # outformat7 = '7 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore sseq'
-    # MergeFileList = []
     if options.readreverse is not None:
         if (options.readforwardtype == "fastq") and (options.readreversetype == "fastq"):
             DictInfo.update({

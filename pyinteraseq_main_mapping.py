@@ -1,8 +1,7 @@
 import optparse
 from pyinteraseq_mapping import *
-from pytinteraseq_domains_definition import *
 
-parser = optparse.OptionParser(usage='python %prog Main PyInteract', version='1.0',)
+parser = optparse.OptionParser(usage='python %prog pyinteraseq_main_mapping.py', version='1.0',)
 parser.add_option('--readforwardtrimmed', action="store", dest="readforwardtrimmed", default=None,
                   help='Read dataset input forward')
 parser.add_option('--readreversetrimmed', action="store", dest="readreversetrimmed", default=None,
@@ -36,28 +35,30 @@ reference_opts.add_option('--annotation', action="store", dest="annotation", def
                           help='Annotation File(.gff|.bed)')
 reference_opts.add_option('--chromosomename', action="store", dest="chromosomename", default=None,
                           help='Chromosome Name.(NC_XXXX)')
-parser.add_option_group(reference_opts)
-
-parser.add_option_group(query_opts)
-
-reference_opts = optparse.OptionGroup(
-    parser, 'Advanced Options',
-    'Options for advanced analysis.',
-    )
-reference_opts.add_option('--minclonelength', action="store", dest="minclonelength", default='100',
-                          help='Minumum clones length.')
-reference_opts.add_option('--overlapintersect', action="store", dest="overlapintersect", type="float",
-                          default=0.7, help='Parameters -f of bedtools intersect.')
 reference_opts.add_option('--thread', action="store", dest="thread", default='1',
                           help='Number of thread.')
 parser.add_option_group(reference_opts)
+
+advance_opts = optparse.OptionGroup(
+    parser, 'Advanced Options',
+    'Options for advanced analysis.',
+    )
+advance_opts.add_option('--minclonelength', action="store", dest="minclonelength", default='100',
+                        help='Minumum clones length.')
+advance_opts.add_option('--overlapintersect', action="store", dest="overlapintersect", type="float",
+                        default=0.7, help='Parameters -f of bedtools intersect.')
+advance_opts.add_option('--opengap', action="store", dest="opengap", type="int",
+                        default=1, help='Open-gap allowed.')
+advance_opts.add_option('--mismatch', action="store", dest="mismatch", type="float",
+                        default=3.0, help='Percentage of Mismatch allowed.')
+parser.add_option_group(advance_opts)
+
 
 options, args = parser.parse_args()
 
 if __name__ == '__main__':
     DictInfo = dict()
     DictFile = dict()
-    outformat6 = '6 sseqid sstart send qseqid score sstrand'
     outformat7 = '7 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore sseq'
     MergeFileList = []
     if options.readforwardtrimmedtype == 'fastq':
@@ -116,60 +117,8 @@ if __name__ == '__main__':
             outputformat=outformat7,
             suffix='_blastn.txt')
     # Clean output of hash
-    DictInfo["blastoutputnohash"] = DomainsDefinition(optparseinstance=options).hashclean(
+    DictInfo["blastoutputnohash"] = BlastNlucleotide(optparseinstance=options).hashclean(
         blastnout=DictInfo["blastoutput"], prefix="_blastn_nohash")
     # Filter reads steps (NO open-gaps, mismatch)
-    DictInfo["blastoutputnohashfiltered"] = DomainsDefinition(optparseinstance=options).blastnfiltering(
+    DictInfo["blastoutputnohashfiltered"] = BlastNlucleotide(optparseinstance=options).blastnfiltering(
         blastnout=DictInfo["blastoutputnohash"])
-    # Conversion Filter Blastn Table in Fasta
-    DictInfo["blastoutputnohashfilteredfasta"] = BlastNlucleotide(optparseinstance=options).tab2fasta(
-        tabular=DictInfo["blastoutputnohashfiltered"], prefixoutput="_blastnfiltered")
-    # Clustering steps calling script Pick_otus
-    DictInfo["clustering"] = DomainsDefinition(optparseinstance=options).clustering(
-        blastnout=DictInfo["blastoutputnohashfilteredfasta"], prefixoutput="_blastnfiltered")
-    # Pick most representative sequence for each cluster
-    DictInfo["pickedreads"] = DomainsDefinition(optparseinstance=options).pickrepseq(
-        pickotus=DictInfo["clustering"], fasta=DictInfo["blastoutputnohashfilteredfasta"])
-    # Sed function
-    DictInfo["pickedreadscleand"] = DomainsDefinition(optparseinstance=options).pysed(
-        DictInfo["pickedreads"], '_clean.fasta', '-', '')
-    # Mapping most representative clone against genome to identify which gene are intersted
-    DictInfo["blastedclones"] = BlastNlucleotide(optparseinstance=options).callmultiblastn(
-        fasta=DictInfo["fasta"],
-        multifasta=DictInfo["pickedreadscleand"],
-        outputformat=outformat6,
-        suffix='_blastnclones.tab')
-    # Parser that take as input blastn format 6 and create a standard bed6
-    DictInfo["bedparsed"] = DomainsDefinition(optparseinstance=options).bedparsing(DictInfo["blastedclones"])
-    # Filtering the output of Bedtools annotate (call inside the function) using a flot percentage of overlap
-    DictInfo["clonesannotated"] = DomainsDefinition(optparseinstance=options).bedtoolsannotatefiltering(
-        # Bedtools annotate to identify the clones inside the CDS
-        DomainsDefinition(optparseinstance=options).bedtoolsannotate(
-            DictInfo["bedparsed"], DictInfo["annotation"]), options.overlapintersect)
-    # Create the count file for each intervals
-    DictInfo["clustercount"] = DomainsDefinition(optparseinstance=options).clonescount(
-        DictInfo["clustering"])
-    # Merge BED6 with count table
-    DictInfo["clonescounted"] = DomainsDefinition(optparseinstance=options).mergingcount(
-        DictInfo["bedparsed"], DictInfo["clustercount"])
-    #  Filtering the domains that are covered less than 10 clones
-    DictInfo["clonescountedfiltered"] = DomainsDefinition(optparseinstance=options).filteringclonescount(
-        DictInfo["clonescounted"], 10)
-    # clone merge to get domains
-    DictInfo["clonescountedmerged"] = DomainsDefinition(optparseinstance=options).pybedtoolsmerge(
-        DictInfo["clonescountedfiltered"])
-    # Get fasta from intervels
-    DictInfo["clonesmergedfasta"] = DomainsDefinition(optparseinstance=options).pybedtoolstofasta(
-        pybedtoolsmergeoutput=DictInfo["clonescountedmerged"], fastqsequence=DictInfo["fasta"])
-    # Add description present in ptt 0.7 is the overlap of intersect cds
-    DictInfo["tabwithdescription"] = DomainsDefinition(optparseinstance=options).adddescription(
-        clonesmerged=DictInfo["clonescountedmerged"], annotation=DictInfo["annotation"],
-        percthr=options.overlapintersect)
-    # Conversion Fasta ==>Tabular
-    DictInfo["clonenseqfasta"] = BlastNlucleotide(optparseinstance=options).fasta2tabular(
-        imp=DictInfo["clonesmergedfasta"], prefix='_clonestabular')
-    # Add sequence to output table
-    DictFile["tabwithsequence"] = DomainsDefinition(optparseinstance=options).addsequence(
-        outputfromdescription=DictInfo["tabwithdescription"], outputfasta2tab=DictInfo["clonenseqfasta"])
-    # print DictInfo
-    # DomainsDefinition(optparseinstance=options).cleantemporaryfilesinglend(DictInfo)

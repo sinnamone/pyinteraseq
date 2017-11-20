@@ -6,7 +6,7 @@ import optparse
 import sys
 from output_message import *
 
-parser = optparse.OptionParser(usage='python %prog Multiblastn.py', version='1.0',)
+parser = optparse.OptionParser(usage='python %prog pyinteraseq_multiblastn.py', version='1.0',)
 parser.add_option('--referencefasta', action="store", dest="referencefasta", default=None,
                   help='Genome sequence fasta')
 parser.add_option('--multifastasequence', action="store", dest="multifastasequence", default=None,

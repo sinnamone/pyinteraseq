@@ -62,6 +62,8 @@ reference_opts = optparse.OptionGroup(
     )
 reference_opts.add_option('--minclonelength', action="store", dest="minclonelength", default='100',
                           help='Minumum clones length.')
+reference_opts.add_option('--overlapintersect', action="store", dest="overlapintersect", type="float",
+                          default=0.7, help='Parameters -f of bedtools intersect.')
 reference_opts.add_option('--thread', action="store", dest="thread", default='1',
                           help='Number of thread.')
 parser.add_option_group(reference_opts)
@@ -78,7 +80,7 @@ if __name__ == '__main__':
         if (options.readforwardtype == "fastq") and (options.readreversetype == "fastq"):
             DictInfo.update({
                 "LogFilePath": TrimmingPaired(optparseinstance=options).logfilecreation(),
-                "CutadaptPath": TrimmingSingle(optparseinstance=options).cutadaptchech(),
+                "CutadaptPath": TrimmingSingle(optparseinstance=options).cutadaptcheck(),
                 "PickOtus": TrimmingSingle(optparseinstance=options).pickotuscheck(),
                 "PickRepSeq": TrimmingSingle(optparseinstance=options).pickrepseqcheck(),
                 "LogInfoAppended": TrimmingPaired(optparseinstance=options).inputinformationappen()
@@ -86,7 +88,7 @@ if __name__ == '__main__':
     else:
         DictInfo.update({
             "LogFilePath": TrimmingSingle(optparseinstance=options).logfilecreation(),
-            "CutadaptPath": TrimmingSingle(optparseinstance=options).cutadaptchech(),
+            "CutadaptPath": TrimmingSingle(optparseinstance=options).cutadaptcheck(),
             "PickOtus": TrimmingSingle(optparseinstance=options).pickotuscheck(),
             "PickRepSeq": TrimmingSingle(optparseinstance=options).pickrepseqcheck(),
             "LogInfoAppended": TrimmingSingle(optparseinstance=options).inputinformationappen()
@@ -106,14 +108,14 @@ if __name__ == '__main__':
         # Conversion Fastq==>Fasta Paired-end
         if options.readreverse is not None:
             DictInfo["FastaReadsForward"] = BlastNlucleotide(optparseinstance=options).fastq2fasta(
-                fastq=DictInfo["Trimmed5paired"][0], nameid="forward")
+                fastq=DictInfo["Trimmed5paired"][0], nameid="_forward")
             # Conversion Fastq<==>Fasta Paired-end
             DictInfo["FastaReadsReverse"] = BlastNlucleotide(optparseinstance=options).fastq2fasta(
-                fastq=DictInfo["Trimmed5paired"][1], nameid="reverse")
+                fastq=DictInfo["Trimmed5paired"][1], nameid="_reverse")
         else:
             # Conversion Fastq==>Fasta Single-end
             DictInfo["FastaReadsForward"] = BlastNlucleotide(optparseinstance=options).fastq2fasta(
-                fastq=DictInfo["Trimmed5single"], nameid="forward")
+                fastq=DictInfo["Trimmed5single"], nameid="_forward")
         # Conversion Fasta==>Tabular forward
         DictInfo["TabularReadsForward"] = BlastNlucleotide(optparseinstance=options).fasta2tabular(
             imp=DictInfo["FastaReadsForward"], prefix="forward")
@@ -123,11 +125,11 @@ if __name__ == '__main__':
                 imp=DictInfo["FastaReadsReverse"], prefix="reverse")
         # Rename Sequence ID forward
         DictInfo["TabularRenamedForward"] = BlastNlucleotide(optparseinstance=options).seqrename(
-            DictInfo["TabularReadsForward"], "forward")
+            tabular=DictInfo["TabularReadsForward"], readirection="forward")
         # Renanme Sequence ID reverse
         if options.readreverse is not None:
             DictInfo["TabularRenamedReverse"] = BlastNlucleotide(optparseinstance=options).seqrename(
-                DictInfo["TabularReadsReverse"], "reverse")
+                tabular=DictInfo["TabularReadsReverse"], readirection="reverse")
     # Trimming steps for fasta input
     elif options.readforwardtype == 'fasta':
         # Trimming paired end fasta
@@ -148,13 +150,19 @@ if __name__ == '__main__':
                 imp=DictInfo["Trimmed5single"], prefix="forward")
         # Rename Sequence ID forward
         DictInfo["TabularRenamedForward"] = BlastNlucleotide(optparseinstance=options).seqrename(
-            DictInfo["FastaReadsForward"], "forward")
+            tabular=DictInfo["FastaReadsForward"], readirection="forward")
         # Rename Sequence ID reverse
         if options.readreverse is not None:
             DictInfo["TabularRenamedReverse"] = BlastNlucleotide(optparseinstance=options).seqrename(
-                DictInfo["FastaReadsReverse"], "reverse")
+                tabular=DictInfo["FastaReadsReverse"], readirection="reverse")
         DictInfo["FastaRenamedForward"] = BlastNlucleotide(optparseinstance=options).tab2fasta(
             DictInfo["TabularRenamedForward"], "_forward")
+
+
+
+
+
+
     # Mapping steps start here
     # Conversion Tabular <==>Fasta forward
     DictInfo["FastaRenamedForward"] = BlastNlucleotide(optparseinstance=options).tab2fasta(
@@ -181,19 +189,19 @@ if __name__ == '__main__':
             suffix='_blastn.txt')
     # Clean output of hash
     DictInfo["blastoutputnohash"] = DomainsDefinition(optparseinstance=options).hashclean(
-        DictInfo["blastoutput"], "_blastn_nohash")
+        blastnout=DictInfo["blastoutput"], prefix="_blastn_nohash")
     # Filter reads steps (NO open-gaps, mismatch)
     DictInfo["blastoutputnohashfiltered"] = DomainsDefinition(optparseinstance=options).blastnfiltering(
-        DictInfo["blastoutputnohash"])
+        blastnout=DictInfo["blastoutputnohash"])
     # Conversion Filter Blastn Table in Fasta
     DictInfo["blastoutputnohashfilteredfasta"] = BlastNlucleotide(optparseinstance=options).tab2fasta(
-        DictInfo["blastoutputnohashfiltered"], "_blastnfiltered")
+        tabular=DictInfo["blastoutputnohashfiltered"], prefixoutput="_blastnfiltered")
     # Clustering steps calling script Pick_otus
     DictInfo["clustering"] = DomainsDefinition(optparseinstance=options).clustering(
-        DictInfo["blastoutputnohashfilteredfasta"])
+        blastnout=DictInfo["blastoutputnohashfilteredfasta"], prefixoutput="_blastnfiltered")
     # Pick most representative sequence for each cluster
     DictInfo["pickedreads"] = DomainsDefinition(optparseinstance=options).pickrepseq(
-        DictInfo["clustering"], DictInfo["blastoutputnohashfilteredfasta"])
+        pickotus=DictInfo["clustering"], fasta=DictInfo["blastoutputnohashfilteredfasta"])
     # Sed function
     DictInfo["pickedreadscleand"] = DomainsDefinition(optparseinstance=options).pysed(
         DictInfo["pickedreads"], '_clean.fasta', '-', '')
@@ -224,10 +232,11 @@ if __name__ == '__main__':
         DictInfo["clonescountedfiltered"])
     # Get fasta from intervels
     DictInfo["clonesmergedfasta"] = DomainsDefinition(optparseinstance=options).pybedtoolstofasta(
-        DictInfo["clonescountedmerged"], DictInfo["fasta"])
+        pybedtoolsmergeoutput=DictInfo["clonescountedmerged"], fastqsequence=DictInfo["fasta"])
     # Add description present in ptt 0.7 is the overlap of intersect cds
     DictInfo["tabwithdescription"] = DomainsDefinition(optparseinstance=options).adddescription(
-        DictInfo["clonescountedmerged"], DictInfo["annotation"], 0.7)
+        clonesmerged=DictInfo["clonescountedmerged"], annotation=DictInfo["annotation"],
+        percthr=options.overlapintersect)
     # Conversion Fasta ==>Tabular
     DictInfo["clonenseqfasta"] = BlastNlucleotide(optparseinstance=options).fasta2tabular(
         imp=DictInfo["clonesmergedfasta"], prefix='_clonestabular')

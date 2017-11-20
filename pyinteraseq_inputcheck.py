@@ -7,6 +7,7 @@ from Bio import SeqIO
 
 
 class InputCheck(object):
+
     def __init__(self, optparseinstance):
         # import instance with all input flag
         self.inputistance = optparseinstance
@@ -238,6 +239,7 @@ class InputCheck(object):
 
 
 class InputCheckMapping(object):
+
     def __init__(self, optparseinstance):
         # import instance with all input flag
         self.inputistance = optparseinstance
@@ -246,6 +248,8 @@ class InputCheckMapping(object):
         self.count = 0
         self.filelog = None
         self.cloneslength = self.inputistance.minclonelength
+        self.mismatch = self.inputistance.mismatch
+        self.opengap = self.inputistance.opengap
         # check for forward reads
         if self.inputistance.readforwardtrimmed is not None:
             self.readforward = self.inputistance.readforwardtrimmed
@@ -277,6 +281,74 @@ class InputCheckMapping(object):
         else:
             sys.stdout.write(msg4)
             sys.exit(0)
+        # check output folder
+        if self.inputistance.outputfolder is not None:
+            if self.inputistance.outputfolder.endswith('/') is True:
+                self.outputfolder = self.inputistance.outputfolder
+            else:
+                self.outputfolder = self.inputistance.outputfolder + '/'
+        else:
+            sys.stdout.write(msg9)
+            sys.exit(0)
+        # check output id
+        if self.inputistance.outputid is not None:
+            self.outputid = self.inputistance.outputid
+        else:
+            sys.stdout.write(msg10)
+            sys.exit(0)
+        # check fasta sequence
+        if self.inputistance.fastasequence is not None:
+            self.fastasequence = self.inputistance.fastasequence
+        else:
+            sys.stdout.write(msg11)
+            sys.exit(0)
+        # check annotation
+        if self.inputistance.annotation is not None:
+            self.annotation = self.inputistance.annotation
+        else:
+            sys.stdout.write(msg12)
+            sys.exit(0)
+        # check if the name of chromosome was given by the user
+        if self.inputistance.chromosomename is not None:
+            self.chromosomename = self.inputistance.chromosomename
+        else:
+            sys.stdout.write(msg87)
+            sys.exit(0)
+        self.out = self.outputfolder+self.outputid
+        # check if log file is already created
+        if self.inputistance.log is None:
+            if os.access(self.outputfolder, os.W_OK) is True:
+                self.filelog = open(self.outputfolder + self.outputid + ".log", "w")
+                self.filelog.close()
+            else:
+                sys.stdout.write(msg13)
+                sys.exit(1)
+
+    def fastqcount(self, fastq, rtype):
+        """
+        Function to count the number of sequence
+        :param fastq:
+        :param rtype:
+        :return:
+        """
+        self.count = 0
+        for record in SeqIO.parse(fastq, rtype):
+            self.count = self.count + 1
+        return str(self.count)
+
+class InputCheckDomainDefinition(object):
+
+    def __init__(self, optparseinstance):
+        # import instance with all input flag
+        self.inputistance = optparseinstance
+        # put all under this
+        self.thread = self.inputistance.thread
+        self.count = 0
+        self.filelog = None
+        self.cloneslength = self.inputistance.minclonelength
+
+
+
         # check output folder
         if self.inputistance.outputfolder is not None:
             if self.inputistance.outputfolder.endswith('/') is True:
