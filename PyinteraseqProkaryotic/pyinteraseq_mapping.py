@@ -9,6 +9,7 @@ from multiprocessing import Pool
 import traceback
 import warnings
 
+
 class BlastNlucleotide(InputCheckMapping):
 
     def __init__(self, optparseinstance):

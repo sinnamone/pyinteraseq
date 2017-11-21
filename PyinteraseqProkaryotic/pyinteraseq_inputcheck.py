@@ -3,7 +3,10 @@ import sys
 import os
 import datetime
 import subprocess
-from Bio import SeqIO
+from Bio import SeqIO, bgzf
+# Used to convert the fastq stream into a file handle
+from io import StringIO
+from gzip import open as gzopen
 
 
 class InputCheck(object):
@@ -110,6 +113,16 @@ class InputCheck(object):
         self.pick_otus = None
         self.pick_rep_set = None
         self.samtools = None
+
+    # def gzipopen(self, readinput, readinputype):
+    #     if readinputype == 'fastq.gz':
+    #         records = SeqIO.parse(
+    #             gzopen(readinput, "rt"),
+    #             format="fastq")
+    #
+    #         with bgzf.BgzfWriter(readinput.str.split('.')[0] + '.fastq', "wb") as outgz:
+    #             SeqIO.write(sequences=records, handle=outgz, format="fastq")
+    #     return readinput.str.split('.')[0] + '.fastq'
 
     def logfilecreation(self):
         """

@@ -1,7 +1,5 @@
 import optparse
 from pyinteraseq_trimming import *
-from pyinteraseq_mapping import *
-from pytinteraseq_domains_definition import *
 from pyinteraseq_genomefileparsing import *
 
 
@@ -10,9 +8,9 @@ parser.add_option('--readforward', action="store", dest="readforward", default=N
                   help='Read dataset input forward')
 parser.add_option('--readreverse', action="store", dest="readreverse", default=None,
                   help='Read dataset input reverse',)
-parser.add_option('--readforwardtype', type='choice', choices=['fastq', 'fasta'], default=None,
+parser.add_option('--readforwardtype', type='choice', choices=['fastq', 'fasta', 'fastq.gz', 'fasta.gz'], default=None,
                   help='Read dataset input forward')
-parser.add_option('--readreversetype', type='choice', choices=['fastq', 'fasta'], default=None,
+parser.add_option('--readreversetype', type='choice', choices=['fastq', 'fasta', 'fastq.gz', 'fasta.gz'], default=None,
                   help='Read dataset input reverse')
 parser.add_option('--sampletype', type='choice', choices=['genomic', 'selection', 'control'], default=None,
                   help='Select type of dataset')

@@ -7,6 +7,7 @@ import re
 import pybedtools
 import traceback
 import os
+from Bio import SeqIO
 
 
 class DomainsDefinition(InputCheckDomainDefinition):
