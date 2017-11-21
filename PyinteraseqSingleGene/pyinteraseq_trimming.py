@@ -15,7 +15,7 @@ class TrimmingSingle(InputCheck):
         Function for trimming 5' single-end reads
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_trimming.log", "a")
         try:
             subprocess.check_call(['cutadapt', '-g', str(self.primer5forward), '--discard-untrimmed',
                                    '-e', '0.03', '--trim-n', '-m', str(self.cloneslength), '--quiet',
@@ -35,7 +35,7 @@ class TrimmingSingle(InputCheck):
         Function for trimming 3' single-end reads
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_trimming.log", "a")
         try:
             subprocess.check_call(
                 ['cutadapt', '-a', str(self.primer3forward), '--trim-n',
@@ -65,7 +65,7 @@ class TrimmingPaired(InputCheck):
         Trimming 5' paired-end dataset
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_trimming.log", "a")
         try:
             subprocess.check_call(['cutadapt',
                                    '-g', self.primer5forward,
@@ -98,7 +98,7 @@ class TrimmingPaired(InputCheck):
         Trimming 3' paired-end
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_trimming.log", "a")
         try:
             subprocess.check_call(
                 ['cutadapt',

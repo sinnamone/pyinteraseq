@@ -21,8 +21,6 @@ query_opts.add_option('--outputfolder', action="store", dest="outputfolder", def
                       help='Output folder.')
 query_opts.add_option('--outputid', action="store", dest="outputid", default=None,
                       help='Output ID.')
-query_opts.add_option('--log', action="store", dest="log", default=None,
-                      help='Log file.')
 parser.add_option_group(query_opts)
 
 reference_opts = optparse.OptionGroup(
@@ -33,6 +31,8 @@ reference_opts.add_option('--fastasequence', action="store", dest="fastasequence
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
 reference_opts.add_option('--genename', action="store", dest="genename", default=None,
                           help='String with gene name')
+reference_opts.add_option('--thread', action="store", dest="thread", default='1',
+                          help='Number of thread.')
 parser.add_option_group(reference_opts)
 
 advance_opts = optparse.OptionGroup(
@@ -56,6 +56,7 @@ if __name__ == '__main__':
     DictFile = dict()
     outformat7 = '7 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore sseq'
     MergeFileList = []
+    BlastNlucleotide(optparseinstance=options).inputinformationappen()
     if options.readforwardtrimmedtype == 'fastq':
         # Conversion Fastq==>Fasta Paired-end
         if options.readreversetrimmed is not None:

@@ -29,7 +29,7 @@ class GenomeFile(InputCheck):
             self.chromosomelength = len(self.seq_record)
 
     def genomefilewrite(self):
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_trimming.log", "a")
         try:
             with open(self.outputfolder + self.chromosomename + '.genome', "wb") as self.genome:
                 self.genome.write(self.chromosomename + '\t' + str(self.chromosomelength))
@@ -41,7 +41,7 @@ class GenomeFile(InputCheck):
             return self.outputfolder + self.chromosomename + '.genome'
 
     def fastareference(self):
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_trimming.log", "a")
         try:
             with open(self.outputfolder + self.chromosomename + '.fasta', 'w') as self.ref:
                 for self.seq_record in SeqIO.parse(self.fastasequence, "fasta"):
@@ -71,7 +71,7 @@ class AnnotationFile(GenomeFile):
         self.df2 = None
 
     def annotationbuild(self):
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_trimming.log", "a")
         try:
             self.dfAnno = pd.read_csv(self.annotation, sep="\t", header=2)
             self.aux = self.dfAnno['Location'].apply(lambda x: x.split('..'))

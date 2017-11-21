@@ -43,7 +43,7 @@ class BlastNlucleotide(InputCheckMapping):
         :param nameid: output name
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
         try:
             SeqIO.convert(fastq, 'fastq', self.out + nameid + '.fasta', 'fasta')
         except traceback:
@@ -61,7 +61,7 @@ class BlastNlucleotide(InputCheckMapping):
         :param prefix: prefix to add at converted file
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
         try:
             SeqIO.convert(imp, 'fasta', self.out + prefix + '.tab', 'tab')
         except traceback:
@@ -79,7 +79,7 @@ class BlastNlucleotide(InputCheckMapping):
         :param readirection: "forward" or "reverse"
         :return: path + name + _1_newid.tab
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
         try:
             if readirection == "forward":
                 self.df1 = pd.read_csv(tabular, header=None, sep='\t')
@@ -105,7 +105,7 @@ class BlastNlucleotide(InputCheckMapping):
         :param prefixoutput: prefix to append
         :return: path + idanalysis + prefix + .fasta
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
         try:
             with open(tabular, 'r') as f:
                 with open(self.out + prefixoutput + '.fasta', 'w') as f_out:
@@ -129,7 +129,7 @@ class BlastNlucleotide(InputCheckMapping):
         :param readlist: list with files to append
         :return: path + idanalysis + _con.fasta
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
         try:
             with open(self.out + '_con.fasta', 'w') as outfile:
                 for fname in readlist:
@@ -154,17 +154,17 @@ class BlastNlucleotide(InputCheckMapping):
         :param suffix: String added to outputfile
         :return: blastn output
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
         try:
             subprocess.check_call(['python', self.path_multiblastn,
                                    '--referencefasta', fasta,
                                    '--multifastasequence', multifasta,
-                                   '--dbname', self.chromosomename,
+                                   '--dbname', self.genename,
                                    '--outputfolder', self.outputfolder,
                                    '--outputid', self.outputid + suffix,
                                    '--thread', self.thread,
                                    '--outformat', outputformat,
-                                   '--log', self.outputfolder + self.outputid + ".log"],
+                                   '--log', self.outputfolder + self.outputid + "_mapping.log"],
                                   stderr=self.filelog, stdout=self.filelog)
         except subprocess.CalledProcessError:
             self.filelog.write(msg60)
@@ -180,7 +180,7 @@ class BlastNlucleotide(InputCheckMapping):
         :param prefix: prefix add to output file
         :return: path + prefix + '.tab' of new file
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
         try:
             with open(blastnout) as oldfile, open(self.out + prefix + '.tab', 'w') as newfile:
                 for line in oldfile:
@@ -201,7 +201,7 @@ class BlastNlucleotide(InputCheckMapping):
         :param blastnout:
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
         try:
             self.df = pd.read_csv(blastnout, sep='\t', header=None,
                                   names=['seq', 'chr', 'percmatch', 'length', 'mismatch', 'op', 'cstart', 'cend',
