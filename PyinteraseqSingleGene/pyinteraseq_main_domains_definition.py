@@ -66,15 +66,16 @@ if __name__ == '__main__':
         bamt=DictInfo["targetbam"])
     #
     if DictInfo["downsampledbam"][0] == "background":
-        DictInfo["coveragetarget"] = DomainsDefinition(optparseinstance=options).depthcount(
+        DictInfo["coveragebackground"] = DomainsDefinition(optparseinstance=options).depthcount(
             bam=DictInfo["downsampledbam"][1], prefix=DictInfo["downsampledbam"][0])
         DictInfo["coveragetarget"] = DomainsDefinition(optparseinstance=options).depthcount(
             bam=DictInfo["targetbam"], prefix="target")
     else:
         DictInfo["coveragetarget"] = DomainsDefinition(optparseinstance=options).depthcount(
             bam=DictInfo["downsampledbam"][1], prefix=DictInfo["downsampledbam"][0])
-        DictInfo["coveragetarget"] = DomainsDefinition(optparseinstance=options).depthcount(
+        DictInfo["coveragebackground"] = DomainsDefinition(optparseinstance=options).depthcount(
             bam=DictInfo["backgroundbam"], prefix="background")
-
+    DomainsDefinition(optparseinstance=options).intervaldata(
+        bedb=DictInfo["coveragebackground"], bedt=DictInfo["coveragetarget"])
 
 

@@ -104,7 +104,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         Computing average depth BAM file
         :param bam:
         :param lung:
-        :return:
+        :return: file path and name
         """
         self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
         try:
@@ -128,7 +128,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param dept:
         :param bamb:
         :param bamt:
-        :return:
+        :return: flag, file path and name
         """
         self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
         try:
@@ -155,7 +155,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         Coverage computation
         :param bam: bam file
         :param prefix: id to append to output
-        :return:
+        :return: file path and name
         """
         self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
         try:
@@ -168,8 +168,41 @@ class DomainsDefinition(InputCheckDomainDefinition):
             # save
             self.df2.to_csv(self.out + prefix + '.tsv', sep="\t", header=None, index=False)
         except traceback:
-            self.filelog.write(msg129)
+            self.filelog.write(msg131)
             sys.exit(1)
         else:
-            self.filelog.write(msg130)
+            self.filelog.write(msg132)
             return self.out + prefix + '.tsv'
+
+    def intervaldata(self, bedb, bedt):
+        """
+        Get intervals with positive coverage
+        :param bedb: bed with background coverage
+        :param bedt: bed with target coverage
+        :return: file path and name
+        """
+        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        try:
+            # import background
+            self.df1 = pd.read_csv(bedb, sep='\t', header=None, names=['CHR_1', 'POS_1', 'COV_1'])
+            # import target
+            self.df2 = pd.read_csv(bedt, sep='\t', header=None, names=['CHR_2', 'POS_2', 'COV_2'])
+            # concat
+            self.df3 = pd.concat([self.df1, self.df2], axis=1)
+            # remove column
+            self.df3.pop('CHR_2')
+            # remove column
+            self.df3.pop('POS_2')
+            # substraction coverage
+            self.df3['score'] = self.df3.COV_2 - self.df3.COV_1
+            # filtering
+            self.df3 = self.df3[(self.df3.COV_1 != 0) & (self.df3.score > 0)]
+            # get tsv with intervals
+            self.df3.to_csv(self.out + '_intervals.tsv', index=False, header=False, sep='\t')
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg133)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg134)
+            return self.out + '_intervals.tsv'
