@@ -4,6 +4,7 @@ import os
 import datetime
 import subprocess
 from Bio import SeqIO
+import traceback
 # bgzf
 # Used to convert the fastq stream into a file handle
 # from io import StringIO
@@ -482,7 +483,107 @@ class InputCheckMapping(object):
         return str(self.count)
 
 
+class InputCheckDomainDefinition(object):
+
+    def __init__(self, optparseinstance):
+        # import instance with all input flag
+        self.inputistance = optparseinstance
+        self.count = 0
+        self.filelog = None
+        self.genome = None
+        self.backgroundmappingoutput = self.inputistance.backgroundmappingoutput
+        self.targetmappingoutput = self.inputistance.targetmappingoutput
+        # check output folder
+        if self.inputistance.outputfolder is not None:
+            if self.inputistance.outputfolder.endswith('/') is True:
+                self.outputfolder = self.inputistance.outputfolder
+            else:
+                self.outputfolder = self.inputistance.outputfolder + '/'
+        else:
+            sys.stdout.write(msg9)
+            sys.exit(1)
+        # check output id
+        if self.inputistance.outputid is not None:
+            self.outputid = self.inputistance.outputid
+            self.out = self.outputfolder + self.outputid
+        else:
+            sys.stdout.write(msg10)
+            sys.exit(1)
+        # check fasta sequence
+        if self.inputistance.fastasequence is not None:
+            self.fastasequence = self.inputistance.fastasequence
+        else:
+            sys.stdout.write(msg11)
+            sys.exit(1)
+        if self.inputistance.genename is None:
+            sys.stdout.write(msg11)
+            sys.exit(1)
+        else:
+            self.genename = self.inputistance.genename
 
 
+    # def fastqcount(self, fastq, rtype):
+    #     """
+    #     Function to count the number of sequence
+    #     :param fastq:
+    #     :param rtype:
+    #     :return:
+    #     """
+    #     self.count = 0
+    #     for record in SeqIO.parse(fastq, rtype):
+    #         self.count = self.count + 1
+    #     return str(self.count)
 
+    def inputinformationappen(self):
+        """
+        Log compilation. Call all the previous functions
+        :return:
+        """
 
+        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "w")
+        self.filelog.write(datetime.datetime.now().ctime() + '\n')
+        self.filelog.write(msg14)
+        self.filelog.write(msg114 + self.backgroundmappingoutput)
+        self.filelog.write(msg115 + self.targetmappingoutput)
+        self.filelog.write(msg115 + self.targetmappingoutput)
+        self.filelog.write(msg116 + self.outputid)
+        self.filelog.write(msg117 + self.outputid)
+        self.filelog.close()
+        return True
+
+    def contafasta(self, ref):
+        """
+        Count gene lenght
+        :param ref:
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        try:
+            for seq_record in SeqIO.parse(ref, "fasta"):
+                leng = len(seq_record)
+                return leng
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg121)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg122)
+
+    def genomefile(self):
+        """
+        Function for the creation of genome file
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        try:
+            ln = self.contafasta(ref=self.fastasequence)
+            self.genome = open(self.outputfolder + self.genename + ".genome", "w")
+            self.genome.write(self.genename + '\t' + '1\t' + str(ln))
+            self.genome.close()
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg123)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg124)
+            return self.outputfolder + self.genename + ".genome"
