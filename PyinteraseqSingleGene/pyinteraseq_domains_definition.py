@@ -60,7 +60,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df2plus['strand'] = self.strandplus
             self.df2minus['strand'] = self.strandminus
             # invert columns
-            self.df3 = self.df2minus[['chr','end','start','seq','strand','length','sub']]
+            self.df3 = self.df2minus[['chr', 'end', 'start', 'seq', 'strand', 'length', 'sub']]
             # rename
             self.df3 = self.df3.rename(columns={'end': 'start', 'start': 'end'})
             #
@@ -206,3 +206,49 @@ class DomainsDefinition(InputCheckDomainDefinition):
         else:
             self.filelog.write(msg134)
             return self.out + '_intervals.tsv'
+
+    def trasposedomains(self, intervals):
+        """
+
+        :param intervals:
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        try:
+            self.df1 = pd.read_csv(intervals, sep="\t", header=None)
+            self.df1[5] = self.df1[1] + 1
+            self.df2 = self.df1[[0, 1, 5]]
+            self.df2[1] = self.df2[1].astype(int)
+            self.df2[5] = self.df2[5].astype(int)
+            self.df2.to_csv(self.out + 'transposedintervals.tsv', sep="\t", header=None, index=False)
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg135)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg136)
+            return self.out + 'transposedintervals.tsv'
+
+    def filtering_domain(self, tsv):
+        """
+        Get intervals domains
+        :param tsv: output from trasposedomains
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        try:
+            a = pybedtools.example_bedtool(tsv)
+            c = a.merge(d=50)
+            self.df1 = pd.read_table(c.fn, sep="\t", header=None)
+            self.df1[3] = self.df1[2] - self.df1[1]
+            self.df2 = self.df1.loc[self.df1[3] > 50]
+            self.df3 = self.df2.loc[self.df2[3] < 1000]
+            self.df3[[0, 1, 2]].to_csv(self.out + '_intevals_domains.txt', sep="\t", header=None, index=False)
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg137)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg138)
+            return self.out + '_intevals_domains.txt'
+

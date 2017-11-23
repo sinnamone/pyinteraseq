@@ -75,7 +75,9 @@ if __name__ == '__main__':
             bam=DictInfo["downsampledbam"][1], prefix=DictInfo["downsampledbam"][0])
         DictInfo["coveragebackground"] = DomainsDefinition(optparseinstance=options).depthcount(
             bam=DictInfo["backgroundbam"], prefix="background")
-    DomainsDefinition(optparseinstance=options).intervaldata(
+    DictInfo["intervalsdata"] = DomainsDefinition(optparseinstance=options).intervaldata(
         bedb=DictInfo["coveragebackground"], bedt=DictInfo["coveragetarget"])
-
+    DictInfo["transpose"] = DomainsDefinition(optparseinstance=options).trasposedomains(
+        intervals=DictInfo["intervalsdata"])
+    DictInfo["filtered"] = DomainsDefinition(optparseinstance=options).filtering_domain(DictInfo["transpose"])
 
