@@ -5,10 +5,6 @@ import datetime
 import subprocess
 from Bio import SeqIO
 import traceback
-# bgzf
-# Used to convert the fastq stream into a file handle
-# from io import StringIO
-# from gzip import open as gzopen
 
 
 class InputCheck(object):
@@ -26,8 +22,10 @@ class InputCheck(object):
         self.readforward = self.inputistance.readforward
         self.readreverse = self.inputistance.readreverse
         self.sequencingtype = None
-        self.readforwardtype = self.inputistance.readforwardtype
-        self.readreversetype = self.inputistance.readreversetype
+        # self.readforwardtype = self.inputistance.readforwardtype
+        # self.readreversetype = self.inputistance.readreversetype
+        self.readforwardtype = None
+        self.readreversetype = None
         self.primer5forward = self.inputistance.primer5forward
         self.primer3forward = self.inputistance.primer3forward
         self.primer5reverse = self.inputistance.primer5reverse
@@ -35,7 +33,7 @@ class InputCheck(object):
         self.fastasequence = self.inputistance.fastasequence
         self.genename = self.inputistance.genename
         # self.outputfolder+self.outputid
-        self.awk = None
+        #self.awk = None
         self.pick_otus = None
         self.pick_rep_set = None
         self.samtools = None
@@ -68,6 +66,19 @@ class InputCheck(object):
         else:
             sys.stdout.write(msg13)
             sys.exit(1)
+
+    def fastatesting(self, seqinput):
+        """
+
+        :param seqinput:
+        :return:
+        """
+        f = open(seqinput, "r")
+        first_line = f.readline().rstrip('\n')
+        if first_line[0] == '@':
+            return "fastq"
+        elif first_line[0] == '>':
+            return "fasta"
 
     def checkreversereads(self, readreverse):
         """
@@ -219,19 +230,6 @@ class InputCheck(object):
         else:
             return self.samtools
 
-    def awkcheck(self):
-        """
-        Function that verify the installation of awk
-        :return: awk path
-        """
-        try:
-            self.awk = subprocess.check_output(['which', 'awk']).split('\n')[0]
-        except subprocess.CalledProcessError:
-            self.filelog.write(msg70)
-            sys.exit(1)
-        else:
-            return self.awk
-
     def fastqcount(self, fastq, rtype):
         """
         Function to count the number of sequence
@@ -261,6 +259,8 @@ class InputCheck(object):
             self.filelog.write(msg18 + self.checkreads(varreads=self.readreverse,
                                                        message=msg3))
             # check type
+            self.readforwardtype = self.fastatesting(self.readforward)
+            self.readreversetype = self.fastatesting(self.readreverse)
             self.filelog.write(msg19 + self.checkreadtype(varformattpye=self.readforwardtype))
             self.filelog.write(msg20 + self.checkreadtype(varformattpye=self.readreversetype))
             # check primers
@@ -521,19 +521,6 @@ class InputCheckDomainDefinition(object):
         else:
             self.genename = self.inputistance.genename
 
-
-    # def fastqcount(self, fastq, rtype):
-    #     """
-    #     Function to count the number of sequence
-    #     :param fastq:
-    #     :param rtype:
-    #     :return:
-    #     """
-    #     self.count = 0
-    #     for record in SeqIO.parse(fastq, rtype):
-    #         self.count = self.count + 1
-    #     return str(self.count)
-
     def inputinformationappen(self):
         """
         Log compilation. Call all the previous functions
@@ -544,7 +531,6 @@ class InputCheckDomainDefinition(object):
         self.filelog.write(datetime.datetime.now().ctime() + '\n')
         self.filelog.write(msg14)
         self.filelog.write(msg114 + self.backgroundmappingoutput)
-        self.filelog.write(msg115 + self.targetmappingoutput)
         self.filelog.write(msg115 + self.targetmappingoutput)
         self.filelog.write(msg116 + self.outputid)
         self.filelog.write(msg117 + self.outputid)

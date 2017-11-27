@@ -1,18 +1,12 @@
 import sys
 import pybedtools
 import pysam
-import os
 import pandas as pd
 import warnings
 import traceback
 from output_message import *
-from Bio import SeqIO
 import subprocess
 from pyinteraseq_inputcheck import InputCheckDomainDefinition
-
-# bedtools='/usr/local/bin/'
-# awk='/usr/bin/awk'
-# samtools='/usr/bin/samtools'
 
 
 class DomainsDefinition(InputCheckDomainDefinition):
@@ -107,9 +101,10 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return: file path and name
         """
         self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        self.sum = 0
         try:
             c = list(str(pysam.depth(bam)).rsplit("\n"))
-            for i in range(len(c)):
+            for i in range(len(c)-1):
                 self.depthlist.append(c[i][0:])
             for g in range(len(self.depthlist) - 1):
                 self.sum += int(self.depthlist[g][-1])
@@ -251,4 +246,3 @@ class DomainsDefinition(InputCheckDomainDefinition):
         else:
             self.filelog.write(msg138)
             return self.out + '_intevals_domains.txt'
-

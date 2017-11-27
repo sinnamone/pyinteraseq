@@ -38,46 +38,52 @@ options, args = parser.parse_args()
 
 if __name__ == '__main__':
     DictInfo = dict()
-    DomainsDefinition(optparseinstance=options).inputinformationappen()
+    # 
+    DomDef = DomainsDefinition(optparseinstance=options)
+    DomDef.inputinformationappen()
     # count lenght gene
-    DictInfo["fastalength"] = DomainsDefinition(optparseinstance=options).contafasta(ref=options.fastasequence)
+    DictInfo["fastalength"] = DomDef.contafasta(ref=options.fastasequence)
     # creation of genome file
-    DictInfo["genomefile"] = DomainsDefinition(optparseinstance=options).genomefile()
+    DictInfo["genomefile"] = DomDef.genomefile()
     # convert balstn to bed
-    DictInfo["backgroundbed"] = DomainsDefinition(optparseinstance=options).blastntobed(
+    DictInfo["backgroundbed"] = DomDef.blastntobed(
         blastnoutput=options.backgroundmappingoutput, idex='background')
-    DictInfo["targetbed"] = DomainsDefinition(optparseinstance=options).blastntobed(
+    DictInfo["targetbed"] = DomDef.blastntobed(
         blastnoutput=options.targetmappingoutput, idex='target')
     # conversion bed to bam
-    DictInfo["backgroundbam"] = DomainsDefinition(optparseinstance=options).bedtobam(
+    DictInfo["backgroundbam"] = DomDef.bedtobam(
         bedinp=DictInfo["backgroundbed"], genomefile=DictInfo["genomefile"], idex="background")
-    DictInfo["targetbam"] = DomainsDefinition(optparseinstance=options).bedtobam(
+    DictInfo["targetbam"] = DomDef.bedtobam(
         bedinp=DictInfo["targetbed"], genomefile=DictInfo["genomefile"], idex="target")
     #
-    DictInfo["backgroundbamaveragedepth"] = DomainsDefinition(optparseinstance=options).averagedepth(
+    DictInfo["backgroundbamaveragedepth"] = DomDef.averagedepth(
         bam=DictInfo["backgroundbam"], lung=DictInfo["fastalength"])
-    DictInfo["targetbamaveragedepth"] = DomainsDefinition(optparseinstance=options).averagedepth(
+    DictInfo["targetbamaveragedepth"] = DomDef.averagedepth(
         bam=DictInfo["targetbam"], lung=DictInfo["fastalength"])
     #
-    DictInfo["downsampledbam"] = DomainsDefinition(optparseinstance=options).downsampling(
+    DictInfo["downsampledbam"] = DomDef.downsampling(
         depb=DictInfo["backgroundbamaveragedepth"],
         dept=DictInfo["targetbamaveragedepth"],
         bamb=DictInfo["backgroundbam"],
         bamt=DictInfo["targetbam"])
     #
     if DictInfo["downsampledbam"][0] == "background":
-        DictInfo["coveragebackground"] = DomainsDefinition(optparseinstance=options).depthcount(
+        DictInfo["coveragebackground"] = DomDef.depthcount(
             bam=DictInfo["downsampledbam"][1], prefix=DictInfo["downsampledbam"][0])
-        DictInfo["coveragetarget"] = DomainsDefinition(optparseinstance=options).depthcount(
+        DictInfo["coveragetarget"] = DomDef.depthcount(
             bam=DictInfo["targetbam"], prefix="target")
     else:
-        DictInfo["coveragetarget"] = DomainsDefinition(optparseinstance=options).depthcount(
+        DictInfo["coveragetarget"] = DomDef.depthcount(
             bam=DictInfo["downsampledbam"][1], prefix=DictInfo["downsampledbam"][0])
-        DictInfo["coveragebackground"] = DomainsDefinition(optparseinstance=options).depthcount(
+        DictInfo["coveragebackground"] = DomDef.depthcount(
             bam=DictInfo["backgroundbam"], prefix="background")
-    DictInfo["intervalsdata"] = DomainsDefinition(optparseinstance=options).intervaldata(
+    DictInfo["intervalsdata"] = DomDef.intervaldata(
         bedb=DictInfo["coveragebackground"], bedt=DictInfo["coveragetarget"])
-    DictInfo["transpose"] = DomainsDefinition(optparseinstance=options).trasposedomains(
+    DictInfo["transpose"] = DomDef.trasposedomains(
         intervals=DictInfo["intervalsdata"])
-    DictInfo["filtered"] = DomainsDefinition(optparseinstance=options).filtering_domain(DictInfo["transpose"])
+    DictInfo["filtered"] = DomDef.filtering_domain(DictInfo["transpose"])
+    for i in "targetbed", "targetbam", "coveragetarget", "backgroundbam", "coveragebackground", "intervalsdata", "backgroundbed", "genomefile", "transpose":
+        os.remove(DictInfo[i])
+    os.remove(DictInfo["downsampledbam"][1])
+
 
