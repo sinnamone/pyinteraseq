@@ -233,6 +233,7 @@ class InputCheck(object):
         self.filelog.close()
         return True
 
+
 class InputCheckDomainDefinition(object):
 
     def __init__(self, optparseinstance):
@@ -262,14 +263,11 @@ class InputCheckDomainDefinition(object):
         # check fasta sequence
         if self.inputistance.fastasequence is not None:
             self.fastasequence = self.inputistance.fastasequence
+            self.namefilefasta = os.path.basename(self.fastasequence.split('/')[-1])
+            self.genename = self.namefilefasta.split('.')[0]
         else:
             sys.stdout.write(msg11)
             sys.exit(1)
-        if self.inputistance.genename is None:
-            sys.stdout.write(msg11)
-            sys.exit(1)
-        else:
-            self.genename = self.inputistance.genename
 
     def inputinformationappen(self):
         """

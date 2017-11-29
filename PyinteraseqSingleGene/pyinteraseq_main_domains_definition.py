@@ -30,8 +30,6 @@ reference_opts = optparse.OptionGroup(
     )
 reference_opts.add_option('--fastasequence', action="store", dest="fastasequence", default=None,
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
-reference_opts.add_option('--genename', action="store", dest="genename", default=None,
-                          help='String with gene name')
 parser.add_option_group(reference_opts)
 
 options, args = parser.parse_args()
