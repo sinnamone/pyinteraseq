@@ -4,16 +4,16 @@ from Bio import SeqIO
 import os
 import pandas as pd
 import sys
-from pyinteraseq_inputcheck import InputCheckMapping
+from pyinteraseq_inputcheck import InputCheck
 from multiprocessing import Pool
 import traceback
 import warnings
 
 
-class BlastNlucleotide(InputCheckMapping):
+class BlastNlucleotide(InputCheck):
 
     def __init__(self, optparseinstance):
-        InputCheckMapping.__init__(self, optparseinstance)
+        InputCheck.__init__(self, optparseinstance)
         warnings.filterwarnings("ignore")
         self.out_lines = []
         self.temp_line = ''
@@ -155,6 +155,7 @@ class BlastNlucleotide(InputCheckMapping):
         :return: blastn output
         """
         self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        fnull = open(os.devnull, 'w')
         try:
             subprocess.check_call(['python', self.path_multiblastn,
                                    '--referencefasta', fasta,
@@ -165,12 +166,13 @@ class BlastNlucleotide(InputCheckMapping):
                                    '--thread', self.thread,
                                    '--outformat', outputformat,
                                    '--log', self.outputfolder + self.outputid + "_mapping.log"],
-                                  stderr=self.filelog, stdout=self.filelog)
+                                  stdout=fnull, stderr=fnull)
         except subprocess.CalledProcessError:
             self.filelog.write(msg60)
             sys.exit(1)
         else:
             self.filelog.write(msg61)
+            self.filelog.close()
             return self.out + suffix
 
     def hashclean(self, blastnout, prefix):
@@ -221,11 +223,10 @@ class BlastNlucleotide(InputCheckMapping):
             self.dflen = self.dfMM[(self.dfMM.length >= int(self.cloneslength))]
             self.filelog.write(msg65 + str(len(self.dflen)))
             # filter in start clone
-            self.dfstart = self.dflen[(self.dflen.cstart <= 1)]
+            #self.dfstart = self.dflen[(self.dflen.cstart <= 1)]
+            self.dfstart = self.dflen
             # drop duplicate
             self.dfstart = self.dfstart.drop_duplicates(subset='seq', keep=False)
-            # self.dfstart.to_csv(self.out + '_fileforenriched.tab', header=None, sep='\t', index=False)
-            self.filelog.write(msg66 + str(len(self.dfstart)))
             if self.sequencingtype == 'Paired-End':
                 # split field seq in two columns
                 self.dfstart['read'], self.dfstart['seqid'] = self.dfstart['seq'].str.split(':', 2).str[0:2].str
@@ -259,3 +260,30 @@ class BlastNlucleotide(InputCheckMapping):
             sys.exit(1)
         else:
             self.filelog.write(msg103)
+
+    def cleansingle(self, tempdict, sequencingtype):
+        """
+
+        :param tempdict:
+        :param sequencingtype:
+        :return:
+        """
+        if sequencingtype == "Single-End":
+            tempfilelist = ["Trimmed5single", "FastaReadsForward", "TabularRenamedForward", "blastoutput",
+                            "blastoutputnohash", "TabularReadsForward"]
+            for i in tempfilelist:
+                os.remove(tempdict[i])
+            return 0
+        elif sequencingtype == "Paired-End":
+            tempfilelist = ["TabularRenamedForward", "FastaRenamedForward",
+                            "TabularRenamedReverse", "blastoutputnohash", "FastaReadsReverse",
+                            "FastaRenamedReverse", "TabularReadsReverse",
+                            "TabularReadsForward", "blastoutput", "Trimmedreadconcatenated"]
+            for i in tempfilelist:
+                os.remove(tempdict[i])
+            for i in tempdict["Trimmed5paired"]:
+                os.remove(tempdict["Trimmed5paired"][i])
+            return 0
+        else:
+            return 1
+

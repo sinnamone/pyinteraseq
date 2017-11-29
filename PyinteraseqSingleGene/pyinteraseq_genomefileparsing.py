@@ -20,23 +20,31 @@ class GenomeFile(InputCheck):
             self.chromosomelength = len(self.seq_record)
 
     def genomefilewrite(self):
-        self.filelog = open(self.outputfolder + self.outputid + "_trimming.log", "a")
+        """
+        Creation of genome file
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
         try:
-            with open(self.outputfolder + self.genename + '.genome', "wb") as self.genome:
-                self.genome.write(self.genename + '\t' + str(self.chromosomelength))
+            with open(self.outputfolder + self.namefilefasta.split('.')[0] + '.genome', "wb") as self.genome:
+                self.genome.write(self.namefilefasta.split('.')[0] + '\t' + str(self.chromosomelength))
         except OSError:
             self.filelog.write(msg45)
             sys.exit(0)
         else:
             self.filelog.write(msg46)
-            return self.outputfolder + self.genename + '.genome'
+            return self.outputfolder + self.namefilefasta.split('.')[0] + '.genome'
 
     def fastareference(self):
-        self.filelog = open(self.outputfolder + self.outputid + "_trimming.log", "a")
+        """
+        parse fasta reference
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
         try:
-            with open(self.outputfolder + self.genename + '.fasta', 'w') as self.ref:
+            with open(self.outputfolder + self.namefilefasta.split('.')[0] + '.fasta', 'w') as self.ref:
                 for self.seq_record in SeqIO.parse(self.fastasequence, "fasta"):
-                    self.ref.write('>' + str(self.genename) + '\n' + str(self.seq_record.seq))
+                    self.ref.write('>' + str(self.namefilefasta.split('.')[0]) + '\n' + str(self.seq_record.seq))
         except OSError:
             self.filelog.write(msg43)
             sys.exit(0)
@@ -45,8 +53,8 @@ class GenomeFile(InputCheck):
                 if item.endswith(".fai"):
                     os.remove(self.outputfolder+item)
             self.filelog.write(msg44)
-            self.index = pysam.Fastafile(self.outputfolder + self.genename + '.fasta')
-            return self.outputfolder + self.genename + '.fasta'
+            self.index = pysam.Fastafile(self.outputfolder + self.namefilefasta.split('.')[0] + '.fasta')
+            return self.outputfolder + self.namefilefasta.split('.')[0] + '.fasta'
 
 
 

@@ -84,6 +84,7 @@ def makeblastdb(outputfolder, dbname, fasta, log):
     """
     if os.path.isfile(outputfolder + dbname) is False:
         logopen = open(log, "a")
+        fnull = open(os.devnull, 'w')
         try:
             subprocess.check_call(
                 ['makeblastdb',
@@ -91,13 +92,13 @@ def makeblastdb(outputfolder, dbname, fasta, log):
                  '-dbtype',
                  'nucl',
                  '-out', options.outputfolder + options.dbname],
-                stderr=logopen, stdout=logopen)
+                stdout=fnull, stderr=fnull)
         except subprocess.CalledProcessError:
             logopen.write(msg58)
             sys.exit(1)
         else:
             logopen.write(msg59)
-        return outputfolder + dbname
+            return outputfolder + dbname
 
 
 def blastn(outputname, fastainpu, dbname, outputformat):
@@ -109,12 +110,14 @@ def blastn(outputname, fastainpu, dbname, outputformat):
     :param outputformat: outpformat blast
     :return:
     """
+    fnull = open(os.devnull, 'w')
     return (subprocess.check_call(['blastn', '-out', outputname,
                                    '-outfmt',
                                    outputformat,
                                    '-query', fastainpu,
                                    '-db', dbname,
-                                   '-evalue', '0.001']))
+                                   '-evalue', '0.001'],
+                                  stdout=fnull, stderr=fnull))
 
 
 def blastmultiprocess(maxchunks, outmerge, chunks, thread, databasename, outputformat):

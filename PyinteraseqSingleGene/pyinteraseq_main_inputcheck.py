@@ -47,16 +47,6 @@ parser.add_option_group(reference_opts)
 
 parser.add_option_group(query_opts)
 
-reference_opts = optparse.OptionGroup(
-    parser, 'Advanced Options',
-    'Options for advanced analysis.',
-    )
-reference_opts.add_option('--minclonelength', action="store", dest="minclonelength", default='50',
-                          help='Minumum clones length.')
-reference_opts.add_option('--thread', action="store", dest="thread", default='1',
-                          help='Number of thread.')
-parser.add_option_group(reference_opts)
-
 options, args = parser.parse_args()
 
 if __name__ == '__main__':
@@ -70,18 +60,18 @@ if __name__ == '__main__':
     })
     # Parsing input fasta file
     DictInfo["fasta"] = GenomeFile(optparseinstance=options).fastareference()
-    # # Trimming steps for fastq input
-    # if options.readforwardtype == 'fastq':
-    #     # Trimming paired end fastq
-    #     if options.readreverse is not None:
-    #         DictInfo["Trimmed5paired"] = TrimmingPaired(optparseinstance=options).trimming5paired()
-    #     else:
-    #         # Trimming Single-End fastq
-    #         DictInfo["Trimmed5single"] = TrimmingSingle(optparseinstance=options).trimming5single()
-    # elif options.readforwardtype == 'fasta':
-    #     # Trimming paired end fasta
-    #     if options.readreverse is not None:
-    #         DictInfo["Trimmed5paired"] = TrimmingPaired(optparseinstance=options).trimming5paired()
-    #     else:
-    #         # Trimming Single-End fasta
-    #         DictInfo["Trimmed5single"] = TrimmingSingle(optparseinstance=options).trimming5single()
+    # Trimming steps for fastq input
+    if options.readforwardtype == 'fastq':
+        # Trimming paired end fastq
+        if options.readreverse is not None:
+            DictInfo["Trimmed5paired"] = TrimmingPaired(optparseinstance=options).trimming5paired()
+        else:
+            # Trimming Single-End fastq
+            DictInfo["Trimmed5single"] = TrimmingSingle(optparseinstance=options).trimming5single()
+    elif options.readforwardtype == 'fasta':
+        # Trimming paired end fasta
+        if options.readreverse is not None:
+            DictInfo["Trimmed5paired"] = TrimmingPaired(optparseinstance=options).trimming5paired()
+        else:
+            # Trimming Single-End fasta
+            DictInfo["Trimmed5single"] = TrimmingSingle(optparseinstance=options).trimming5single()
