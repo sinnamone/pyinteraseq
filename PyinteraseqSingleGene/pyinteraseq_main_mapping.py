@@ -156,5 +156,5 @@ if __name__ == '__main__':
     # Filter reads steps (NO open-gaps, mismatch)
     DictInfo["blastoutputnohashfiltered"] = MappingClass.blastnfiltering(
         blastnout=DictInfo["blastoutputnohash"])
-    print DictInfo
+    #print DictInfo
     #MappingClass.cleansingle(tempdict=DictInfo, sequencingtype=seqtype)
