@@ -281,7 +281,7 @@ class InputCheckDomainDefinition(object):
         self.filelog.write(msg114 + self.backgroundmappingoutput)
         self.filelog.write(msg115 + self.targetmappingoutput)
         self.filelog.write(msg116 + self.outputid)
-        self.filelog.write(msg117 + self.outputid)
+        self.filelog.write(msg117 + self.fastasequence)
         self.filelog.close()
         return True
 
