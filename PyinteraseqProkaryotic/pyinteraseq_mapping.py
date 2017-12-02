@@ -4,16 +4,16 @@ from Bio import SeqIO
 import os
 import pandas as pd
 import sys
-from pyinteraseq_inputcheck import InputCheckMapping
+from pyinteraseq_inputcheck import InputCheck
 from multiprocessing import Pool
 import traceback
 import warnings
 
 
-class BlastNlucleotide(InputCheckMapping):
+class BlastNlucleotide(InputCheck):
 
     def __init__(self, optparseinstance):
-        InputCheckMapping.__init__(self, optparseinstance)
+        InputCheck.__init__(self, optparseinstance)
         warnings.filterwarnings("ignore")
         self.out_lines = []
         self.temp_line = ''
@@ -159,7 +159,7 @@ class BlastNlucleotide(InputCheckMapping):
             subprocess.check_call(['python', self.path_multiblastn,
                                    '--referencefasta', fasta,
                                    '--multifastasequence', multifasta,
-                                   '--dbname', self.chromosomename,
+                                   '--dbname', os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0],
                                    '--outputfolder', self.outputfolder,
                                    '--outputid', self.outputid + suffix,
                                    '--thread', self.thread,

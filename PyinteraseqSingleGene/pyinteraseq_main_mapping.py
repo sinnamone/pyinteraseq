@@ -98,17 +98,17 @@ if __name__ == '__main__':
             sys.exit(1)
         # Conversion Fasta==>Tabular forward
         DictInfo["TabularReadsForward"] = MappingClass.fasta2tabular(
-            imp=DictInfo["FastaReadsForward"], prefix="_forward")
+            imp=DictInfo["FastaReadsForward"], prefix="forward")
         if seqtype == "Paired-End":
             # Conversion Fasta==>Tabular reverse
             DictInfo["TabularReadsReverse"] = MappingClass.fasta2tabular(
-                imp=DictInfo["FastaReadsReverse"], prefix="_reverse")
+                imp=DictInfo["FastaReadsReverse"], prefix="reverse")
     elif readtype == 'fasta':
         # Trimming paired end fasta
         if seqtype == "Paired-End":
             DictInfo["Trimmed5paired"] = TrimmingPairedClass.trimming5paired()
             DictInfo["TabularReadsForward"] = MappingClass.fasta2tabular(
-                imp=InpClass.readforward, prefix="_forward")
+                imp=InpClass.readforward, prefix="forward")
             if options.readreverse is not None:
                 DictInfo["TabularReadsReverse"] = MappingClass.fasta2tabular(
                     imp=InpClass.readreverse, prefix="_reverse")
@@ -156,5 +156,5 @@ if __name__ == '__main__':
     # Filter reads steps (NO open-gaps, mismatch)
     DictInfo["blastoutputnohashfiltered"] = MappingClass.blastnfiltering(
         blastnout=DictInfo["blastoutputnohash"])
-    #print DictInfo
-    #MappingClass.cleansingle(tempdict=DictInfo, sequencingtype=seqtype)
+    print DictInfo
+    MappingClass.cleansingle(tempdict=DictInfo, sequencingtype=seqtype)
