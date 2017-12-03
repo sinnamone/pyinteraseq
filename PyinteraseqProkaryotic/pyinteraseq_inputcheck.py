@@ -3,10 +3,7 @@ import sys
 import os
 import datetime
 import subprocess
-from Bio import SeqIO, bgzf
-# Used to convert the fastq stream into a file handle
-from io import StringIO
-from gzip import open as gzopen
+from Bio import SeqIO
 import gzip
 
 
@@ -19,24 +16,19 @@ class InputCheck(object):
         # dataset input
         self.readforward = self.inputistance.readforward
         self.readreverse = self.inputistance.readreverse
-        # Fasta
-        self.fastasequence = self.inputistance.fastasequence
-        # Annotation
-        self.annotation = self.inputistance.annotation
         # Thread
         self.thread = self.inputistance.thread
         # Output folder
-        self.outputfolder = self.inputistance.outputfolder
+        self.outputfolder = self.checkoutputpath()
         # Output Id
-        self.outputid = self.inputistance.outputid
+        self.outputid = self.checkoutputid()
+        #
+        self.out = self.outputfolder + self.outputid
         # pick otus
         self.pick_otus = None
         self.pick_rep_set = None
-        self.outputid = self.inputistance.outputid
-        self.out = None
-        self.thread = self.inputistance.thread
         self.cloneslength = self.inputistance.minclonelength
-        self.fastasequence = self.inputistance.fastasequence
+        self.fastasequence = self.checkfastasequence()
         self.namefilefasta = os.path.basename(self.fastasequence.split('/')[-1])
         self.genename = self.namefilefasta.split('.')[0]
         self.opengap = self.inputistance.opengap
@@ -44,49 +36,27 @@ class InputCheck(object):
         self.count = 0
         self.cutadapt = ''
         self.cutadaptversion = ""
-        # check output folder
-        if self.inputistance.outputid is None:
-            self.filelog.write(msg10)
-            sys.exit(1)
-        #
         self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
-        # outputfolder string
-        if self.outputfolder is not None:
-            if self.outputfolder.endswith('/') is True:
-                self.outputfolder = self.inputistance.outputfolder
-                self.out = self.outputfolder + self.outputid
-            else:
-                self.outputfolder = self.inputistance.outputfolder + '/'
-                self.out = self.outputfolder + self.outputid
+        self.sequencingtype = self.checksequencingtype()
         # check if input forward file is gz
         self.readforward = self.gzipopen(self.readforward, "_forward.")
         self.readreverse = self.gzipopen(self.readreverse, "_reverse.")
         # check sequencing type
-        if self.readreverse is None:
-            self.sequencingtype = 'Single-End'
+        if self.sequencingtype in "Single-End":
             self.readforwardtype = self.fastatesting(self.readforward)
-        else:
-            self.readreverse = self.inputistance.readreverse
-            self.sequencingtype = 'Paired-End'
+        elif self.sequencingtype in "Paired-End":
             self.readforwardtype = self.fastatesting(self.readforward)
             self.readreversetype = self.fastatesting(self.readreverse)
-        # check fasta sequence
-        if self.fastasequence is None:
-            self.filelog.write(msg11)
-            sys.exit(1)
-        # adapters
         self.primer5forward = self.inputistance.primer5forward
         self.primer3forward = self.inputistance.primer3forward
         self.primer5reverse = self.inputistance.primer5reverse
         self.primer3reverse = self.inputistance.primer3reverse
-        if self.sequencingtype == 'Paired-End':
-            self.primer5reverse = self.inputistance.primer5reverse
-            self.primer3reverse = self.inputistance.primer3reverse
 
     def gzipopen(self, readfile, direction):
         """
 
         :param readfile:
+        :param direction:
         :return:
         """
         if str(readfile).endswith(".gz"):
@@ -100,9 +70,37 @@ class InputCheck(object):
         else:
             return readfile
 
-
     def openlog(self):
         return open(self.outputfolder + self.outputid + "_mapping.log", "a")
+
+    def checkoutputid(self):
+        if self.inputistance.outputid is None:
+            self.filelog.write(msg10)
+            sys.exit(1)
+        else:
+            return self.inputistance.outputid
+
+    def checkfastasequence(self):
+        if self.inputistance.fastasequence is None:
+            self.filelog.write(msg11)
+            sys.exit(1)
+        else:
+            return self.inputistance.fastasequence
+
+    def checksequencingtype(self):
+        if self.readreverse is None:
+            self.sequencingtype = 'Single-End'
+        elif self.readreverse is not None:
+            self.sequencingtype = 'Paired-End'
+        return self.sequencingtype
+
+    def checkoutputpath(self):
+        if self.inputistance.outputfolder is not None:
+            if self.inputistance.outputfolder.endswith('/') is True:
+                self.outputfolder = self.inputistance.outputfolder
+            else:
+                self.outputfolder = self.inputistance.outputfolder + '/'
+            return self.outputfolder
 
     def logfilecreation(self):
         """
@@ -110,7 +108,7 @@ class InputCheck(object):
         :return: path + name file log
         """
         if os.access(self.outputfolder, os.W_OK) is True:
-            self.filelog = open(self.outputfolder+self.outputid+"_mapping.log", "w")
+            self.filelog = open(self.outputfolder+self.outputid+"_mapping.log", "a")
             self.filelog.close()
             return self.outputfolder+self.outputid + "_mapping.log"
         else:
@@ -130,19 +128,19 @@ class InputCheck(object):
         elif first_line[0] == '>':
             return "fasta"
 
-    def annotesting(self, annotationfile):
-        """
-        check annotation
-        :param annotationfile:
-        :return:
-        """
-        self.filelog = self.openlog()
-        if annotationfile is not None:
-            self.annotation = annotationfile
-            self.filelog.write(msg4 + self.annotation)
-        else:
-            self.filelog.write(msg12)
-            sys.exit(1)
+    # def annotesting(self, annotationfile):
+    #     """
+    #     check annotation
+    #     :param annotationfile:
+    #     :return:
+    #     """
+    #     self.filelog = self.openlog()
+    #     if annotationfile is not None:
+    #         self.annotation = annotationfile
+    #         self.filelog.write(msg4 + self.annotation)
+    #     else:
+    #         self.filelog.write(msg12)
+    #         sys.exit(1)
 
     def checkreversereads(self, readreverse):
         """
@@ -264,10 +262,10 @@ class InputCheck(object):
                                                        message=msg2))
             self.filelog.write(msg18 + self.checkreads(varreads=self.readreverse,
                                                        message=msg3))
-            self.filelog.write(msg21 + self.primer5forward)
-            self.filelog.write(msg22 + self.primer3forward)
-            self.filelog.write(msg23 + self.primer5reverse)
-            self.filelog.write(msg24 + self.primer3reverse)
+            self.filelog.write(msg21 + str(self.primer5forward))
+            self.filelog.write(msg22 + str(self.primer3forward))
+            self.filelog.write(msg23 + str(self.primer5reverse))
+            self.filelog.write(msg24 + str(self.primer3reverse))
             self.filelog.write(msg47 + self.fastqcount(fastq=self.readforward,
                                                        rtype=self.readforwardtype))
             self.filelog.write(msg48 + self.fastqcount(fastq=self.readreverse,
@@ -290,110 +288,12 @@ class InputCheck(object):
             sys.exit(1)
         self.filelog.write(msg25 + self.outputid)
         self.filelog.write(msg26 + self.fastasequence)
-        self.filelog.write(msg27 + self.annotation)
+        # self.filelog.write(msg27 + self.annotation)
         self.filelog.write(msg33 + subprocess.check_output(['cutadapt', '--version']))
         self.filelog.write(msg0)
         self.filelog.close()
         return True
 
-
-# class InputCheckMapping(object):
-#
-#     def __init__(self, optparseinstance):
-#         # import instance with all input flag
-#         self.inputistance = optparseinstance
-#         # put all under this
-#         self.thread = self.inputistance.thread
-#         self.count = 0
-#         self.filelog = None
-#         self.cloneslength = self.inputistance.minclonelength
-#         self.mismatch = self.inputistance.mismatch
-#         self.opengap = self.inputistance.opengap
-#         # check for forward reads
-#         if self.inputistance.readforwardtrimmed is not None:
-#             self.readforward = self.inputistance.readforwardtrimmed
-#         else:
-#             sys.stdout.write(msg1)
-#             sys.exit(1)
-#         # check for reverse read and assign sequencing type dataset
-#         if self.inputistance.readreversetrimmed is not None:
-#             self.readreverse = self.inputistance.readreversetrimmed
-#             self.sequencingtype = 'Paired-End'
-#         else:
-#             self.sequencingtype = 'Single-End'
-#         # Check type of dataset
-#         if self.inputistance.readforwardtrimmedtype is not None:
-#             self.readforwardtype = self.inputistance.readforwardtrimmedtype
-#         else:
-#             sys.stdout.write(msg2)
-#             sys.exit(1)
-#         # Check type of dataset reverse
-#         if self.inputistance.readreversetrimmed is not None:
-#             if self.inputistance.readreversetrimmedtype is not None:
-#                 self.readreversetype = self.inputistance.readreversetrimmedtype
-#             else:
-#                 sys.stdout.write(msg3)
-#                 sys.exit(1)
-#         # Check for Dataset typr
-#         if self.inputistance.sampletype is not None:
-#             self.sampletype = self.inputistance.sampletype
-#         else:
-#             sys.stdout.write(msg4)
-#             sys.exit(0)
-#         # check output folder
-#         if self.inputistance.outputfolder is not None:
-#             if self.inputistance.outputfolder.endswith('/') is True:
-#                 self.outputfolder = self.inputistance.outputfolder
-#             else:
-#                 self.outputfolder = self.inputistance.outputfolder + '/'
-#         else:
-#             sys.stdout.write(msg9)
-#             sys.exit(0)
-#         # check output id
-#         if self.inputistance.outputid is not None:
-#             self.outputid = self.inputistance.outputid
-#         else:
-#             sys.stdout.write(msg10)
-#             sys.exit(0)
-#         # check fasta sequence
-#         if self.inputistance.fastasequence is not None:
-#             self.fastasequence = self.inputistance.fastasequence
-#         else:
-#             sys.stdout.write(msg11)
-#             sys.exit(0)
-#         # check annotation
-#         if self.inputistance.annotation is not None:
-#             self.annotation = self.inputistance.annotation
-#         else:
-#             sys.stdout.write(msg12)
-#             sys.exit(0)
-#         # check if the name of chromosome was given by the user
-#         if self.inputistance.chromosomename is not None:
-#             self.chromosomename = self.inputistance.chromosomename
-#         else:
-#             sys.stdout.write(msg87)
-#             sys.exit(0)
-#         self.out = self.outputfolder+self.outputid
-#         # check if log file is already created
-#         if self.inputistance.log is None:
-#             if os.access(self.outputfolder, os.W_OK) is True:
-#                 self.filelog = open(self.outputfolder + self.outputid + ".log", "w")
-#                 self.filelog.close()
-#             else:
-#                 sys.stdout.write(msg13)
-#                 sys.exit(1)
-#
-#     def fastqcount(self, fastq, rtype):
-#         """
-#         Function to count the number of sequence
-#         :param fastq:
-#         :param rtype:
-#         :return:
-#         """
-#         self.count = 0
-#         for record in SeqIO.parse(fastq, rtype):
-#             self.count = self.count + 1
-#         return str(self.count)
 
 class InputCheckDomainDefinition(object):
 
@@ -405,8 +305,6 @@ class InputCheckDomainDefinition(object):
         self.count = 0
         self.filelog = None
         self.cloneslength = self.inputistance.minclonelength
-
-
 
         # check output folder
         if self.inputistance.outputfolder is not None:

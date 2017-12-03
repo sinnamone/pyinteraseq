@@ -82,6 +82,7 @@ def makeblastdb(outputfolder, dbname, fasta, log):
     :param log:
     :return: Database name
     """
+    fnull = open(os.devnull, 'w')
     if os.path.isfile(outputfolder + dbname) is False:
         logopen = open(log, "a")
         try:
@@ -91,7 +92,7 @@ def makeblastdb(outputfolder, dbname, fasta, log):
                  '-dbtype',
                  'nucl',
                  '-out', options.outputfolder + options.dbname],
-                stderr=logopen, stdout=logopen)
+                stderr=logopen, stdout=fnull)
         except subprocess.CalledProcessError:
             logopen.write(msg58)
             sys.exit(1)

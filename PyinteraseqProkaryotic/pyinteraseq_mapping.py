@@ -23,6 +23,7 @@ class BlastNlucleotide(InputCheck):
         self.id = [(int(x) - 1) for x in self.id]
         self.header = None
         self.dbid = os.path.basename(self.fastasequence.split('/')[-1])
+        self.dbname = self.outputfolder + os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0]
         self.path_multiblastn = os.path.dirname(os.path.realpath(__file__)) + '/pyinteraseq_multblastn.py'
         self.pool = Pool(processes=int(self.thread))
         self.df = None
@@ -36,6 +37,26 @@ class BlastNlucleotide(InputCheck):
         self.dfRev = None
         self.dfMerge2 = None
 
+    def filelogstdoutwrite(self, msg):
+        """
+        Write information about script esecution
+        :param msg:
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        self.filelog.write(msg)
+
+    def filelogerrorwrite(self, msg):
+        """
+        Write error message
+        :param msg:
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        self.filelog.write(traceback.format_exc())
+        self.filelog.write(msg)
+        sys.exit(1)
+
     def fastq2fasta(self, fastq, nameid):
         """
         Covert Fastq in Fasta format
@@ -43,15 +64,12 @@ class BlastNlucleotide(InputCheck):
         :param nameid: output name
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             SeqIO.convert(fastq, 'fastq', self.out + nameid + '.fasta', 'fasta')
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg94)
-            sys.exit(1)
+            self.filelogerrorwrite(msg94)
         else:
-            self.filelog.write(msg95)
+            self.filelogstdoutwrite(msg95)
             return self.out + nameid + '.fasta'
 
     def fasta2tabular(self, imp, prefix):
@@ -61,15 +79,12 @@ class BlastNlucleotide(InputCheck):
         :param prefix: prefix to add at converted file
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             SeqIO.convert(imp, 'fasta', self.out + prefix + '.tab', 'tab')
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg96)
-            sys.exit(1)
+            self.filelogerrorwrite(msg96)
         else:
-            self.filelog.write(msg97)
+            self.filelogstdoutwrite(msg97)
             return self.out + prefix + '.tab'
 
     def seqrename(self, tabular, readirection):
@@ -79,7 +94,6 @@ class BlastNlucleotide(InputCheck):
         :param readirection: "forward" or "reverse"
         :return: path + name + _1_newid.tab
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             if readirection == "forward":
                 self.df1 = pd.read_csv(tabular, header=None, sep='\t')
@@ -92,11 +106,9 @@ class BlastNlucleotide(InputCheck):
                 self.df1[['seq_id', 1]].to_csv(self.out + '_2_newid.tab', header=None, sep='\t', index=False)
                 return self.out + '_2_newid.tab'
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg98)
-            sys.exit(1)
+            self.filelogerrorwrite(msg98)
         finally:
-            self.filelog.write(msg99)
+            self.filelogstdoutwrite(msg99)
 
     def tab2fasta(self, tabular, prefixoutput):
         """
@@ -105,7 +117,6 @@ class BlastNlucleotide(InputCheck):
         :param prefixoutput: prefix to append
         :return: path + idanalysis + prefix + .fasta
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             with open(tabular, 'r') as f:
                 with open(self.out + prefixoutput + '.fasta', 'w') as f_out:
@@ -116,11 +127,9 @@ class BlastNlucleotide(InputCheck):
                         f_out.write(line[self.seqix] + '\n')
                 f_out.close()
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg100)
-            sys.exit(1)
+            self.filelogerrorwrite(msg100)
         else:
-            self.filelog.write(msg101)
+            self.filelogstdoutwrite(msg101)
             return self.out + prefixoutput + '.fasta'
 
     def concatenateforrev(self, readlist):
@@ -129,7 +138,6 @@ class BlastNlucleotide(InputCheck):
         :param readlist: list with files to append
         :return: path + idanalysis + _con.fasta
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             with open(self.out + '_con.fasta', 'w') as outfile:
                 for fname in readlist:
@@ -137,10 +145,10 @@ class BlastNlucleotide(InputCheck):
                         for line in infile:
                             outfile.write(line)
             outfile.close()
-        except StandardError:
-            self.filelog.write(msg88)
-            sys.exit(1)
+        except traceback:
+            self.filelogerrorwrite(msg88)
         else:
+            self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
             self.filelog.write(msg56 + self.fastqcount(self.out + '_con.fasta',
                                                        'fasta'))
             return self.out + '_con.fasta'
@@ -154,7 +162,7 @@ class BlastNlucleotide(InputCheck):
         :param suffix: String added to outputfile
         :return: blastn output
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
         try:
             subprocess.check_call(['python', self.path_multiblastn,
                                    '--referencefasta', fasta,
@@ -164,13 +172,13 @@ class BlastNlucleotide(InputCheck):
                                    '--outputid', self.outputid + suffix,
                                    '--thread', self.thread,
                                    '--outformat', outputformat,
-                                   '--log', self.outputfolder + self.outputid + ".log"],
+                                   '--log', self.outputfolder + self.outputid + "_mapping.log"],
                                   stderr=self.filelog, stdout=self.filelog)
         except subprocess.CalledProcessError:
             self.filelog.write(msg60)
             sys.exit(1)
         else:
-            self.filelog.write(msg61)
+            self.filelogstdoutwrite(msg61)
             return self.out + suffix
 
     def hashclean(self, blastnout, prefix):
@@ -180,18 +188,16 @@ class BlastNlucleotide(InputCheck):
         :param prefix: prefix add to output file
         :return: path + prefix + '.tab' of new file
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             with open(blastnout) as oldfile, open(self.out + prefix + '.tab', 'w') as newfile:
                 for line in oldfile:
                     if not line.startswith('#'):
                         newfile.write(line)
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg92)
-            sys.exit(0)
+            self.filelogerrorwrite(msg92)
+            sys.exit(1)
         else:
-            self.filelog.write(msg93)
+            self.filelogstdoutwrite(msg93)
             return self.out + prefix + '.tab'
 
     def blastnfiltering(self, blastnout):
@@ -201,7 +207,6 @@ class BlastNlucleotide(InputCheck):
         :param blastnout:
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             self.df = pd.read_csv(blastnout, sep='\t', header=None,
                                   names=['seq', 'chr', 'percmatch', 'length', 'mismatch', 'op', 'cstart', 'cend',
@@ -254,8 +259,51 @@ class BlastNlucleotide(InputCheck):
         except Warning:
             self.filelog.write('\nWarning')
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg102)
+            self.filelogerrorwrite(msg102)
             sys.exit(1)
         else:
-            self.filelog.write(msg103)
+            self.filelogstdoutwrite(msg103)
+
+    def cleantempfile(self):
+        """
+        Remove temporany files.
+        :return:
+        """
+        db1 = str(self.dbname + ".nsq")
+        db2 = str(self.dbname + ".nin")
+        db3 = str(self.dbname + ".nhr")
+        os.remove(db1)
+        os.remove(db2)
+        os.remove(db3)
+        templistfilesingle = ["_forward.fastq", "_read1.fastq", "forward.tab", "_forward.fasta", "_filtered_single.tab",
+                        "_filtered_single_complete.tab", "_blastn.txt", "_1_newid.tab"]
+        templistfilepaired = ["_read1.fastq", "_read2.fastq", "_reverse.fasta", "forward.tab", "reverse.tab",
+                              "_2_newid.tab", "_con.fasta", "_1_newid.tab", "_forward.fasta", "_blastn.txt",
+                              "_blastn_nohash.tab"]
+        if self.sequencingtype in "Single-End":
+            if self.readforwardtype in "fastq":
+                for item in templistfilesingle:
+                    if os.path.isfile(self.out + item):
+                        os.remove(self.out + item)
+            elif self.readforwardtype in "fasta":
+                templistfilesingle = templistfilesingle[2:]
+                templistfilesingle.append("_read1.fasta")
+                for item in templistfilesingle:
+                    if os.path.isfile(self.out + item):
+                        os.remove(self.out + item)
+        elif self.sequencingtype in "Paired-End":
+            if self.readforwardtype in "fastq":
+                for item in templistfilepaired:
+                    if os.path.isfile(self.out + item):
+                        os.remove(self.out + item)
+            elif self.readforwardtype in "fasta":
+                templistfilepaired = templistfilepaired[2:]
+                templistfilepaired.append("_read1.fasta")
+                templistfilepaired.append("_read2.fasta")
+                for item in templistfilepaired:
+                    if os.path.isfile(self.out + item):
+                        os.remove(self.out + item)
+
+
+
+
