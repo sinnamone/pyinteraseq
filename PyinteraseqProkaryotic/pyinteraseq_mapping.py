@@ -278,8 +278,7 @@ class BlastNlucleotide(InputCheck):
         templistfilesingle = ["_forward.fastq", "_read1.fastq", "forward.tab", "_forward.fasta", "_filtered_single.tab",
                         "_filtered_single_complete.tab", "_blastn.txt", "_1_newid.tab"]
         templistfilepaired = ["_read1.fastq", "_read2.fastq", "_reverse.fasta", "forward.tab", "reverse.tab",
-                              "_2_newid.tab", "_con.fasta", "_1_newid.tab", "_forward.fasta", "_blastn.txt",
-                              "_blastn_nohash.tab"]
+                              "_2_newid.tab", "_con.fasta", "_1_newid.tab", "_forward.fasta", "_blastn.txt"]
         if self.sequencingtype in "Single-End":
             if self.readforwardtype in "fastq":
                 for item in templistfilesingle:

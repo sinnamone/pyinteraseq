@@ -91,6 +91,7 @@ if __name__ == "__main__":
     df4b = pd.merge(df1b, df3b, left_on='start', right_on='id')
     # merge all information
     df5 = pd.merge(df4b, df4a, on='start')
+    df5['score'] = "."
     # save in tsv
-    df5[['seqid_x', 'start', 'end_x', 'locus_tag', 'product', 'strand_x']].to_csv(
-        args.outputfolder + args.outputid + '.gff', sep="\t", header=None, index=False)
+    df5[['seqid_x', 'start', 'end_x', 'locus_tag', 'score', 'strand_x', 'product']].to_csv(
+        args.outputfolder + args.outputid + '.bed', sep="\t", header=None, index=False)

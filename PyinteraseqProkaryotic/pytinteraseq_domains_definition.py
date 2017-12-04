@@ -35,6 +35,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.id = [(int(x) - 1) for x in self.id]
         self.header = None
         self.path_multiblastn = os.path.dirname(os.path.realpath(__file__)) + '/pyinteraseq_multblastn.py'
+        self.dbname = self.outputfolder + os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0]
 
     def tab2fasta(self, tabular, prefixoutput):
         """
@@ -93,7 +94,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
             subprocess.check_call(['python', self.path_multiblastn,
                                    '--referencefasta', fasta,
                                    '--multifastasequence', multifasta,
-                                   '--dbname', self.chromosomename,
+                                   '--dbname', os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0],
                                    '--outputfolder', self.outputfolder,
                                    '--outputid', self.outputid + suffix,
                                    '--thread', self.thread,
@@ -240,6 +241,9 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df1 = pd.read_csv(mergingcountoutput, sep="\t", header=None,
                                    names=['chr', 'start', 'end', 'clonename', 'count', 'strand'])
             self.df2 = self.df1.loc[self.df1['count'] >= int(frequency)].sort_values('start').reset_index(drop=True)
+            self.df2 = self.df2.sort_values(['chr', 'start'], ascending=[True, True])
+            self.df2 = self.df2.drop_duplicates(subset='start', keep="last")
+            self.df2 = self.df2.drop_duplicates(subset='end', keep="last")
             self.df2.to_csv(self.out + '_blastnclonescountedfiltered.bed', sep="\t", header=None, index=False)
         except traceback:
             self.filelog.write(traceback.format_exc())
@@ -288,7 +292,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
             f.close()
         except subprocess.CalledProcessError:
             self.filelog.write(msg75)
-            sys.exit(0)
+            sys.exit(1)
         else:
             self.filelog.write(msg76)
             return self.out + '_clonesannotated.bed'
@@ -380,50 +384,22 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.filelog.write(msg113)
             return self.out + '_domaindetection_step1.tab'
 
-    # def cleantemporaryfilesinglend(self, filedict):
-    #     for key, value in filedict.iteritems():
-    #         if key == 'Trimmed5single':
-    #             os.remove(value)
-    #         elif key == 'TabularRenamedForward':
-    #             os.remove(value)
-    #         elif key == 'FastaReadsForward':
-    #             os.remove(value)
-    #         elif key == 'FastaRenamedForward':
-    #             os.remove(value)
-    #         elif key == 'blastoutputnohash':
-    #             os.remove(value)
-    #         elif key == 'pickedreads':
-    #             os.remove(value)
-    #         elif key == 'blastoutputnohashfiltered':
-    #             os.remove(value)
-    #         elif key == 'pickedreadscleand':
-    #             os.remove(value)
-    #         elif key == 'blastedclones':
-    #             os.remove(value)
-    #         elif key == 'bedparsed':
-    #             os.remove(value)
-    #         elif key == 'clonesannotated':
-    #             os.remove(value)
-    #         elif key == 'clustercount':
-    #             os.remove(value)
-    #         elif key == 'clonescounted':
-    #             os.remove(value)
-    #         elif key == 'clonenseqfasta':
-    #             os.remove(value)
-    #         elif key == 'clonesmergedfasta':
-    #             os.remove(value)
-    #         elif key == 'clonescountedmerged':
-    #             os.remove(value)
-    #         elif key == 'tabwithdescription':
-    #             os.remove(value)
-    #         elif key == 'clonescountedfiltered':
-    #             os.remove(value)
-    #         elif key == 'blastoutput':
-    #             os.remove(value)
-    #         elif key == 'blastoutputnohashfilteredfasta':
-    #             os.remove(value)
-    #         shutil.rmtree(self.out + '_picked', ignore_errors=True)
-    #         filelist = [f for f in os.listdir(self.outputfolder) if f.startswith(self.chromosomename)]
-    #         for f in filelist:
-    #             os.remove(os.path.join(self.outputfolder, f))
-    #     return 0
+    def cleantempfile(self):
+        """
+        Remove temporany files.
+        :return:
+        """
+        db1 = str(self.dbname + ".nsq")
+        db2 = str(self.dbname + ".nin")
+        db3 = str(self.dbname + ".nhr")
+        os.remove(db1)
+        os.remove(db2)
+        os.remove(db3)
+        templistfilesingle = ["_def_blastnfiltered.fasta", "_otus_most_abundant.fa", "_def_clean.fasta", "_def_cluster_count.txt",
+                              "_def_clonestabular.tab", "_clonesdescription.bed", "_clonesannotatedfiltered.bed", "_clonesannotated.bed",
+                              "_blastnclonesmerge.fasta", "_blastnclonesmerge.bed", "_blastnclonescountedfiltered.bed", "_blastnclonescounted.bed",
+                              "_def_blastnclones.tab", "_def_blastclonesparsed.bed", "_blastnfiltered.fasta", "_clean.fasta",
+                              "_cluster_count.txt", "_clonestabular.tab", "_blastnclones.tab", "_blastclonesparsed.bed"]
+        for item in templistfilesingle:
+            if os.path.isfile(self.out + item):
+                os.remove(self.out + item)

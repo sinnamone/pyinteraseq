@@ -305,49 +305,29 @@ class InputCheckDomainDefinition(object):
         self.count = 0
         self.filelog = None
         self.cloneslength = self.inputistance.minclonelength
+        self.outputfolder = self.checkoutputpath()
+        self.outputid = self.checkoutputid()
+        self.fastasequence = self.checkfastasequence()
+        self.namefilefasta = os.path.basename(self.fastasequence.split('/')[-1])
+        self.genename = self.namefilefasta.split('.')[0]
+        self.out = self.outputfolder + self.outputid
 
-        # check output folder
-        if self.inputistance.outputfolder is not None:
-            if self.inputistance.outputfolder.endswith('/') is True:
-                self.outputfolder = self.inputistance.outputfolder
-            else:
-                self.outputfolder = self.inputistance.outputfolder + '/'
-        else:
-            self.filelog.write(msg9)
-            sys.exit(0)
-        # check output id
-        if self.inputistance.outputid is not None:
-            self.outputid = self.inputistance.outputid
-        else:
-            self.filelog.write(msg10)
-            sys.exit(0)
-        # check fasta sequence
-        if self.inputistance.fastasequence is not None:
-            self.fastasequence = self.inputistance.fastasequence
-        else:
-            self.filelog.write(msg11)
-            sys.exit(0)
         # check annotation
         if self.inputistance.annotation is not None:
             self.annotation = self.inputistance.annotation
-        else:
-            self.filelog.write(msg12)
-            sys.exit(0)
-        # check if the name of chromosome was given by the user
-        if self.inputistance.chromosomename is not None:
-            self.chromosomename = self.inputistance.chromosomename
-        else:
-            self.filelog.write(msg87)
-            sys.exit(0)
-        self.out = self.outputfolder+self.outputid
-        # check if log file is already created
-        if self.inputistance.log is None:
-            if os.access(self.outputfolder, os.W_OK) is True:
-                self.filelog = open(self.outputfolder + self.outputid + ".log", "w")
-                self.filelog.close()
-            else:
-                self.filelog.write(msg13)
-                sys.exit(1)
+        # else:
+        #     self.filelog.write(msg12)
+        #     sys.exit(0)
+
+
+        # # check if log file is already created
+        # if self.inputistance.log is None:
+        #     if os.access(self.outputfolder, os.W_OK) is True:
+        #         self.filelog = open(self.outputfolder + self.outputid + ".log", "w")
+        #         self.filelog.close()
+        #     else:
+        #         self.filelog.write(msg13)
+        #         sys.exit(1)
 
     def fastqcount(self, fastq, rtype):
         """
@@ -360,3 +340,37 @@ class InputCheckDomainDefinition(object):
         for record in SeqIO.parse(fastq, rtype):
             self.count = self.count + 1
         return str(self.count)
+
+    def checkoutputpath(self):
+        """
+
+        :return:
+        """
+        if self.inputistance.outputfolder is not None:
+            if self.inputistance.outputfolder.endswith('/') is True:
+                self.outputfolder = self.inputistance.outputfolder
+            else:
+                self.outputfolder = self.inputistance.outputfolder + '/'
+            return self.outputfolder
+
+    def checkoutputid(self):
+        """
+
+        :return:
+        """
+        if self.inputistance.outputid is None:
+            self.filelog.write(msg10)
+            sys.exit(1)
+        else:
+            return self.inputistance.outputid
+
+    def openlog(self):
+        return open(self.outputfolder + self.outputid + "_domaind_efinition.log", "a")
+
+    def checkfastasequence(self):
+        if self.inputistance.fastasequence is None:
+            self.filelog.write(msg11)
+            sys.exit(1)
+        else:
+            return self.inputistance.fastasequence
+

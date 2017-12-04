@@ -20,8 +20,8 @@ query_opts.add_option('--outputfolder', action="store", dest="outputfolder", def
                       help='Output folder.')
 query_opts.add_option('--outputid', action="store", dest="outputid", default=None,
                       help='Output ID.')
-query_opts.add_option('--log', action="store", dest="log", default=None,
-                      help='Log file.')
+# query_opts.add_option('--log', action="store", dest="log", default=None,
+#                       help='Log file.')
 parser.add_option_group(query_opts)
 
 reference_opts = optparse.OptionGroup(
@@ -32,8 +32,8 @@ reference_opts.add_option('--fastasequence', action="store", dest="fastasequence
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
 reference_opts.add_option('--annotation', action="store", dest="annotation", default=None,
                           help='Annotation File(.gff|.bed)')
-reference_opts.add_option('--chromosomename', action="store", dest="chromosomename", default=None,
-                          help='Chromosome Name.(NC_XXXX)')
+# reference_opts.add_option('--chromosomename', action="store", dest="chromosomename", default=None,
+#                           help='Chromosome Name.(NC_XXXX)')
 parser.add_option_group(reference_opts)
 
 
@@ -60,55 +60,55 @@ if __name__ == '__main__':
     DictInfo = dict()
     DictFile = dict()
     outformat6 = '6 sseqid sstart send qseqid score sstrand'
+    DomainDefinitionClass = DomainsDefinition(optparseinstance=options)
     # Conversion Filter Blastn Table in Fasta
-    DictInfo["blastoutputnohashfilteredfasta"] = DomainsDefinition(optparseinstance=options).tab2fasta(
+    DictInfo["blastoutputnohashfilteredfasta"] = DomainDefinitionClass.tab2fasta(
         tabular=options.mappingoutput, prefixoutput="_blastnfiltered")
     # Clustering steps calling script Pick_otus
-    DictInfo["clustering"] = DomainsDefinition(optparseinstance=options).clustering(
+    DictInfo["clustering"] = DomainDefinitionClass.clustering(
         blastnout=DictInfo["blastoutputnohashfilteredfasta"], prefixoutput="_blastnfiltered")
     # Pick most representative sequence for each cluster
-    DictInfo["pickedreads"] = DomainsDefinition(optparseinstance=options).pickrepseq(
+    DictInfo["pickedreads"] = DomainDefinitionClass.pickrepseq(
         pickotus=DictInfo["clustering"], fasta=DictInfo["blastoutputnohashfilteredfasta"])
     # Sed function
-    DictInfo["pickedreadscleand"] = DomainsDefinition(optparseinstance=options).pysed(
+    DictInfo["pickedreadscleand"] = DomainDefinitionClass.pysed(
         DictInfo["pickedreads"], '_clean.fasta', '-', '')
     # Mapping most representative clone against genome to identify which gene are intersted
-    DictInfo["blastedclones"] = DomainsDefinition(optparseinstance=options).callmultiblastn(
+    DictInfo["blastedclones"] = DomainDefinitionClass.callmultiblastn(
         fasta=options.fastasequence,
         multifasta=DictInfo["pickedreadscleand"],
         outputformat=outformat6,
         suffix='_blastnclones.tab')
     # Parser that take as input blastn format 6 and create a standard bed6
-    DictInfo["bedparsed"] = DomainsDefinition(optparseinstance=options).bedparsing(DictInfo["blastedclones"])
+    DictInfo["bedparsed"] = DomainDefinitionClass.bedparsing(DictInfo["blastedclones"])
     # Filtering the output of Bedtools annotate (call inside the function) using a flot percentage of overlap
-    DictInfo["clonesannotated"] = DomainsDefinition(optparseinstance=options).bedtoolsannotatefiltering(
+    DictInfo["clonesannotated"] = DomainDefinitionClass.bedtoolsannotatefiltering(
         # Bedtools annotate to identify the clones inside the CDS
-        DomainsDefinition(optparseinstance=options).bedtoolsannotate(
+        DomainDefinitionClass.bedtoolsannotate(
             DictInfo["bedparsed"], options.annotation), options.overlapintersect)
     # Create the count file for each intervals
-    DictInfo["clustercount"] = DomainsDefinition(optparseinstance=options).clonescount(
+    DictInfo["clustercount"] = DomainDefinitionClass.clonescount(
         DictInfo["clustering"])
     # Merge BED6 with count table
-    DictInfo["clonescounted"] = DomainsDefinition(optparseinstance=options).mergingcount(
+    DictInfo["clonescounted"] = DomainDefinitionClass.mergingcount(
         DictInfo["bedparsed"], DictInfo["clustercount"])
     #  Filtering the domains that are covered less than 10 clones
-    DictInfo["clonescountedfiltered"] = DomainsDefinition(optparseinstance=options).filteringclonescount(
-        DictInfo["clonescounted"], 10)
+    DictInfo["clonescountedfiltered"] = DomainDefinitionClass.filteringclonescount(
+        DictInfo["clonescounted"], 5)
     # clone merge to get domains
-    DictInfo["clonescountedmerged"] = DomainsDefinition(optparseinstance=options).pybedtoolsmerge(
+    DictInfo["clonescountedmerged"] = DomainDefinitionClass.pybedtoolsmerge(
         DictInfo["clonescountedfiltered"])
-    # Get fasta from intervels
-    DictInfo["clonesmergedfasta"] = DomainsDefinition(optparseinstance=options).pybedtoolstofasta(
+    # # Get fasta from intervels
+    DictInfo["clonesmergedfasta"] = DomainDefinitionClass.pybedtoolstofasta(
         pybedtoolsmergeoutput=DictInfo["clonescountedmerged"], fastqsequence=options.fastasequence)
     # Add description present in ptt 0.7 is the overlap of intersect cds
-    DictInfo["tabwithdescription"] = DomainsDefinition(optparseinstance=options).adddescription(
+    DictInfo["tabwithdescription"] = DomainDefinitionClass.adddescription(
         clonesmerged=DictInfo["clonescountedmerged"], annotation=options.annotation,
         percthr=options.overlapintersect)
     # Conversion Fasta ==>Tabular
-    DictInfo["clonenseqfasta"] = DomainsDefinition(optparseinstance=options).fasta2tabular(
+    DictInfo["clonenseqfasta"] = DomainDefinitionClass.fasta2tabular(
         imp=DictInfo["clonesmergedfasta"], prefix='_clonestabular')
     # Add sequence to output table
-    DictFile["tabwithsequence"] = DomainsDefinition(optparseinstance=options).addsequence(
+    DictFile["tabwithsequence"] = DomainDefinitionClass.addsequence(
         outputfromdescription=DictInfo["tabwithdescription"], outputfasta2tab=DictInfo["clonenseqfasta"])
-    # print DictInfo
-    # DomainsDefinition(optparseinstance=options).cleantemporaryfilesinglend(DictInfo)
+    DomainDefinitionClass.cleantempfile()
