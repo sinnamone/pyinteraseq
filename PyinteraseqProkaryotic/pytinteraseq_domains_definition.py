@@ -37,6 +37,26 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.path_multiblastn = os.path.dirname(os.path.realpath(__file__)) + '/pyinteraseq_multblastn.py'
         self.dbname = self.outputfolder + os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0]
 
+    def filelogstdoutwrite(self, msg):
+        """
+        Write information about script esecution
+        :param msg:
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + "_domaind_definition.log", "a")
+        self.filelog.write(msg)
+
+    def filelogerrorwrite(self, msg):
+        """
+        Write error message
+        :param msg:
+        :return:
+        """
+        self.filelog = open(self.outputfolder + self.outputid + "_domaind_definition.log", "a")
+        self.filelog.write(traceback.format_exc())
+        self.filelog.write(msg)
+        sys.exit(1)
+
     def tab2fasta(self, tabular, prefixoutput):
         """
         Convert tabular fasta file (2 columns) first ID second nucleotide sequence in fasta file format
@@ -44,7 +64,6 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param prefixoutput: prefix to append
         :return: path + idanalysis + prefix + .fasta
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             with open(tabular, 'r') as f:
                 with open(self.out + prefixoutput + '.fasta', 'w') as f_out:
@@ -55,11 +74,9 @@ class DomainsDefinition(InputCheckDomainDefinition):
                         f_out.write(line[self.seqix] + '\n')
                 f_out.close()
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg100)
-            sys.exit(1)
+            self.filelogerrorwrite(msg100)
         else:
-            self.filelog.write(msg101)
+            self.filelogstdoutwrite(msg101)
             return self.out + prefixoutput + '.fasta'
 
     def fasta2tabular(self, imp, prefix):
@@ -69,15 +86,12 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param prefix: prefix to add at converted file
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
-            SeqIO.convert(imp, 'fasta', self.out + prefix + '.tab', 'tab')
+            SeqIO.convert(imp, 'fasta', self.out + prefix + '_domaind_definition.tab', 'tab')
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg96)
-            sys.exit(1)
+            self.filelogerrorwrite(msg96)
         else:
-            self.filelog.write(msg97)
+            self.filelogstdoutwrite(msg97)
             return self.out + prefix + '.tab'
 
     def callmultiblastn(self, fasta, multifasta, outputformat, suffix):
@@ -89,7 +103,6 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param suffix: String added to outputfile
         :return: blastn output
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             subprocess.check_call(['python', self.path_multiblastn,
                                    '--referencefasta', fasta,
@@ -102,10 +115,9 @@ class DomainsDefinition(InputCheckDomainDefinition):
                                    '--log', self.outputfolder + self.outputid + ".log"],
                                   stderr=self.filelog, stdout=self.filelog)
         except subprocess.CalledProcessError:
-            self.filelog.write(msg60)
-            sys.exit(1)
+            self.filelogerrorwrite(msg60)
         else:
-            self.filelog.write(msg61)
+            self.filelogstdoutwrite(msg61)
             return self.out + suffix
 
     def clustering(self, blastnout, prefixoutput):
@@ -115,14 +127,13 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param prefixoutput: Prefix that will add to output
         :return: cluster file
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             subprocess.check_call(['pick_otus.py', '-i', blastnout, '-o',
                                    self.out + '_picked', '-s', '0.97'])
         except subprocess.CalledProcessError:
-            self.filelog.write(msg71)
-            sys.exit(1)
-        return self.out + '_picked/' + self.outputid + prefixoutput + '_otus.txt'
+            self.filelogerrorwrite(msg71)
+        else:
+            return self.out + '_picked/' + self.outputid + prefixoutput + '_otus.txt'
 
     def pickrepseq(self, pickotus, fasta):
         """
@@ -131,17 +142,15 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param fasta: File generated with tab2fasta containing fasta sequence filtered genarated by blastn align
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             subprocess.check_call(
                 ['pick_rep_set.py', '-i', pickotus, '-f',
                  fasta,
                  '-m', 'most_abundant', '-o', self.out + '_otus_most_abundant.fa'])
         except subprocess.CalledProcessError:
-            self.filelog.write(msg72)
-            sys.exit(1)
+            self.filelogerrorwrite(msg72)
         else:
-            self.filelog.write(msg73)
+            self.filelogstdoutwrite(msg73)
             return self.out + '_otus_most_abundant.fa'
 
     def pysed(self, pickrepseqoutput, idx, old, new):
@@ -167,7 +176,6 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return:
         """
         try:
-            self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
             self.df1 = pd.read_csv(blastnclonesinput, sep="\t", header=None,
                                    names=['chr', 'start', 'end', 'clonename', 'score', 'strand'])
             self.df2 = self.df1.replace({'minus': '-', 'plus': '+'}, regex=True).sort_values('start').reset_index(
@@ -182,11 +190,9 @@ class DomainsDefinition(InputCheckDomainDefinition):
                                  ignore_index=True).sort_values('start').reset_index(drop=True)
             self.df1.to_csv(self.out + '_blastclonesparsed.bed', sep="\t", header=None, index=False)
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg104)
-            sys.exit(1)
+            self.filelogerrorwrite(msg104)
         else:
-            self.filelog.write(msg105)
+            self.filelogstdoutwrite(msg105)
             return self.out+'_blastclonesparsed.bed'
 
     def clonescount(self, pickotusout):
@@ -195,15 +201,13 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param pickotusout:
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             with open(self.out + '_cluster_count.txt', 'w') as f:
                 subprocess.check_call(['awk', 'BEGIN{FS="\t";OFS="\t"}{print $1,NF}', pickotusout], stdout=f)
         except subprocess.CalledProcessError:
-            self.filelog.write(msg106)
-            sys.exit(1)
+            self.filelogerrorwrite(msg106)
         else:
-            self.filelog.write(msg107)
+            self.filelogstdoutwrite(msg107)
             return self.out+'_cluster_count.txt'
 
     def mergingcount(self, bedparsed, clonescounted):
@@ -213,7 +217,6 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param clonescounted:
         :return: BED6 files with chr, start, end, clonename, count, strand
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             self.df1 = pd.read_csv(bedparsed, sep="\t", header=None,
                                    names=['chr', 'start', 'end', 'clonename', 'score', 'strand'])
@@ -222,11 +225,9 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df3 = self.df3[['chr', 'start', 'end', 'clonename', 'count', 'strand']]
             self.df3.to_csv(self.out + '_blastnclonescounted.bed', sep="\t", header=None, index=False)
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg108)
-            sys.exit(1)
+            self.filelogerrorwrite(msg108)
         else:
-            self.filelog.write(msg109)
+            self.filelogstdoutwrite(msg109)
             return self.out + '_blastnclonescounted.bed'
 
     def filteringclonescount(self, mergingcountoutput, frequency):
@@ -236,7 +237,6 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param frequency:
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             self.df1 = pd.read_csv(mergingcountoutput, sep="\t", header=None,
                                    names=['chr', 'start', 'end', 'clonename', 'count', 'strand'])
@@ -246,11 +246,9 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df2 = self.df2.drop_duplicates(subset='end', keep="last")
             self.df2.to_csv(self.out + '_blastnclonescountedfiltered.bed', sep="\t", header=None, index=False)
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg108)
-            sys.exit(1)
+            self.filelogerrorwrite(msg108)
         else:
-            self.filelog.write(msg109)
+            self.filelogstdoutwrite(msg109)
             return self.out+'_blastnclonescountedfiltered.bed'
 
     def pybedtoolsmerge(self, filteringclonescountoutput):
@@ -265,17 +263,14 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param fastqsequence: Input fasta file
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             self.bed = pybedtools.BedTool(pybedtoolsmergeoutput)
             self.fasta = pybedtools.BedTool(fastqsequence)
             self.end = self.bed.sequence(fi=self.fasta).save_seqs(self.out + '_blastnclonesmerge.fasta')
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg88)
-            sys.exit(1)
+            self.filelogerrorwrite(msg88)
         else:
-            self.filelog.write(msg91)
+            self.filelogstdoutwrite(msg91)
             return self.out + '_blastnclonesmerge.fasta'
 
     def bedtoolsannotate(self, clonesformatbed, annotation):
@@ -285,16 +280,14 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param annotation:
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             with open(self.out + '_clonesannotated.bed', 'w') as f:
                 subprocess.check_call(['bedtools', 'annotate', '-i', clonesformatbed, '-files', annotation], stdout=f)
             f.close()
         except subprocess.CalledProcessError:
-            self.filelog.write(msg75)
-            sys.exit(1)
+            self.filelogerrorwrite(msg75)
         else:
-            self.filelog.write(msg76)
+            self.filelogstdoutwrite(msg76)
             return self.out + '_clonesannotated.bed'
 
     def bedtoolsannotatefiltering(self, bedtoolsannotateout, percthr):
@@ -304,19 +297,15 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param percthr:
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
-            self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
             self.df1 = pd.read_csv(bedtoolsannotateout, sep="\t", header=None)
             self.df2 = self.df1.loc[self.df1[6] >= float(percthr)].sort_values(1).reset_index(drop=True)
             self.df2[[0, 1, 2, 3, 4, 5]].to_csv(self.out + '_clonesannotatedfiltered.bed', sep="\t",
                                                 header=None, index=False)
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg88)
-            sys.exit(1)
+            self.filelogerrorwrite(msg88)
         else:
-            self.filelog.write(msg77)
+            self.filelogstdoutwrite(msg77)
             return self.out + '_clonesannotatedfiltered.bed'
 
     def adddescription(self, clonesmerged, annotation, percthr):
@@ -327,9 +316,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param percthr: Overlap intersection
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
-            self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
             self.clones = pybedtools.BedTool(clonesmerged)
             self.annotation = pybedtools.BedTool(annotation)
             self.intersection = self.clones.intersect(self.annotation, wao=True, f=float(percthr))
@@ -343,11 +330,9 @@ class DomainsDefinition(InputCheckDomainDefinition):
                       'strand', 'genename', 'description']].to_csv(self.out + '_clonesdescription.bed', sep="\t",
                                                                    header=None, index=False)
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg110)
-            sys.exit(1)
+            self.filelogerrorwrite(msg110)
         else:
-            self.filelog.write(msg111)
+            self.filelogstdoutwrite(msg111)
             return self.out + '_clonesdescription.bed'
 
     def addsequence(self, outputfromdescription, outputfasta2tab):
@@ -357,7 +342,6 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param outputfasta2tab:
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + ".log", "a")
         try:
             # ex clones description sequence
             self.df1 = pd.read_csv(outputfromdescription,
@@ -377,11 +361,9 @@ class DomainsDefinition(InputCheckDomainDefinition):
                       'description', 'nseq']].to_csv(self.out + '_domaindetection_step1.tab', sep="\t",
                                                      header=None, index=False)
         except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg112)
-            sys.exit(1)
+            self.filelogerrorwrite(msg112)
         else:
-            self.filelog.write(msg113)
+            self.filelogstdoutwrite(msg113)
             return self.out + '_domaindetection_step1.tab'
 
     def cleantempfile(self):
