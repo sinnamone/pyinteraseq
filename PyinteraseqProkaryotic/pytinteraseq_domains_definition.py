@@ -87,7 +87,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return:
         """
         try:
-            SeqIO.convert(imp, 'fasta', self.out + prefix + '_domaind_definition.tab', 'tab')
+            SeqIO.convert(imp, 'fasta', self.out + prefix + '.tab', 'tab')
         except traceback:
             self.filelogerrorwrite(msg96)
         else:
@@ -112,7 +112,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
                                    '--outputid', self.outputid + suffix,
                                    '--thread', self.thread,
                                    '--outformat', outputformat,
-                                   '--log', self.outputfolder + self.outputid + ".log"],
+                                   '--log', self.outputfolder + self.outputid + "_domaind_definition.log"],
                                   stderr=self.filelog, stdout=self.filelog)
         except subprocess.CalledProcessError:
             self.filelogerrorwrite(msg60)
