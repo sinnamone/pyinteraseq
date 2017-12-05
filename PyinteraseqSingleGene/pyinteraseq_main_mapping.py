@@ -42,16 +42,16 @@ reference_opts.add_option('--fastasequence', action="store", dest="fastasequence
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
 reference_opts.add_option('--thread', action="store", dest="thread", default='1',
                           help='Number of thread.')
+reference_opts.add_option('--log', action="store", dest="log", default=None,
+                          help='Number of thread.')
 parser.add_option_group(reference_opts)
 
 advance_opts = optparse.OptionGroup(
     parser, 'Advanced Options',
     'Options for advanced analysis.',
     )
-advance_opts.add_option('--minclonelength', action="store", dest="minclonelength", default='100',
+advance_opts.add_option('--minclonelength', action="store", dest="minclonelength", default='50',
                         help='Minumum clones length.')
-advance_opts.add_option('--overlapintersect', action="store", dest="overlapintersect", type="float",
-                        default=0.7, help='Parameters -f of bedtools intersect.')
 advance_opts.add_option('--opengap', action="store", dest="opengap", type="int",
                         default=1, help='Open-gap allowed.')
 advance_opts.add_option('--mismatch', action="store", dest="mismatch", type="float",
@@ -67,10 +67,7 @@ if __name__ == '__main__':
     MergeFileList = []
     InpClass = InputCheck(optparseinstance=options)
     DictInfo.update({
-        "LogFilePath": InpClass.logfilecreation(),
         "CutadaptPath": InpClass.cutadaptcheck(),
-        "PickOtus": InpClass.pickotuscheck(),
-        "PickRepSeq": InpClass.pickrepseqcheck(),
         "LogInfoAppended": InpClass.inputinformationappen()
     })
     # Parsing input fasta file
@@ -79,16 +76,16 @@ if __name__ == '__main__':
     TrimmingSingleClass = TrimmingSingle(optparseinstance=options)
     TrimmingPairedClass = TrimmingPaired(optparseinstance=options)
     MappingClass = BlastNlucleotide(optparseinstance=options)
-    readtype = InpClass.fastatesting(options.readforward)
+    readtype = InpClass.fastatesting(InpClass.readforward)
     seqtype = InpClass.sequencingtype
     if readtype == 'fastq':
         # Trimming paired end fastq
         if seqtype == "Paired-End":
             DictInfo["Trimmed5paired"] = TrimmingPairedClass.trimming5paired()
             DictInfo["FastaReadsForward"] = MappingClass.fastq2fasta(
-                fastq=InpClass.readforward, nameid="_forward")
+                fastq=DictInfo["Trimmed5paired"][0], nameid="_forward")
             DictInfo["FastaReadsReverse"] = MappingClass.fastq2fasta(
-                fastq=InpClass.readreverse, nameid="_reverse")
+                fastq=DictInfo["Trimmed5paired"][1], nameid="_reverse")
         elif seqtype == "Single-End":
             # Trimming Single-End fastq
             DictInfo["Trimmed5single"] = TrimmingSingleClass.trimming5single()
@@ -98,17 +95,17 @@ if __name__ == '__main__':
             sys.exit(1)
         # Conversion Fasta==>Tabular forward
         DictInfo["TabularReadsForward"] = MappingClass.fasta2tabular(
-            imp=DictInfo["FastaReadsForward"], prefix="forward")
+            imp=DictInfo["FastaReadsForward"], prefix="_forward")
         if seqtype == "Paired-End":
             # Conversion Fasta==>Tabular reverse
             DictInfo["TabularReadsReverse"] = MappingClass.fasta2tabular(
-                imp=DictInfo["FastaReadsReverse"], prefix="reverse")
+                imp=DictInfo["FastaReadsReverse"], prefix="_reverse")
     elif readtype == 'fasta':
         # Trimming paired end fasta
         if seqtype == "Paired-End":
             DictInfo["Trimmed5paired"] = TrimmingPairedClass.trimming5paired()
             DictInfo["TabularReadsForward"] = MappingClass.fasta2tabular(
-                imp=InpClass.readforward, prefix="forward")
+                imp=InpClass.readforward, prefix="_forward")
             if options.readreverse is not None:
                 DictInfo["TabularReadsReverse"] = MappingClass.fasta2tabular(
                     imp=InpClass.readreverse, prefix="_reverse")
@@ -156,5 +153,4 @@ if __name__ == '__main__':
     # Filter reads steps (NO open-gaps, mismatch)
     DictInfo["blastoutputnohashfiltered"] = MappingClass.blastnfiltering(
         blastnout=DictInfo["blastoutputnohash"])
-    print DictInfo
-    MappingClass.cleansingle(tempdict=DictInfo, sequencingtype=seqtype)
+    MappingClass.cleantempfile()

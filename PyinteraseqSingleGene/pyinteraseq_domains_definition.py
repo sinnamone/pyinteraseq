@@ -7,6 +7,7 @@ import traceback
 from output_message import *
 import subprocess
 from pyinteraseq_inputcheck import InputCheckDomainDefinition
+import os
 
 
 class DomainsDefinition(InputCheckDomainDefinition):
@@ -37,7 +38,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return:
         """
         # open log
-        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        self.filelog = self.logopen()
         try:
             # import blastnoutput
             self.df1 = pd.read_csv(blastnoutput, sep="\t", header=None,
@@ -80,7 +81,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param idex: string that will be appended to output name file
         :return: file path and name
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        self.filelog = self.logopen()
         try:
             bed = pybedtools.example_bedtool(bedinp)
             bam = bed.to_bam(g=genomefile)
@@ -100,7 +101,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param lung:
         :return: file path and name
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        self.filelog = self.logopen()
         self.sum = 0
         try:
             c = list(str(pysam.depth(bam)).rsplit("\n"))
@@ -125,14 +126,14 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param bamt:
         :return: flag, file path and name
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        self.filelog = self.logopen()
         try:
             if depb >= dept:
-                self.down = float(dept) / depb
+                self.down = float(depb) / dept
                 self.bam = bamb
                 self.flag = "background"
-            elif dept >= depb:
-                self.down = float(depb) / dept
+            elif depb < dept:
+                self.down = float(dept) / depb
                 self.bam = bamt
                 self.flag = "target"
             self.prefix = self.bam.rsplit("/")[-1][:-len(".bam")]
@@ -152,7 +153,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param prefix: id to append to output
         :return: file path and name
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        self.filelog = self.logopen()
         try:
             # read bam file  output all positions
             self.depthlist = pysam.depth("-a", bam).split("\n")
@@ -176,7 +177,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param bedt: bed with target coverage
         :return: file path and name
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        self.filelog = self.logopen()
         try:
             # import background
             self.df1 = pd.read_csv(bedb, sep='\t', header=None, names=['CHR_1', 'POS_1', 'COV_1'])
@@ -208,7 +209,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param intervals:
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        self.filelog = self.logopen()
         try:
             self.df1 = pd.read_csv(intervals, sep="\t", header=None)
             self.df1[5] = self.df1[1] + 1
@@ -230,7 +231,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param tsv: output from trasposedomains
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
+        self.filelog = self.logopen()
         try:
             a = pybedtools.example_bedtool(tsv)
             c = a.merge(d=50)
@@ -246,3 +247,14 @@ class DomainsDefinition(InputCheckDomainDefinition):
         else:
             self.filelog.write(msg138)
             return self.out + '_intevals_domains.txt'
+
+    def cleantempfile(self):
+        """
+        Remove temporany files.
+        :return:
+        """
+        templistfiles = ["background.bed", "target.bed", "background.bam", "target.bam", "target_down.bam",
+                         "target.tsv", "background.tsv", "_intervals.tsv", "transposedintervals.tsv", "_blastn_nohash.tab"]
+        for item in templistfiles:
+            if os.path.isfile(self.out + item):
+                os.remove(self.out + item)

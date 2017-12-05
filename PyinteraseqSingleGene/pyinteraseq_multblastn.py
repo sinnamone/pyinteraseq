@@ -26,8 +26,6 @@ query_opts.add_option('--outputid', action="store", dest="outputid", default=Non
                       help='Output ID.')
 query_opts.add_option('--outformat', action="store", dest="outformat", default=None,
                       help='Output format for blastn.')
-query_opts.add_option('--log', action="store", dest="log", default=None,
-                      help='Log file')
 query_opts.add_option('--suffix', action="store", dest="suffix", default='_blastn.txt',
                       help='Suffix to add after merging files.')
 parser.add_option_group(query_opts)
@@ -73,31 +71,27 @@ def splittingfiles(wholefasta, chunks, outputpath, idtemp):
     return count
 
 
-def makeblastdb(outputfolder, dbname, fasta, log):
+def makeblastdb(outputfolder, dbname, fasta):
     """
     Run makeblastdb
     :param outputfolder: Output folder for new db
     :param dbname: Name of Database
     :param fasta: Reference fasta file
-    :param log:
     :return: Database name
     """
     if os.path.isfile(outputfolder + dbname) is False:
-        logopen = open(log, "a")
         fnull = open(os.devnull, 'w')
         try:
             subprocess.check_call(
-                ['makeblastdb',
+                ['/opt/ncbi-blast-2.7.1+/bin/makeblastdb',
                  '-in', fasta,
                  '-dbtype',
                  'nucl',
                  '-out', options.outputfolder + options.dbname],
                 stdout=fnull, stderr=fnull)
         except subprocess.CalledProcessError:
-            logopen.write(msg58)
             sys.exit(1)
         else:
-            logopen.write(msg59)
             return outputfolder + dbname
 
 
@@ -111,7 +105,7 @@ def blastn(outputname, fastainpu, dbname, outputformat):
     :return:
     """
     fnull = open(os.devnull, 'w')
-    return (subprocess.check_call(['blastn', '-out', outputname,
+    return (subprocess.check_call(['/opt/ncbi-blast-2.7.1+/bin/blastn', '-out', outputname,
                                    '-outfmt',
                                    outputformat,
                                    '-query', fastainpu,
@@ -183,8 +177,7 @@ if __name__ == '__main__':
         else:
             outp = options.outputfolder + '/' + options.outputid
     # Makeblastdb
-    databname = makeblastdb(outputfolder=options.outputfolder, dbname=options.dbname, fasta=options.referencefasta,
-                            log=options.log)
+    databname = makeblastdb(outputfolder=options.outputfolder, dbname=options.dbname, fasta=options.referencefasta)
     # Split input multifastafile
     numfilesgenerated = (splittingfiles(wholefasta=options.multifastasequence, chunks=options.chunks,
                                         outputpath=options.outputfolder,

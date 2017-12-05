@@ -2,7 +2,7 @@ import optparse
 from pyinteraseq_mapping import *
 from pyinteraseq_domains_definition import *
 
-parser = optparse.OptionParser(usage='python %prog pyinteraseq_main_definition.py', version='1.0',)
+parser = optparse.OptionParser(usage='python %prog pyinteraseq_main_domains_definition.py', version='1.0',)
 input_opts = optparse.OptionGroup(
     parser, 'Input Options',
     'Input file.',
@@ -30,13 +30,15 @@ reference_opts = optparse.OptionGroup(
     )
 reference_opts.add_option('--fastasequence', action="store", dest="fastasequence", default=None,
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
+reference_opts.add_option('--log', action="store", dest="log", default=None,
+                          help='Number of thread.')
 parser.add_option_group(reference_opts)
 
 options, args = parser.parse_args()
 
 if __name__ == '__main__':
     DictInfo = dict()
-    # 
+    #
     DomDef = DomainsDefinition(optparseinstance=options)
     DomDef.inputinformationappen()
     # count lenght gene
@@ -58,6 +60,7 @@ if __name__ == '__main__':
         bam=DictInfo["backgroundbam"], lung=DictInfo["fastalength"])
     DictInfo["targetbamaveragedepth"] = DomDef.averagedepth(
         bam=DictInfo["targetbam"], lung=DictInfo["fastalength"])
+
     #
     DictInfo["downsampledbam"] = DomDef.downsampling(
         depb=DictInfo["backgroundbamaveragedepth"],
@@ -80,8 +83,4 @@ if __name__ == '__main__':
     DictInfo["transpose"] = DomDef.trasposedomains(
         intervals=DictInfo["intervalsdata"])
     DictInfo["filtered"] = DomDef.filtering_domain(DictInfo["transpose"])
-    for i in "targetbed", "targetbam", "coveragetarget", "backgroundbam", "coveragebackground", "intervalsdata", "backgroundbed", "genomefile", "transpose":
-        os.remove(DictInfo[i])
-    os.remove(DictInfo["downsampledbam"][1])
-
-
+    DomDef.cleantempfile()

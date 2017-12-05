@@ -15,7 +15,7 @@ class TrimmingSingle(InputCheck):
         Function for trimming 5' single-end reads
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        self.filelog = self.logopen()
         try:
             subprocess.check_call(['cutadapt', '-g', str(self.primer5forward), '--discard-untrimmed',
                                    '-e', '0.03', '--trim-n', '-m', str(self.cloneslength), '--quiet',
@@ -25,9 +25,9 @@ class TrimmingSingle(InputCheck):
             self.filelog.write(msg34)
             sys.exit(1)
         else:
-            # self.filelog.write(msg50 + self.fastqcount(self.out + '_read1.' + self.readforwardtype,
-            #                                            self.readforwardtype))
-            # self.filelog.write(msg35)
+            self.filelog.write(msg50 + self.fastqcount(self.out + '_read1.' + self.readforwardtype,
+                                                       self.readforwardtype))
+            self.filelog.write(msg35)
             return self.out + '_read1.' + self.readforwardtype
 
     def trimming3single(self):
@@ -35,7 +35,7 @@ class TrimmingSingle(InputCheck):
         Function for trimming 3' single-end reads
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        self.filelog = self.logopen()
         try:
             subprocess.check_call(
                 ['cutadapt', '-a', str(self.primer3forward), '--trim-n',
@@ -66,7 +66,7 @@ class TrimmingPaired(InputCheck):
         Trimming 5' paired-end dataset
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        self.filelog = self.logopen()
         try:
             subprocess.check_call(['cutadapt',
                                    '-g', self.primer5forward,
@@ -114,7 +114,7 @@ class TrimmingPaired(InputCheck):
                  self.out + '_read2.' + self.readreversetype],
                 stderr=self.filelog)
         except subprocess.CalledProcessError:
-            sys.stdout.write(msg39)
+            self.filelog.write(msg39)
             sys.exit(1)
         else:
             self.readtrimmedthree.append(self.out + '_read1_1.' + self.readforwardtype)

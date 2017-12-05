@@ -24,7 +24,7 @@ class GenomeFile(InputCheck):
         Creation of genome file
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        self.filelog = self.logopen()
         try:
             with open(self.outputfolder + self.namefilefasta.split('.')[0] + '.genome', "wb") as self.genome:
                 self.genome.write(self.namefilefasta.split('.')[0] + '\t' + str(self.chromosomelength))
@@ -40,9 +40,10 @@ class GenomeFile(InputCheck):
         parse fasta reference
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        outid = self.outputfolder + self.namefilefasta.split('.')[0] + '_parsed.fasta'
+        self.filelog = self.logopen()
         try:
-            with open(self.outputfolder + self.namefilefasta.split('.')[0] + '.fasta', 'w') as self.ref:
+            with open(outid, 'w') as self.ref:
                 for self.seq_record in SeqIO.parse(self.fastasequence, "fasta"):
                     self.ref.write('>' + str(self.namefilefasta.split('.')[0]) + '\n' + str(self.seq_record.seq))
         except OSError:
@@ -53,8 +54,8 @@ class GenomeFile(InputCheck):
                 if item.endswith(".fai"):
                     os.remove(self.outputfolder+item)
             self.filelog.write(msg44)
-            self.index = pysam.Fastafile(self.outputfolder + self.namefilefasta.split('.')[0] + '.fasta')
-            return self.outputfolder + self.namefilefasta.split('.')[0] + '.fasta'
+            self.index = pysam.Fastafile(outid)
+            return outid
 
 
 

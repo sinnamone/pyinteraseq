@@ -49,7 +49,7 @@ msg46 = "Genome format file parsing complete.\n"
 msg47 = "\nForward read number:\t"
 msg48 = "\nReverse read number:\t"
 msg49 = "\nNumber of reads:\t"
-msg50 = "Number of reads after 5\' trimming\t"
+msg50 = "\nNumber of reads after 5\' trimming\t"
 msg51 = "Number of reads after 3\' trimming\t"
 msg52 = "\nNumber of forward reads after 5\' trimming.\t"
 msg53 = "\nNumber of reverse reads after 5\' trimming.\t"
@@ -58,7 +58,7 @@ msg55 = "\nNumber of reverse reads after 3\' trimming.\t"
 msg56 = "Total reads ready for mapping.\t"
 msg57 = "Database already exist. Exit\n"
 msg58 = "Error makeblastdb. Exit\n"
-msg59 = "Make blast db complete.\n"
+msg59 = "\nMake blast db complete."
 msg60 = "#Error#Error during blastn analysis. Exit\n"
 msg61 = "Blastn analysis complete."
 msg62 = "Number of reads mapping:\t"
@@ -92,7 +92,7 @@ msg89 = '\n#Error#Error in pybedtools. Function bedtools getfasta failed.Executi
 msg90 = '\n#Error#Error in pybedtools. Function bedtools getfasta failed.Execution stop.'
 msg91 = '\nPybedtools getfasta complete.'
 msg92 = '\n#Error#Error while cleaning balstn output.Execution stop.'
-msg93 = '\nBlastn output hash clean complete.'
+msg93 = '\nBlastn output hash clean complete.\n'
 msg94 = '#Error#Error conversion FastQ ==>FastA.Execution stop.\n'
 msg95 = 'Conversion FastQ ==>FastA complete.\n'
 msg96 = "#Error#Error conversion FastA ==>Tabular.Execution stop.\n"
