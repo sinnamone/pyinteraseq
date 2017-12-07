@@ -42,6 +42,8 @@ reference_opts.add_option('--fastasequence', action="store", dest="fastasequence
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
 reference_opts.add_option('--thread', action="store", dest="thread", default='2',
                           help='Number of thread.')
+reference_opts.add_option('--log', action="store", dest="log", default=None,
+                          help='Log file.')
 parser.add_option_group(reference_opts)
 
 advance_opts = optparse.OptionGroup(
@@ -74,24 +76,27 @@ if __name__ == '__main__':
     if InpClass.readreverse is not None:
         if (InpClass.readforwardtype is "fastq") and (InpClass.readreversetype is "fastq"):
             DictInfo.update({
-                # "LogFilePath": InpClass.logfilecreation(),
+                "CutadaptPath": InpClass.cutadaptcheck(),
+                "LogInfoAppended": InpClass.inputinformationappen()
+            })
+	elif (InpClass.readforwardtype is "fasta") and (InpClass.readreversetype is "fasta"):
+            DictInfo.update({
                 "CutadaptPath": InpClass.cutadaptcheck(),
                 "LogInfoAppended": InpClass.inputinformationappen()
             })
         elif InpClass.readforwardtype is "fastq" and InpClass.readreversetype is "fasta":
-            log = open(options.outputfolder + options.outputid + "_mapping.log", "a")
+            log = open(InpClass.inputfilelog, "a")
             log.write(msg5)
         elif InpClass.readforwardtype is "fasta" and InpClass.readreversetype is "fastq":
-            log = open(options.outputfolder + options.outputid + "_mapping.log", "a")
+            log = open(InpClass.inputfilelog, "a")
             log.write(msg6)
     elif InpClass.readreverse is None:
         DictInfo.update({
-            # "LogFilePath": InpClass.logfilecreation(),
             "CutadaptPath": InpClass.cutadaptcheck(),
             "LogInfoAppended": InpClass.inputinformationappen()
         })
     # start analysis
-    log = open(InpClass.outputfolder+InpClass.outputid + "_mapping.log", "a")
+    log = open(InpClass.inputfilelog, "a")
     if (InpClass.sequencingtype in "Single-End") and (InpClass.readforwardtype in "fastq"):
         if (InpClass.primer5forward is not None) and (InpClass.primer3forward is not None):
             # Trimming Single-End fastQ
@@ -118,7 +123,7 @@ if __name__ == '__main__':
             multifasta=DictInfo["FastaRenamedForward"],
             outputformat=outformat7,
             suffix='_blastn.txt')
-        #End Single fastq
+        # End Single fastq
     elif (InpClass.sequencingtype in "Single-End") and (InpClass.readforwardtype in "fasta"):
         if (InpClass.primer5forward is not None) and (InpClass.primer3forward is not None):
             # Trimming Single-End fastA
@@ -183,7 +188,7 @@ if __name__ == '__main__':
             outputformat=outformat7,
             suffix='_blastn.txt')
     elif (InpClass.sequencingtype in "Paired-End") and (InpClass.readforwardtype in "fasta"):
-        if (InpClass.primer5forward is not None) and (InpClass.primer3forward is not None) and (InpClass.primer5reverse is not None) and (InpClass.primer3reverse is not None):
+        if (InpClass.primer5forward is not None) and (InpClass.primer5reverse is not None):
             DictInfo["Trimmed5paired"] = TrimPaired.trimming5paired()
             # Conversion  Fasta<==>Tabular
             DictInfo["TabularReadsForward"] = MappingClass.fasta2tabular(
@@ -225,3 +230,4 @@ if __name__ == '__main__':
     DictInfo["blastoutputnohashfiltered"] = MappingClass.blastnfiltering(
         blastnout=DictInfo["blastoutputnohash"])
     MappingClass.cleantempfile()
+

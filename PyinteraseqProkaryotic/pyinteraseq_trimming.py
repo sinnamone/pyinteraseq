@@ -8,13 +8,14 @@ class TrimmingSingle(InputCheck):
 
     def __init__(self, optparseinstance):
         InputCheck.__init__(self, optparseinstance)
+        self.primer5reverse = InputCheck(optparseinstance)
 
     def trimming5single(self):
         """
         Function for trimming 5' single-end reads
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        self.filelog = self.logopen()
         try:
             subprocess.check_call(['cutadapt', '-g', str(self.primer5forward), '--discard-untrimmed',
                                    '-e', '0.03', '--trim-n', '-m', str(self.cloneslength), '--quiet',
@@ -34,7 +35,7 @@ class TrimmingSingle(InputCheck):
         Function for trimming 3' single-end reads
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        self.filelog = self.logopen()
         try:
             subprocess.check_call(
                 ['cutadapt', '-a', str(self.primer3forward), '--trim-n',
@@ -59,12 +60,13 @@ class TrimmingPaired(InputCheck):
         self.readtrimmedfive = []
         self.readtrimmedthree = []
 
+
     def trimming5paired(self):
         """
         Trimming 5' paired-end dataset
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        self.filelog = self.logopen()
         try:
             subprocess.check_call(['cutadapt',
                                    '-g', self.primer5forward,
@@ -112,7 +114,7 @@ class TrimmingPaired(InputCheck):
                  self.out + '_read2.' + self.readreversetype],
                 stderr=self.filelog)
         except subprocess.CalledProcessError:
-            sys.stdout.write(msg39)
+            self.filelog.write(msg39)
             sys.exit(1)
         else:
             self.readtrimmedthree.append(self.out + '_read1_1.' + self.readforwardtype)

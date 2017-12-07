@@ -32,8 +32,7 @@ reference_opts.add_option('--fastasequence', action="store", dest="fastasequence
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
 reference_opts.add_option('--annotation', action="store", dest="annotation", default=None,
                           help='Annotation File(.gff|.bed)')
-# reference_opts.add_option('--chromosomename', action="store", dest="chromosomename", default=None,
-#                           help='Chromosome Name.(NC_XXXX)')
+
 parser.add_option_group(reference_opts)
 
 
