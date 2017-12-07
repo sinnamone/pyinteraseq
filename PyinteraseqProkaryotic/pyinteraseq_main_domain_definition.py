@@ -1,6 +1,6 @@
 import optparse
 from pyinteraseq_mapping import *
-from pytinteraseq_domains_definition import *
+from pyinteraseq_domains_definition import *
 
 parser = optparse.OptionParser(usage='python %prog pyinteraseq_main_definition.py', version='1.0',)
 input_opts = optparse.OptionGroup(
@@ -32,7 +32,8 @@ reference_opts.add_option('--fastasequence', action="store", dest="fastasequence
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
 reference_opts.add_option('--annotation', action="store", dest="annotation", default=None,
                           help='Annotation File(.gff|.bed)')
-
+reference_opts.add_option('--log', action="store", dest="log", default=None,
+                          help='Path/filelog.log.')
 parser.add_option_group(reference_opts)
 
 
@@ -60,9 +61,11 @@ if __name__ == '__main__':
     DictFile = dict()
     outformat6 = '6 sseqid sstart send qseqid score sstrand'
     DomainDefinitionClass = DomainsDefinition(optparseinstance=options)
+    DictInfo["mappingoutputabular"] = DomainDefinitionClass.mappingoutput2tabular(
+        tabularoutput=DomainDefinitionClass.mappingoutoput)
     # Conversion Filter Blastn Table in Fasta
     DictInfo["blastoutputnohashfilteredfasta"] = DomainDefinitionClass.tab2fasta(
-        tabular=options.mappingoutput, prefixoutput="_blastnfiltered")
+        tabular=DictInfo["mappingoutputabular"], prefixoutput="_blastnfiltered")
     # Clustering steps calling script Pick_otus
     DictInfo["clustering"] = DomainDefinitionClass.clustering(
         blastnout=DictInfo["blastoutputnohashfilteredfasta"], prefixoutput="_blastnfiltered")
@@ -74,7 +77,7 @@ if __name__ == '__main__':
         DictInfo["pickedreads"], '_clean.fasta', '-', '')
     # Mapping most representative clone against genome to identify which gene are intersted
     DictInfo["blastedclones"] = DomainDefinitionClass.callmultiblastn(
-        fasta=options.fastasequence,
+        fasta=DomainDefinitionClass.fastasequence,
         multifasta=DictInfo["pickedreadscleand"],
         outputformat=outformat6,
         suffix='_blastnclones.tab')

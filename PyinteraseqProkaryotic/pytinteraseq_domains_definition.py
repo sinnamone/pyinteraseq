@@ -25,7 +25,6 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.output = None
         self.end = None
         self.bed = None
-        self.fasta = None
         self.clones = None
         self.intersection = None
         self.dfplus = None
@@ -36,6 +35,8 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.header = None
         self.path_multiblastn = os.path.dirname(os.path.realpath(__file__)) + '/pyinteraseq_multblastn.py'
         self.dbname = self.outputfolder + os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0]
+        self.mappingoutoput = self.inputistance.mappingoutput
+
 
     def filelogstdoutwrite(self, msg):
         """
@@ -43,7 +44,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param msg:
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_domaind_definition.log", "a")
+        self.filelog = self.logopen()
         self.filelog.write(msg)
 
     def filelogerrorwrite(self, msg):
@@ -52,10 +53,24 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param msg:
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_domaind_definition.log", "a")
+        self.filelog = self.logopen()
         self.filelog.write(traceback.format_exc())
         self.filelog.write(msg)
         sys.exit(1)
+
+    def mappingoutput2tabular(self, tabularoutput):
+        """
+
+        :param tabularoutput:
+        :return:
+        """
+        self.df1 = pd.read_csv(tabularoutput, sep ="\t", header=None, names=[u'seq', u'chr', u'percmatch', u'length',
+                                                                             u'mismatch', u'op', u'cstart',
+                                                                             u'cend', u'start', u'end', u'evalue',
+                                                                             u'bitscore', u'nseq'])
+        self.df1 = self.df1.drop_duplicates(subset='seq', keep=False)
+        self.df1[[u'seq',u'nseq']].to_csv(self.out + '_mappingoutput.tab', sep="\t",header=None,index=False)
+        return self.out + '_mappingoutput.tab'
 
     def tab2fasta(self, tabular, prefixoutput):
         """
@@ -103,21 +118,23 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param suffix: String added to outputfile
         :return: blastn output
         """
+        self.filelog = self.logopen()
+        fnull = open(os.devnull, 'w')
         try:
             subprocess.check_call(['python', self.path_multiblastn,
                                    '--referencefasta', fasta,
                                    '--multifastasequence', multifasta,
-                                   '--dbname', os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0],
+                                   '--dbname', self.genename,
                                    '--outputfolder', self.outputfolder,
                                    '--outputid', self.outputid + suffix,
                                    '--thread', self.thread,
-                                   '--outformat', outputformat,
-                                   '--log', self.outputfolder + self.outputid + "_domaind_definition.log"],
-                                  stderr=self.filelog, stdout=self.filelog)
+                                   '--outformat', outputformat])
         except subprocess.CalledProcessError:
-            self.filelogerrorwrite(msg60)
+            self.filelog.write(msg60)
+            sys.exit(1)
         else:
-            self.filelogstdoutwrite(msg61)
+            self.filelog.write(msg61)
+            self.filelog.close()
             return self.out + suffix
 
     def clustering(self, blastnout, prefixoutput):
@@ -128,7 +145,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return: cluster file
         """
         try:
-            subprocess.check_call(['pick_otus.py', '-i', blastnout, '-o',
+            subprocess.check_call([self.pick_otus, '-i', blastnout, '-o',
                                    self.out + '_picked', '-s', '0.97'])
         except subprocess.CalledProcessError:
             self.filelogerrorwrite(msg71)
@@ -144,7 +161,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         """
         try:
             subprocess.check_call(
-                ['pick_rep_set.py', '-i', pickotus, '-f',
+                [self.pick_rep_set, '-i', pickotus, '-f',
                  fasta,
                  '-m', 'most_abundant', '-o', self.out + '_otus_most_abundant.fa'])
         except subprocess.CalledProcessError:

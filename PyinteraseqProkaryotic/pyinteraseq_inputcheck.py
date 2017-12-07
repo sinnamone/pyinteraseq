@@ -270,7 +270,7 @@ class InputCheckDomainDefinition(object):
             # put all under this
             self.thread = self.inputistance.thread
             self.count = 0
-            self.filelog = None
+            self.inputfilelog = self.inputistance.log
             self.cloneslength = self.inputistance.minclonelength
             self.outputfolder = self.checkoutputpath()
             self.outputid = self.checkoutputid()
@@ -278,24 +278,30 @@ class InputCheckDomainDefinition(object):
             self.namefilefasta = os.path.basename(self.fastasequence.split('/')[-1])
             self.genename = self.namefilefasta.split('.')[0]
             self.out = self.outputfolder + self.outputid
-            self.mappingoutoput = self.inputistance.mappingoutput
+            self.pick_otus = "/opt/miniconda3/envs/qiime1/bin/pick_otus.py"
+            self.pick_rep_set = "/opt/miniconda3/envs/qiime1/bin/pick_rep_set.py"
+            # check file log
+            self.inputfilelog = self.logfilecreation()
+            self.filelog = None
 
             # check annotation
             if self.inputistance.annotation is not None:
                 self.annotation = self.inputistance.annotation
-                # else:
-                #     self.filelog.write(msg12)
-                #     sys.exit(0)
 
-
-                # # check if log file is already created
-                # if self.inputistance.log is None:
-                #     if os.access(self.outputfolder, os.W_OK) is True:
-                #         self.filelog = open(self.outputfolder + self.outputid + ".log", "w")
-                #         self.filelog.close()
-                #     else:
-                #         self.filelog.write(msg13)
-                #         sys.exit(1)
+        def logfilecreation(self):
+            """
+            Function that open new log file.
+            :return: path + name file log
+            """
+            if os.access(self.outputfolder, os.W_OK) is True:
+                if self.inputfilelog is None:
+                    self.inputfilelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+                    return self.outputfolder + self.outputid + "_mapping.log"
+                else:
+                    return self.inputfilelog
+            else:
+                sys.stdout.write(msg13)
+                sys.exit(1)
 
         def fastqcount(self, fastq, rtype):
             """
@@ -332,8 +338,11 @@ class InputCheckDomainDefinition(object):
             else:
                 return self.inputistance.outputid
 
-        def openlog(self):
-            return open(self.outputfolder + self.outputid + "_domaind_efinition.log", "a")
+        def logopen(self):
+            if self.inputfilelog is None:
+                return open(self.outputfolder + self.outputid + "_domaind_definition.log", "a")
+            else:
+                return open(str(self.inputfilelog), 'a')
 
         def checkfastasequence(self):
             if self.inputistance.fastasequence is None:
@@ -342,111 +351,4 @@ class InputCheckDomainDefinition(object):
             else:
                 return self.inputistance.fastasequence
 
-    # def __init__(self, optparseinstance):
-    #     # import instance with all input flag
-    #     self.inputistance = optparseinstance
-    #     self.count = 0
-    #     self.filelog = None
-    #     self.genome = None
-    #     self.backgroundmappingoutput = self.inputistance.backgroundmappingoutput
-    #     self.targetmappingoutput = self.inputistance.targetmappingoutput
-    #     self.inputfilelog = self.inputistance.log
-    #     # check output folder
-    #     if self.inputistance.outputfolder is not None:
-    #         if self.inputistance.outputfolder.endswith('/') is True:
-    #             self.outputfolder = self.inputistance.outputfolder
-    #         else:
-    #             self.outputfolder = self.inputistance.outputfolder + '/'
-    #     else:
-    #         self.filelog.write(msg9)
-    #         sys.exit(1)
-    #     # check output id
-    #     if self.inputistance.outputid is not None:
-    #         self.outputid = self.inputistance.outputid
-    #         self.out = self.outputfolder + self.outputid
-    #     else:
-    #         self.filelog.write(msg10)
-    #         sys.exit(1)
-    #     #
-    #     self.inputfilelog = self.logfilecreation()
-    #     # check fasta sequence
-    #     if self.inputistance.fastasequence is not None:
-    #         self.fastasequence = self.inputistance.fastasequence
-    #         self.namefilefasta = os.path.basename(self.fastasequence.split('/')[-1])
-    #         self.genename = self.namefilefasta.split('.')[0]
-    #     else:
-    #         self.filelog.write(msg11)
-    #         sys.exit(1)
-    #
-    # def inputinformationappen(self):
-    #     """
-    #     Log compilation. Call all the previous functions
-    #     :return:
-    #     """
-    #     self.filelog = self.logopen()
-    #     self.filelog.write(datetime.datetime.now().ctime() + '\n')
-    #     self.filelog.write(msg14)
-    #     self.filelog.write(msg114 + self.backgroundmappingoutput)
-    #     self.filelog.write(msg115 + self.targetmappingoutput)
-    #     self.filelog.write(msg116 + self.outputid)
-    #     self.filelog.write(msg117 + self.fastasequence)
-    #     self.filelog.close()
-    #     return True
-    #
-    # def contafasta(self, ref):
-    #     """
-    #     Count gene lenght
-    #     :param ref:
-    #     :return:
-    #     """
-    #     self.filelog = self.logopen()
-    #     try:
-    #         for seq_record in SeqIO.parse(ref, "fasta"):
-    #             leng = len(seq_record)
-    #             return leng
-    #     except traceback:
-    #         self.filelog.write(traceback.format_exc())
-    #         self.filelog.write(msg121)
-    #         sys.exit(1)
-    #     else:
-    #         self.filelog.write(msg122)
-    #
-    # def genomefile(self):
-    #     """
-    #     Function for the creation of genome file
-    #     :return:
-    #     """
-    #     self.filelog = self.logopen()
-    #     try:
-    #         ln = self.contafasta(ref=self.fastasequence)
-    #         self.genome = open(self.outputfolder + self.genename + ".genome", "w")
-    #         self.genome.write(self.genename + '\t' + '1\t' + str(ln))
-    #         self.genome.close()
-    #     except traceback:
-    #         self.filelog.write(traceback.format_exc())
-    #         self.filelog.write(msg123)
-    #         sys.exit(1)
-    #     else:
-    #         self.filelog.write(msg124)
-    #         return self.outputfolder + self.genename + ".genome"
-    #
-    # def logfilecreation(self):
-    #     """
-    #     Function that open new log file.
-    #     :return: path + name file log
-    #     """
-    #     if os.access(self.outputfolder, os.W_OK) is True:
-    #         if self.inputfilelog is None:
-    #             self.inputfilelog = open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
-    #             return self.outputfolder + self.outputid + "_domains_definition.log"
-    #         else:
-    #             return self.inputfilelog
-    #     else:
-    #         sys.stdout.write(msg13)
-    #         sys.exit(1)
-    #
-    # def logopen(self):
-    #     if self.inputfilelog is None:
-    #         return open(self.outputfolder + self.outputid + "_domains_definition.log", "a")
-    #     else:
-    #         return open(str(self.inputfilelog), 'a')
+
