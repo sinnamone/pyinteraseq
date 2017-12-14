@@ -9,6 +9,8 @@ import traceback
 import os
 from Bio import SeqIO
 
+from qiime import pick_rep_set
+
 
 class DomainsDefinition(InputCheckDomainDefinition):
 
@@ -36,7 +38,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.path_multiblastn = os.path.dirname(os.path.realpath(__file__)) + '/pyinteraseq_multblastn.py'
         self.dbname = self.outputfolder + os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0]
         self.mappingoutoput = self.inputistance.mappingoutput
-
+        self.pythoneve = "/opt/miniconda3/envs/qiime1/bin/python"
 
     def filelogstdoutwrite(self, msg):
         """
@@ -145,7 +147,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return: cluster file
         """
         try:
-            subprocess.check_call([self.pick_otus, '-i', blastnout, '-o',
+            subprocess.check_call([self.pythoneve, self.pick_otus, '-i', blastnout, '-o',
                                    self.out + '_picked', '-s', '0.97'])
         except subprocess.CalledProcessError:
             self.filelogerrorwrite(msg71)
@@ -161,7 +163,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         """
         try:
             subprocess.check_call(
-                [self.pick_rep_set, '-i', pickotus, '-f',
+                [self.pythoneve,self.pick_rep_set, '-i', pickotus, '-f',
                  fasta,
                  '-m', 'most_abundant', '-o', self.out + '_otus_most_abundant.fa'])
         except subprocess.CalledProcessError:

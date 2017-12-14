@@ -60,7 +60,6 @@ advance_opts.add_option('--mismatch', action="store", dest="mismatch", type="flo
                         default=3.0, help='Percentage of Mismatch allowed.')
 parser.add_option_group(advance_opts)
 
-
 options, args = parser.parse_args()
 
 if __name__ == '__main__':
