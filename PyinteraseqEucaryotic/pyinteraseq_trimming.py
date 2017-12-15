@@ -55,64 +55,24 @@ class Trimming(InputCheck):
             self.filelog.write(msg37)
             return self.out + direction + readtype
 
-    def trimming5paired(self):
+    def concatenateforrev(self, readlist):
         """
-        Trimming 5' paired-end dataset
-        :return:
+        Merge forward and reverse fasta file
+        :param readlist: list with files to append
+        :return: path + idanalysis + _con.fasta
         """
+        self.filelog = self.logopen()
         try:
-            subprocess.check_call(['cutadapt',
-                                   '-g', self.primer5forward,
-                                   '-G', self.primer5reverse,
-                                   '--trim-n',
-                                   '-m', self.minclonelength,
-                                   '--quiet',
-                                   '--discard-untrimmed',
-                                   '-o', self.out + '_read1.' + self.readforwardtype,
-                                   '-p', self.out + '_read2.' + self.readreversetype,
-                                   self.readforward,
-                                   self.readreverse])
-        except subprocess.CalledProcessError:
-            self.logopen().write(msg38a)
+            with open(self.out + '_con.' + self.readforwardtype, 'w') as outfile:
+                for fname in readlist:
+                    with open(fname) as infile:
+                        for line in infile:
+                            outfile.write(line)
+            outfile.close()
+        except StandardError:
+            self.filelog.write(msg88)
             sys.exit(1)
         else:
-            self.readtrimmedfive.append(self.out + '_read1.' + self.readforwardtype)
-            self.readtrimmedfive.append(self.out + '_read2.' + self.readreversetype)
-            self.logopen().write(msg52 + self.fastqcount(self.out + '_read1.' + self.readforwardtype,
-                                                         self.readforwardtype))
-            self.logopen().write(msg53 + self.fastqcount(self.out + '_read2.' + self.readreversetype,
-                                                         self.readreversetype))
-            self.logopen().write(msg38b)
-            return self.readtrimmedfive
-
-    def trimming3paired(self):
-        """
-        Trimming 3' paired-end
-        :return:
-        """
-        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
-        try:
-            subprocess.check_call(
-                ['cutadapt',
-                 '-b', self.primer3forward,
-                 '-B', self.primer3reverse,
-                 '-e', '0.03',
-                 '--trim-n', '-m', self.minclonelength,
-                 '--quiet',
-                 '-o', self.out + '_read1_1.' + self.readforwardtype,
-                 '-p', self.out + '_read2_2.' + self.readreversetype,
-                 self.out + '_read1.' + self.readforwardtype,
-                 self.out + '_read2.' + self.readreversetype],
-                stderr=self.filelog)
-        except subprocess.CalledProcessError:
-            self.filelog.write(msg39)
-            sys.exit(1)
-        else:
-            self.readtrimmedthree.append(self.out + '_read1_1.' + self.readforwardtype)
-            self.readtrimmedthree.append(self.out + '_read2_2.' + self.readforwardtype)
-            self.filelog.write(msg54 + self.fastqcount(self.out + '_read1_1.' + self.readforwardtype,
+            self.filelog.write(msg56 + self.fastqcount(self.out + '_con.' + self.readforwardtype,
                                                        self.readforwardtype))
-            self.filelog.write(msg55 + self.fastqcount(self.out + '_read2_2.' + self.readreversetype,
-                                                       self.readreversetype))
-            self.filelog.write(msg40)
-        return self.readtrimmedthree
+            return self.out + '_con.' + self.readforwardtype

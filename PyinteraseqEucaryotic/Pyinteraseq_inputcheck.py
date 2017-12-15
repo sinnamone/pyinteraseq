@@ -27,8 +27,6 @@ class InputCheck(object):
         #
         # self.filelog contain string of created file log
         self.minclonelength = self.inputistance.minclonelength
-        self.overlapintersect = self.inputistance.overlapintersect
-        self.opengap = self.inputistance.opengap
         self.mismatch = self.inputistance.mismatch
         #
         self.count = 0
@@ -233,8 +231,10 @@ class InputCheck(object):
             self.logopen().write(msg28 + self.checkreads(varreads=self.readforward,
                                                          message=msg1))
             self.logopen().write(msg29 + self.readforwardtype)
-            self.logopen().write(msg30 + self.primer5forward)
-            self.logopen().write(msg31 + self.primer3forward)
+            if self.primer5forward is not None:
+                self.logopen().write(msg30 + self.primer5forward)
+            if self.primer3forward is not None:
+                self.logopen().write(msg31 + self.primer3forward)
             self.logopen().write(msg49 + self.fastqcount(fastq=self.readforward,
                                                          rtype=self.readforwardtype))
         self.logopen().write(msg25 + self.outputid)

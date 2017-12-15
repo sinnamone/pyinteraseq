@@ -2,6 +2,7 @@ import optparse
 from pyinteraseq_mapping import *
 from output_message import *
 import sys
+import traceback
 
 parser = optparse.OptionParser(usage='python %prog pyinteraseq_main_mapping.py', version='1.0',)
 parser.add_option('--readforward', action="store", dest="readforward", default=None,
@@ -39,7 +40,7 @@ reference_opts = optparse.OptionGroup(
     )
 reference_opts.add_option('--fastasequence', action="store", dest="fastasequence", default=None,
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
-reference_opts.add_option('--thread', action="store", dest="thread", default='2',
+reference_opts.add_option('--thread', action="store", dest="thread", default='10',
                           help='Number of thread.')
 reference_opts.add_option('--log', action="store", dest="log", default=None,
                           help='Log file.')
@@ -51,10 +52,6 @@ advance_opts = optparse.OptionGroup(
     )
 advance_opts.add_option('--minclonelength', action="store", dest="minclonelength", default='100',
                         help='Minumum clones length.')
-advance_opts.add_option('--overlapintersect', action="store", dest="overlapintersect", type="float",
-                        default=0.7, help='Parameters -f of bedtools intersect.')
-advance_opts.add_option('--opengap', action="store", dest="opengap", type="int",
-                        default=1, help='Open-gap allowed.')
 advance_opts.add_option('--mismatch', action="store", dest="mismatch", type="float",
                         default=3.0, help='Percentage of Mismatch allowed.')
 parser.add_option_group(advance_opts)
@@ -64,105 +61,108 @@ options, args = parser.parse_args()
 if __name__ == '__main__':
     DictInfo = dict()
     MappingClass = BlastNlucleotide(optparseinstance=options)
-    if MappingClass.readreverse is not None:
+    if MappingClass.sequencingtype == "Paired-End":
         if (MappingClass.readforwardtype is "fastq") and (MappingClass.readreversetype is "fastq"):
             DictInfo.update({
                 "LogInfoAppended": MappingClass.inputinformationappen()
             })
-    elif (MappingClass.readforwardtype is "fasta") and (MappingClass.readreversetype is "fasta"):
-        DictInfo.update({
-            "LogInfoAppended": MappingClass.inputinformationappen()
-        })
-    elif MappingClass.readforwardtype is "fastq" and MappingClass.readreversetype is "fasta":
-        log = open(MappingClass.inputfilelog, "a")
-        log.write(msg5)
-        sys.exit(1)
-    elif MappingClass.readforwardtype is "fasta" and MappingClass.readreversetype is "fastq":
-        log = open(MappingClass.inputfilelog, "a")
-        log.write(msg6)
-        sys.exit(1)
-    elif MappingClass.readreverse is None:
+        elif (MappingClass.readforwardtype is "fasta") and (MappingClass.readreversetype is "fasta"):
+            DictInfo.update({
+                "LogInfoAppended": MappingClass.inputinformationappen()
+            })
+        else:
+            log = open(MappingClass.inputfilelog, "a")
+            log.write(msg5)
+            sys.exit(1)
+    elif MappingClass.sequencingtype is "Single-End":
         DictInfo.update({
             "LogInfoAppended": MappingClass.inputinformationappen()
         })
     log = open(MappingClass.inputfilelog, "a")
     if MappingClass.sequencingtype in "Single-End":
-        if (MappingClass.primer5forward is not None) and (MappingClass.primer3forward is not None):
-            DictInfo["forward5trimmed"] = MappingClass.trimming5single(readfile=MappingClass.readforward,
-                                                                       primer5=MappingClass.primer5forward,
-                                                                       direction="_forward5trimmed.",
-                                                                       readtype=MappingClass.readforwardtype)
-            DictInfo["Trimmedreadconcatenated"] = MappingClass.trimming3single(readfile=DictInfo["forward5trimmed"],
-                                                                               primer3=MappingClass.primer3forward,
-                                                                               direction="_forward3trimmed.",
-                                                                               readtype=MappingClass.readforwardtype)
-        elif (MappingClass.primer5forward is None) and (MappingClass.primer3forward is None):
-            DictInfo["Trimmedreadconcatenated"] = MappingClass.readforward
-        else:
-            log.write(msg116)
+        log.write(msg120)
+        try:
+            if (MappingClass.primer5forward is not None) and (MappingClass.primer3forward is not None):
+                DictInfo["forward5trimmed"] = MappingClass.trimming5single(readfile=MappingClass.readforward,
+                                                                           primer5=MappingClass.primer5forward,
+                                                                           direction="_forward5trimmed.",
+                                                                           readtype=MappingClass.readforwardtype)
+                DictInfo["Trimmedreadconcatenated"] = MappingClass.trimming3single(readfile=DictInfo["forward5trimmed"],
+                                                                                   primer3=MappingClass.primer3forward,
+                                                                                   direction="_forward3trimmed.",
+                                                                                   readtype=MappingClass.readforwardtype)
+            elif (MappingClass.primer5forward is None) and (MappingClass.primer3forward is None):
+                DictInfo["Trimmedreadconcatenated"] = MappingClass.readforward
+            else:
+                log.write(msg116)
+                sys.exit(1)
+        except traceback:
+            log.write(msg118)
             sys.exit(1)
-        # End Single fastq
+        else:
+            log.write(msg119)
     elif MappingClass.sequencingtype in "Paired-End":
-        if (MappingClass.primer5forward is not None) and (MappingClass.primer3forward is not None) and (
-                    MappingClass.primer5reverse is not None) and (MappingClass.primer3reverse is not None):
-            DictInfo["forward5trimmed"] = MappingClass.trimming5single(readfile=MappingClass.readforward,
-                                                                       primer5=MappingClass.primer5forward,
-                                                                       direction="_forward5trimmed.",
-                                                                       readtype=MappingClass.readforwardtype)
-            DictInfo["reverse5trimmed"] = MappingClass.trimming5single(readfile=MappingClass.readreverse,
-                                                                       primer5=MappingClass.primer5reverse,
-                                                                       direction="_reverse5trimmed.",
-                                                                       readtype=MappingClass.readreversetype)
-            DictInfo["forward3trimmed"] = MappingClass.trimming3single(readfile=DictInfo["forward5trimmed"],
-                                                                       primer3=MappingClass.primer3forward,
-                                                                       direction="_forward3trimmed.",
-                                                                       readtype=MappingClass.readforwardtype)
-            DictInfo["reverse3trimmed"] = MappingClass.trimming3single(readfile=DictInfo["reverse5trimmed"],
-                                                                       primer3=MappingClass.primer3reverse,
-                                                                       direction="_reverse3trimmed.",
-                                                                       readtype=MappingClass.readforwardtype)
-            DictInfo["Trimmedreadconcatenated"] = MappingClass.concatenateforrev([DictInfo["forward3trimmed"],
-                                                                                  DictInfo["reverse3trimmed"]])
-        elif (MappingClass.primer5forward is None) and (MappingClass.primer3forward is None) and (
-                    MappingClass.primer5reverse is None) and (MappingClass.primer3reverse is None):
-            DictInfo["Trimmedreadconcatenated"] = MappingClass.concatenateforrev([MappingClass.readforward,
-                                                                                  MappingClass.readreverse])
-        elif (MappingClass.primer5forward is not None) and (MappingClass.primer3forward is not None) and (
-                    MappingClass.primer5reverse is None) and (MappingClass.primer3reverse is None):
-            DictInfo["forward5trimmed"] = MappingClass.trimming5single(readfile=MappingClass.readforward,
-                                                                       primer5=MappingClass.primer5forward,
-                                                                       direction="_forward5trimmed.",
-                                                                       readtype=MappingClass.readforwardtype)
-            DictInfo["forward3trimmed"] = MappingClass.trimming3single(readfile=DictInfo["forward5trimmed"],
-                                                                       primer3=MappingClass.primer3forward,
-                                                                       direction="_forward3trimmed.",
-                                                                       readtype=MappingClass.readforwardtype)
-            DictInfo["Trimmedreadconcatenated"] = MappingClass.concatenateforrev([DictInfo["forward3trimmed"],
-                                                                                  MappingClass.readreverse])
-        elif (MappingClass.primer5forward is None) and (MappingClass.primer3forward is None) and (
-                    MappingClass.primer5reverse is not None) and (MappingClass.primer3reverse is not None):
-            DictInfo["reverse5trimmed"] = MappingClass.trimming5single(readfile=MappingClass.readreverse,
-                                                                       primer5=MappingClass.primer5reverse,
-                                                                       direction="_reverse5trimmed.",
-                                                                       readtype=MappingClass.readreversetype)
-            DictInfo["reverse3trimmed"] = MappingClass.trimming3single(readfile=DictInfo["reverse5trimmed"],
-                                                                       primer3=MappingClass.primer3reverse,
-                                                                       direction="_reverse3trimmed.",
-                                                                       readtype=MappingClass.readforwardtype)
-        else:
-            log.write(msg116)
+        log.write(msg121)
+        try:
+            if (MappingClass.primer5forward is not None) and (MappingClass.primer3forward is not None) and (
+                        MappingClass.primer5reverse is not None) and (MappingClass.primer3reverse is not None):
+                DictInfo["forward5trimmed"] = MappingClass.trimming5single(readfile=MappingClass.readforward,
+                                                                           primer5=MappingClass.primer5forward,
+                                                                           direction="_forward5trimmed.",
+                                                                           readtype=MappingClass.readforwardtype)
+                DictInfo["reverse5trimmed"] = MappingClass.trimming5single(readfile=MappingClass.readreverse,
+                                                                           primer5=MappingClass.primer5reverse,
+                                                                           direction="_reverse5trimmed.",
+                                                                           readtype=MappingClass.readreversetype)
+                DictInfo["forward3trimmed"] = MappingClass.trimming3single(readfile=DictInfo["forward5trimmed"],
+                                                                           primer3=MappingClass.primer3forward,
+                                                                           direction="_forward3trimmed.",
+                                                                           readtype=MappingClass.readforwardtype)
+                DictInfo["reverse3trimmed"] = MappingClass.trimming3single(readfile=DictInfo["reverse5trimmed"],
+                                                                           primer3=MappingClass.primer3reverse,
+                                                                           direction="_reverse3trimmed.",
+                                                                           readtype=MappingClass.readforwardtype)
+                DictInfo["Trimmedreadconcatenated"] = MappingClass.concatenateforrev([DictInfo["forward3trimmed"],
+                                                                                      DictInfo["reverse3trimmed"]])
+            elif (MappingClass.primer5forward is None) and (MappingClass.primer3forward is None) and (
+                        MappingClass.primer5reverse is None) and (MappingClass.primer3reverse is None):
+                DictInfo["Trimmedreadconcatenated"] = MappingClass.concatenateforrev([MappingClass.readforward,
+                                                                                      MappingClass.readreverse])
+            elif (MappingClass.primer5forward is not None) and (MappingClass.primer3forward is not None) and (
+                        MappingClass.primer5reverse is None) and (MappingClass.primer3reverse is None):
+                DictInfo["forward5trimmed"] = MappingClass.trimming5single(readfile=MappingClass.readforward,
+                                                                           primer5=MappingClass.primer5forward,
+                                                                           direction="_forward5trimmed.",
+                                                                           readtype=MappingClass.readforwardtype)
+                DictInfo["forward3trimmed"] = MappingClass.trimming3single(readfile=DictInfo["forward5trimmed"],
+                                                                           primer3=MappingClass.primer3forward,
+                                                                           direction="_forward3trimmed.",
+                                                                           readtype=MappingClass.readforwardtype)
+                DictInfo["Trimmedreadconcatenated"] = MappingClass.concatenateforrev([DictInfo["forward3trimmed"],
+                                                                                      MappingClass.readreverse])
+            elif (MappingClass.primer5forward is None) and (MappingClass.primer3forward is None) and (
+                        MappingClass.primer5reverse is not None) and (MappingClass.primer3reverse is not None):
+                DictInfo["reverse5trimmed"] = MappingClass.trimming5single(readfile=MappingClass.readreverse,
+                                                                           primer5=MappingClass.primer5reverse,
+                                                                           direction="_reverse5trimmed.",
+                                                                           readtype=MappingClass.readreversetype)
+                DictInfo["reverse3trimmed"] = MappingClass.trimming3single(readfile=DictInfo["reverse5trimmed"],
+                                                                           primer3=MappingClass.primer3reverse,
+                                                                           direction="_reverse3trimmed.",
+                                                                           readtype=MappingClass.readforwardtype)
+            else:
+                log.write(msg4)
+                sys.exit(1)
+        except traceback:
+            log.write(msg118)
             sys.exit(1)
-        DictInfo["dbname"] = MappingClass.indexing_bowtie()
-        DictInfo["sam"] = MappingClass.mapping_bowtie(DictInfo["Trimmedreadconcatenated"], DictInfo["dbname"])
-        DictInfo["headersam"] = MappingClass.getheadersam(samfile=DictInfo["sam"])
-        MappingClass.parsesamfiles(samfile=DictInfo["sam"])
-        DictInfo["filteredsam"] = MappingClass.filteringmismatches()
-        DictInfo["bam"] = MappingClass.conversionsam2bam(samfile=DictInfo["filteredsam"])
-        DictInfo["sortedbam"] = MappingClass.sortbam(bamfile=DictInfo["bam"])
-    # End Paired fastq
-    # DictInfo["blastoutputnohash"] = MappingClass.hashclean(
-    #     blastnout=DictInfo["blastoutput"], prefix="_blastn_nohash")
-    # # Filter reads steps (NO open-gaps, mismatch)
-    # DictInfo["blastoutputnohashfiltered"] = MappingClass.blastnfiltering(
-    #     blastnout=DictInfo["blastoutputnohash"])
-    # MappingClass.cleantempfile()
+        else:
+            log.write(msg122)
+    DictInfo["dbname"] = MappingClass.indexing_bowtie()
+    DictInfo["sam"] = MappingClass.mapping_bowtie(DictInfo["Trimmedreadconcatenated"], DictInfo["dbname"])
+    DictInfo["headersam"] = MappingClass.getheadersam(samfile=DictInfo["sam"])
+    MappingClass.parsesamfiles(samfile=DictInfo["sam"])
+    DictInfo["filteredsam"] = MappingClass.filteringmismatches()
+    DictInfo["bam"] = MappingClass.conversionsam2bam(samfile=DictInfo["filteredsam"])
+    DictInfo["sortedbam"] = MappingClass.sortbam(bamfile=DictInfo["bam"])
+    MappingClass.cleantempfile()
