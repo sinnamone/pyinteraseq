@@ -244,3 +244,93 @@ class InputCheck(object):
         self.logopen().write(msg0)
         self.logopen().close()
         return True
+
+
+class InputCheckDomainDefinition(object):
+
+    def __init__(self, optparseinstance):
+        # import instance with all input flag
+        self.inputistance = optparseinstance
+        # put all under this
+        self.thread = self.inputistance.thread
+        self.count = 0
+        self.inputfilelog = self.inputistance.log
+        self.cloneslength = self.inputistance.minclonelength
+        self.outputfolder = self.checkoutputpath()
+        self.outputid = self.checkoutputid()
+        self.fastasequence = self.checkfastasequence()
+        self.namefilefasta = os.path.basename(self.fastasequence.split('/')[-1])
+        self.genename = self.namefilefasta.split('.')[0]
+        self.out = self.outputfolder + self.outputid
+        self.pick_otus = "/opt/miniconda3/envs/qiime1/bin/pick_otus.py"
+        self.pick_rep_set = "/opt/miniconda3/envs/qiime1/bin/pick_rep_set.py"
+        # check file log
+        self.inputfilelog = self.logfilecreation()
+        self.filelog = None
+
+        # check annotation
+        if self.inputistance.annotation is not None:
+            self.annotation = self.inputistance.annotation
+
+    def logfilecreation(self):
+        """
+        Function that open new log file.
+        :return: path + name file log
+        """
+        if os.access(self.outputfolder, os.W_OK) is True:
+            if self.inputfilelog is None:
+                self.inputfilelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+                return self.outputfolder + self.outputid + "_mapping.log"
+            else:
+                return self.inputfilelog
+        else:
+            sys.stdout.write(msg13)
+            sys.exit(1)
+
+    def fastqcount(self, fastq, rtype):
+        """
+        Function to count the number of sequence
+        :param fastq:
+        :param rtype:
+        :return:
+        """
+        self.count = 0
+        for record in SeqIO.parse(fastq, rtype):
+            self.count = self.count + 1
+        return str(self.count)
+
+    def checkoutputpath(self):
+        """
+
+        :return:
+        """
+        if self.inputistance.outputfolder is not None:
+            if self.inputistance.outputfolder.endswith('/') is True:
+                self.outputfolder = self.inputistance.outputfolder
+            else:
+                self.outputfolder = self.inputistance.outputfolder + '/'
+            return self.outputfolder
+
+    def checkoutputid(self):
+        """
+
+        :return:
+        """
+        if self.inputistance.outputid is None:
+            self.filelog.write(msg10)
+            sys.exit(1)
+        else:
+            return self.inputistance.outputid
+
+    def logopen(self):
+        if self.inputfilelog is None:
+            return open(self.outputfolder + self.outputid + "_domaind_definition.log", "a")
+        else:
+            return open(str(self.inputfilelog), 'a')
+
+    def checkfastasequence(self):
+        if self.inputistance.fastasequence is None:
+            self.filelog.write(msg11)
+            sys.exit(1)
+        else:
+            return self.inputistance.fastasequence

@@ -208,7 +208,9 @@ class BlastNlucleotide(Trimming):
         Remove temporany files.
         :return:
         """
-        templistfilesingle = [".sam", "_filtered.sam", ".bam", "_forward.fastq", "_forward5trimmed.fastq","_forward3trimmed.fastq"]
+        templistfilesingle = [".sam", "_filtered.sam", ".bam", "_forward.fastq", "_forward5trimmed.fastq",
+                              "_forward3trimmed.fastq", "_reverse3trimmed.fasta", "_forward3trimmed.fasta",
+                              "_reverse5trimmed.fasta", "_forward5trimmed.fasta", "_con.fasta"]
         templistfilepaired = ["_forward.fastq", "_reverse.fastq", "_forward5trimmed.fastq", "_reverse5trimmed.fastq",
                               "_forward3trimmed.fastq", "_reverse3trimmed.fastq", "_con.fastq", ".sam", "_filtered.sam",
                               ".bam"]

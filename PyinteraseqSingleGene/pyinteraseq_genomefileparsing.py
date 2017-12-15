@@ -40,7 +40,7 @@ class GenomeFile(InputCheck):
         parse fasta reference
         :return:
         """
-        outid = self.outputfolder + self.namefilefasta.split('.')[0] + '_parsed.fasta'
+        outid = self.out + '_parsedreference.fasta'
         self.filelog = self.logopen()
         try:
             with open(outid, 'w') as self.ref:
@@ -50,9 +50,9 @@ class GenomeFile(InputCheck):
             self.filelog.write(msg43)
             sys.exit(0)
         else:
-            for item in self.dir:
-                if item.endswith(".fai"):
-                    os.remove(self.outputfolder+item)
+            # for item in self.dir:
+            #     if item.endswith(".fai"):
+            #         os.remove(self.outputfolder+item)
             self.filelog.write(msg44)
             self.index = pysam.Fastafile(outid)
             return outid

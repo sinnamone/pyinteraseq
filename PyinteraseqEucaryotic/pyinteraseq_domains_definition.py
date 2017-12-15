@@ -8,8 +8,8 @@ import pybedtools
 import traceback
 import os
 from Bio import SeqIO
-from qiime import pick_rep_set
-
+import pysam
+from Bio import SeqIO, Seq, SeqRecord
 
 class DomainsDefinition(InputCheckDomainDefinition):
 
@@ -38,6 +38,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.dbname = self.outputfolder + os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0]
         self.mappingoutoput = self.inputistance.mappingoutput
         self.pythoneve = "/opt/miniconda3/envs/qiime1/bin/python"
+        self.outfasta = self.out + "_converted.fasta"
 
     def filelogstdoutwrite(self, msg):
         """
@@ -59,6 +60,24 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.filelog.write(msg)
         sys.exit(1)
 
+    def bam2rec(self, bamsorted):
+        """
+        Generator to convert BAM files into Biopython SeqRecords.
+        """
+        bam_file = pysam.Samfile(bamsorted, "rb")
+        for read in bam_file:
+            seq = Seq.Seq(read.seq)
+            if read.is_reverse:
+                seq = seq.reverse_complement()
+            rec = SeqRecord.SeqRecord(seq, read.qname, "", "")
+            yield rec
+
+    def bam2fasta(self, bamfile):
+        with open(self.outfasta, "w") as out_handle:
+            # Write records from the BAM file one at a time to the output file.
+            # Works lazily as BAM sequences are read so will handle large files.
+            SeqIO.write(self.bam2rec(bamfile), out_handle, "fasta")
+
     def mappingoutput2tabular(self, tabularoutput):
         """
 
@@ -70,7 +89,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
                                                                              u'cend', u'start', u'end', u'evalue',
                                                                              u'bitscore', u'nseq'])
         self.df1 = self.df1.drop_duplicates(subset='seq', keep=False)
-        self.df1[[u'seq',u'nseq']].to_csv(self.out + '_mappingoutput.tab', sep="\t",header=None,index=False)
+        self.df1[[u'seq', u'nseq']].to_csv(self.out + '_mappingoutput.tab', sep="\t",header=None,index=False)
         return self.out + '_mappingoutput.tab'
 
     def tab2fasta(self, tabular, prefixoutput):
@@ -403,3 +422,238 @@ class DomainsDefinition(InputCheckDomainDefinition):
         for item in templistfilesingle:
             if os.path.isfile(self.out + item):
                 os.remove(self.out + item)
+
+
+
+
+
+# import os
+# from os import listdir
+# import subprocess
+# import sys
+# import time
+# import pandas as pd
+# import numpy as np
+# import optparse
+#
+# parser = optparse.OptionParser(usage='%prog [options] \n'
+#                                      '\n -a or --bam [ Input file BAM ] '
+#                                      '\n -b or --bed [ Annotation BED file ] \n'
+#                                      '\n -c or --genome [ Genome format file ] '
+#                                      '\n -p or --path [ Path where write output file ] '
+#                                      '\n -t or --threshold [ Percentile threshold ] '
+#                                      '\n -o or --output [ Output ID ] '
+#                                      '\n -h [ show this help message and exit ]',
+#                                description='Domain Detection script. This script computes the identification of domain/epitopes starting from BAM file. Annotation and genome file are mandatory. Simone Puccio',
+#                                prog='domain_detection.py',
+#                                version='1.0'
+#                                )
+#
+# parser.add_option('-a', '--bam', action='store', dest='bam', default=False, help='Input file BAM')
+# parser.add_option('-b', '--bed', action='store', dest='bed', default=False, help='Annotation BED file')
+# parser.add_option('-c', '--genome', action='store', dest='genome', default=False, help='Genome format file')
+# parser.add_option('-p', '--path', action='store', dest='path', default=False, help='Path where write output file')
+# parser.add_option('-t', '--threshold', action='store', dest='threshold', type='int', default=30,
+#                   help='Percentile threshold')
+# parser.add_option('-o', '--output', action='store', dest='output', default=False, help='Output ID')
+# options, args = parser.parse_args()
+#
+#
+# class DomainsDefinition(object):
+#
+#     def __init__(self, optparseinstance):
+#         self.inputistance = optparseinstancea
+#
+#     def focus_calculation(file1, file2, path_out):
+#         dfA = pd.read_csv(file1, index_col=False, header=None, sep='\t')
+#         dfA.columns = ["chr", "num_read"]
+#         dfB = pd.read_csv(file2, index_col=False, header=None, sep='\t')
+#         dfB.columns = ["chr", "max"]
+#         dfC = pd.merge(dfA, dfB, on='chr')
+#         newcol = np.divide(dfC["max"], dfC["num_read"], dtype='float')
+#         dfC["focus"] = newcol
+#         dfC.to_csv(path_out + options.output + 'temp_6.bed', header=None, sep='\t', index=False)
+#
+#     def percentile(file, perc, path_out):
+#         # dataframe creation
+#         dfA = pd.read_csv(file, index_col=False, header=None, sep='\t')
+#         # labeling columns
+#         dfA.columns = ['a1', 'a2', 'a3']
+#         # list with values of depth
+#         p = dfA.a3
+#         # percentile function, value int perc is the threshold
+#         v = np.percentile(p, perc)
+#         dfD = dfA.loc[lambda df: df.a3 > v, :]
+#         dfD.to_csv(path_out + options.output + 'temp_8.bed', header=None,
+#                    sep='\t', index=False)
+#
+#     def merge_intervals_focus(file1, file2, file3, path_out):
+#         dfA = pd.read_csv(file2, index_col=False, header=None, sep='\t')
+#         dfA.columns = ['chr', 'start_int', 'end_int', 'mean_depth']
+#         dfB = pd.read_csv(file1, index_col=False, header=None, sep='\t')
+#         dfB.columns = ["chr", "num_read", "max", "focus"]
+#         dfC = pd.read_csv(file3, index_col=False, header=None, sep='\t')
+#         dfC.columns = ["chr", "start", "end", "gene_id", "point", "strand", "description"]
+#         dfD = pd.merge(dfA, dfB, on='chr')
+#         dfE = pd.merge(dfD, dfC, on='chr')
+#         dfE.to_csv(path_out + options.output + 'domain_detection.bed', header=None,
+#                    sep='\t', index=False)
+#
+#     def groupbyreads(file):
+#         df = pd.read_csv(file, index_col=False, header=None, sep='\t')
+#         df.columns = ['a', 'b', 'c', 'd', 'e', 'f']
+#         df1 = df.groupby(["a"], as_index=False)["d"].count()
+#         df1.to_csv(options.path + options.output + 'temp_4.bed', header=None, sep='\t', index=False)
+#
+#     def groupbydepth(file):
+#         df = pd.read_csv(file, index_col=False, header=None, sep='\t')
+#         df.columns = ['a', 'b', 'c', 'd', 'e']
+#         df1 = df.groupby(["a"], as_index=False)["b"].max()
+#         df1.to_csv(options.path + options.output + 'temp_5.bed', header=None, sep='\t', index=False)
+#
+#     def clean(dest):
+#         try:
+#             suffixdelete = ["temp_1.bed", "temp_2.bed", "temp_3.bed", "temp_4.bed", "temp_5.bed", "temp_6.bed",
+#                             "temp_7.bed", "temp_8.bed", "temp_9.bed", "temp_10.bed"]
+#             for file in os.listdir(dest):
+#                 for i in range(len(suffixdelete)):
+#                     if file.endswith(suffixdelete[i]):
+#                         os.remove(os.path.join(dest, file))
+#         except ValueError:
+#             sys.stdout.write('Error. Removing temporary files. Exit\n')
+#             sys.exit(0)
+#         else:
+#             sys.stdout.write('Removing temporary files. Complete.\n')
+#
+#     def groupby(file):
+#         df = pd.read_csv(file, index_col=False, header=None, sep='\t')
+#         df.columns = ['a', 'b', 'c']
+#         df1 = df.groupby(['a'], as_index=False)['b'].min()
+#         df2 = df.groupby(["a"], as_index=False)["b"].max()
+#         df3 = df.groupby(["a"], as_index=False)["c"].mean()
+#         dfA = pd.merge(df1, df2, on='a')
+#         dfB = pd.merge(dfA, df3, on='a')
+#         # print dfB.head()
+#         dfB.to_csv(options.path + options.output + 'temp_7.bed', header=None, sep='\t', index=False)
+#
+#     def groupbytwo(file):
+#         df = pd.read_csv(file, index_col=False, header=None, sep='\t')
+#         df.columns = ['a', 'b', 'c']
+#         df1 = df.groupby(['a'], as_index=False)['b'].min()
+#         df2 = df.groupby(["a"], as_index=False)["b"].max()
+#         df3 = df.groupby(["a"], as_index=False)["c"].mean()
+#         dfA = pd.merge(df1, df2, on='a')
+#         dfB = pd.merge(dfA, df3, on='a')
+#         dfB.to_csv(options.path + options.output + 'temp_9.bed', header=None, sep='\t', index=False)
+#
+#
+# if __name__ == '__main__' :
+#     try:
+#         with open(options.path + options.output + 'temp_1.bed', 'w') as a:
+#             subprocess.check_call([bedtools + 'genomeCoverageBed', '-dz', '-ibam', options.bam, '-g', options.genome],
+#                                   stdout=a)
+#     except subprocess.CalledProcessError:
+#         sys.stdout.write('Error in computing depth-of-coverage. Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Computing the depth-of-coverage complete.\n')
+#
+#     try:
+#         with open(options.path + options.output + 'temp_2.bed', 'w') as b:
+#             subprocess.check_call([bedtools + 'genomeCoverageBed', '-ibam', options.bam, '-g', options.genome],
+#                                   stdout=b)
+#     except subprocess.CalledProcessError:
+#         sys.stdout.write('Error in computing breadth-of-coverage. Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Computing the breadth-of-coverage complete.\n')
+#
+#     try:
+#         with open(options.path + options.output + 'temp_3.bed', 'w') as c:
+#             subprocess.check_call([bedtools + 'bamToBed', '-i', options.bam], stdout=c)
+#     except subprocess.CalledProcessError:
+#         sys.stdout.write('Error in conversion BAM to BED. Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Computing the conversion BAM to BED complete.\n')
+#
+#     try:
+#         groupbyreads(c.name)
+#     except subprocess.CalledProcessError:
+#         sys.stdout.write('Error. Grouping number of reads for each intervals failed.Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Grouping number of reads for each intervals.\n')
+#
+#     try:
+#         groupbydepth(b.name)
+#     except subprocess.CalledProcessError:
+#         sys.stdout.write('Error. Grouping number of reads for each intervals failed.Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Grouping number of reads for each intervals.\n')
+#
+#     try:
+#         focus_calculation(options.path + options.output + 'temp_4.bed', options.path + options.output + 'temp_5.bed',
+#                           options.path)
+#     except subprocess.CalledProcessError:
+#         sys.stdout.write('Error. During focus index calculation. Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Focus index complete.\n')
+#
+#     try:
+#         groupby(a.name)
+#     except subprocess.CalledProcessError:
+#         sys.stdout.write('Error. Parsing file for focus retrievement. Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Percentile calculation complete.\n')
+#
+#     # definizione intervalliii
+#     try:
+#         percentile(options.path + options.output + 'temp_1.bed', options.threshold, options.path)
+#     except subprocess.CalledProcessError:
+#         sys.stdout.write('Error. Percentile calculation failed. Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Percentile calculation complete.\n')
+#
+#     try:
+#         groupbytwo(options.path + options.output + 'temp_8.bed')
+#     except subprocess.CalledProcessError:
+#         sys.stdout.write('Error. Parsing file for focus retrievement. Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Percentile calculation complete.\n')
+#
+#     try:
+#         with open(options.path + options.output + 'temp_10.bed', 'w') as h:
+#             subprocess.check_call(['awk',
+#                                    'BEGIN{FS="\t";OFS="\t"}{split($1,a,"_");if($3-$2>"30" || $3-$2<"1200")print $1,($2+a[3]),($3+a[3]),$4}',
+#                                    options.path + options.output + 'temp_9.bed'],
+#                                   stdout=h)
+#     except subprocess.CalledProcessError:
+#         sys.stdout.write('Error parsing columns. Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Columns parsed complete\n')
+#
+#     try:
+#         merge_intervals_focus(options.path + options.output + 'temp_6.bed',
+#                               options.path + options.output + 'temp_10.bed', options.bed, options.path)
+#     except subprocess.CalledProcessError:
+#         sys.stdout.write('Error in merging intervals. Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Intervals merging complete\n')
+#
+#     try:
+#         clean(options.path)
+#     except Exception:
+#         sys.stdout.write('Error. Delete temp file failed. Exit\n')
+#         sys.exit(0)
+#     else:
+#         sys.stdout.write('Enrichement detection complete.\n')
+#
+#

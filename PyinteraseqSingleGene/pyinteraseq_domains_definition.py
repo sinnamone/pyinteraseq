@@ -41,7 +41,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.filelog = self.logopen()
         try:
             # import blastnoutput
-            self.df1 = pd.read_csv(blastnoutput, sep="\t", header=None,
+            self.df1 = pd.read_csv(blastnoutput, sep="\t", header=0,
                                    names=['seq', 'chr', 'percmatch', 'length', 'mismatch', 'op', 'cstart', 'cend',
                                           'start',
                                           'end', 'evalue', 'bitscore', 'nseq'])
@@ -239,14 +239,15 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df1[3] = self.df1[2] - self.df1[1]
             self.df2 = self.df1.loc[self.df1[3] > 50]
             self.df3 = self.df2.loc[self.df2[3] < 1000]
-            self.df3[[0, 1, 2]].to_csv(self.out + '_intevals_domains.txt', sep="\t", header=None, index=False)
+            self.df3 = self.df3.rename(columns={0: 'GeneName', 1: 'Start', 2: 'End'})
+            self.df3[['GeneName', 'Start', 'End']].to_csv(self.out + '_intevals_domains.txt', sep="\t", header=True, index=False)
         except traceback:
             self.filelog.write(traceback.format_exc())
             self.filelog.write(msg137)
             sys.exit(1)
         else:
             self.filelog.write(msg138)
-            return self.out + '_intevals_domains.txt'
+            return self.out + '_domains.txt'
 
     def cleantempfile(self):
         """
@@ -254,7 +255,10 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return:
         """
         templistfiles = ["background.bed", "target.bed", "background.bam", "target.bam", "target_down.bam",
-                         "target.tsv", "background.tsv", "_intervals.tsv", "transposedintervals.tsv", "_blastn_nohash.tab"]
+                         "target.tsv", "background.tsv", "_intervals.tsv", "transposedintervals.tsv",
+                         "_blastn_nohash.tab"]
+        os.remove(self.outputfolder + self.namefilefasta.split('.')[0] + '.genome')
         for item in templistfiles:
             if os.path.isfile(self.out + item):
                 os.remove(self.out + item)
+

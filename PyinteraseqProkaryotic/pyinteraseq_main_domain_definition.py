@@ -1,5 +1,4 @@
 import optparse
-from pyinteraseq_mapping import *
 from pyinteraseq_domains_definition import *
 
 parser = optparse.OptionParser(usage='python %prog pyinteraseq_main_definition.py', version='1.0',)

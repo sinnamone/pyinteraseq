@@ -92,7 +92,7 @@ msg89 = '\n#Error#Error in pybedtools. Function bedtools getfasta failed.Executi
 msg90 = '\n#Error#Error in pybedtools. Function bedtools getfasta failed.Execution stop.'
 msg91 = '\nPybedtools getfasta complete.'
 msg92 = '\n#Error#Error while cleaning balstn output.Execution stop.'
-msg93 = '\nBlastn output hash clean complete.\n'
+msg93 = '\nBlastn output hash clean complete.'
 msg94 = '#Error#Error conversion FastQ ==>FastA.Execution stop.\n'
 msg95 = 'Conversion FastQ ==>FastA complete.\n'
 msg96 = "#Error#Error conversion FastA ==>Tabular.Execution stop.\n"

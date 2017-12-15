@@ -156,8 +156,7 @@ if __name__ == '__main__':
         except traceback:
             log.write(msg118)
             sys.exit(1)
-        else:
-            log.write(msg122)
+    log.write(msg122)
     DictInfo["dbname"] = MappingClass.indexing_bowtie()
     DictInfo["sam"] = MappingClass.mapping_bowtie(DictInfo["Trimmedreadconcatenated"], DictInfo["dbname"])
     DictInfo["headersam"] = MappingClass.getheadersam(samfile=DictInfo["sam"])
