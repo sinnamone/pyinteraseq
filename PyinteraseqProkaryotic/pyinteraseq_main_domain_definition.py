@@ -1,5 +1,5 @@
 import optparse
-from pyinteraseq_domains_definition import *
+from pytinteraseq_domains_definition import *
 
 parser = optparse.OptionParser(usage='python %prog pyinteraseq_main_definition.py', version='1.0',)
 input_opts = optparse.OptionGroup(

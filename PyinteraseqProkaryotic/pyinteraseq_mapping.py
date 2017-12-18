@@ -163,7 +163,7 @@ class BlastNlucleotide(InputCheck):
             subprocess.check_call(['python', self.path_multiblastn,
                                    '--referencefasta', fasta,
                                    '--multifastasequence', multifasta,
-                                   '--dbname', self.genename,
+                                   '--dbname', self.outputid,
                                    '--outputfolder', self.outputfolder,
                                    '--outputid', self.outputid + suffix,
                                    '--thread', self.thread,
@@ -217,7 +217,7 @@ class BlastNlucleotide(InputCheck):
             self.filelog.write(msg64 + str(len(self.dfMM)))
             self.dfMM[[u'seq', u'chr', u'percmatch', u'length', u'mismatch', u'op', u'cstart',
                        u'cend', u'start', u'end', u'evalue', u'bitscore', u'nseq']].to_csv(
-                self.out + '_output_mapping_step.tab', header=None, sep='\t', index=False)
+                self.out + '_mapping.tab', header=None, sep='\t', index=False)
         except Warning:
             self.filelog.write('\nWarning')
         except traceback:
@@ -226,20 +226,19 @@ class BlastNlucleotide(InputCheck):
             sys.exit(1)
         else:
             self.filelog.write(msg103)
-            return self.out + '_output_mapping_step.tab'
+            return self.out + '_mapping.tab'
 
     def cleantempfile(self):
         """
         Remove temporany files.
         :return:
         """
-        db1 = str(self.dbname + ".nsq")
-        db2 = str(self.dbname + ".nin")
-        db3 = str(self.dbname + ".nhr")
+        db1 = str(self.out + ".nsq")
+        db2 = str(self.out + ".nin")
+        db3 = str(self.out + ".nhr")
         os.remove(db1)
         os.remove(db2)
         os.remove(db3)
-        # "_filtered_paired_complete.tab"
         templistfilesingle = ["_forward.fastq", "_read1.fastq", "forward.tab", "_forward.fasta",
                               "_filtered_single.tab", "_blastn_nohash.tab", "_blastn.txt", "_1_newid.tab"]
         templistfilepaired = ["_forward.fastq", "_reverse.fastq", "_read1.fastq", "_read2.fastq", "forward.tab",

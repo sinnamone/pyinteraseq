@@ -295,8 +295,8 @@ class InputCheckDomainDefinition(object):
             """
             if os.access(self.outputfolder, os.W_OK) is True:
                 if self.inputfilelog is None:
-                    self.inputfilelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
-                    return self.outputfolder + self.outputid + "_mapping.log"
+                    self.inputfilelog = open(self.outputfolder + self.outputid + "_domain_definition.log", "a")
+                    return self.outputfolder + self.outputid + "_domain_definition.log"
                 else:
                     return self.inputfilelog
             else:
@@ -340,7 +340,7 @@ class InputCheckDomainDefinition(object):
 
         def logopen(self):
             if self.inputfilelog is None:
-                return open(self.outputfolder + self.outputid + "_domaind_definition.log", "a")
+                return open(self.outputfolder + self.outputid + "_domain_definition.log", "a")
             else:
                 return open(str(self.inputfilelog), 'a')
 

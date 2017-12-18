@@ -9,7 +9,7 @@ import traceback
 import os
 from Bio import SeqIO
 import pysam
-from Bio import SeqIO, Seq, SeqRecord
+
 
 class DomainsDefinition(InputCheckDomainDefinition):
 
@@ -60,23 +60,39 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.filelog.write(msg)
         sys.exit(1)
 
-    def bam2rec(self, bamsorted):
-        """
-        Generator to convert BAM files into Biopython SeqRecords.
-        """
-        bam_file = pysam.Samfile(bamsorted, "rb")
-        for read in bam_file:
-            seq = Seq.Seq(read.seq)
-            if read.is_reverse:
-                seq = seq.reverse_complement()
-            rec = SeqRecord.SeqRecord(seq, read.qname, "", "")
-            yield rec
-
+    # def bam2rec(self, bamsorted):
+    #     """
+    #     Generator to convert BAM files into Biopython SeqRecords.
+    #     """
+    #     bam_file = pysam.Samfile(bamsorted, "rb")
+    #     for read in bam_file:
+    #         seq = Seq.Seq(read.seq)
+    #         if read.is_reverse:
+    #             seq = seq.reverse_complement()
+    #         rec = SeqRecord.SeqRecord(seq, read.qname, "", "")
+    #         yield rec
+    #
     def bam2fasta(self, bamfile):
-        with open(self.outfasta, "w") as out_handle:
-            # Write records from the BAM file one at a time to the output file.
-            # Works lazily as BAM sequences are read so will handle large files.
-            SeqIO.write(self.bam2rec(bamfile), out_handle, "fasta")
+
+
+
+    def fastq2fasta(self, fastq, nameid):
+        """
+        Covert Fastq in Fasta format
+        :param fastq: input Fastq file
+        :param nameid: output name
+        :return:
+        """
+        self.filelog = self.logopen()
+        try:
+            SeqIO.convert(fastq, 'fastq', self.out + nameid + '.fasta', 'fasta')
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg94)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg95)
+            return self.out + nameid + '.fasta'
 
     def mappingoutput2tabular(self, tabularoutput):
         """

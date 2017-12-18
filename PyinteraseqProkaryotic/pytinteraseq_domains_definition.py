@@ -8,7 +8,6 @@ import pybedtools
 import traceback
 import os
 from Bio import SeqIO
-from qiime import pick_rep_set
 
 
 class DomainsDefinition(InputCheckDomainDefinition):
@@ -37,6 +36,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.path_multiblastn = os.path.dirname(os.path.realpath(__file__)) + '/pyinteraseq_multblastn.py'
         self.dbname = self.outputfolder + os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0]
         self.mappingoutoput = self.inputistance.mappingoutput
+        self.path_pickotus = os.path.dirname(os.path.realpath(__file__)) + '/pick_otus.sh'
         self.pythoneve = "/opt/miniconda3/envs/qiime1/bin/python"
 
     def filelogstdoutwrite(self, msg):
@@ -146,8 +146,9 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return: cluster file
         """
         try:
-            subprocess.check_call([self.pythoneve, self.pick_otus, '-i', blastnout, '-o',
-                                   self.out + '_picked', '-s', '0.97'])
+            # subprocess.check_call([self.pythoneve, self.pick_otus, '-i', blastnout, '-o',
+            #                        self.out + '_picked', '-s', '0.97'])
+            subprocess.check_call([self.path_pickotus, blastnout, self.out + '_picked'])
         except subprocess.CalledProcessError:
             self.filelogerrorwrite(msg71)
         else:
@@ -376,13 +377,13 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df3[['chr', 'clonestart', 'cloneend',
                       'clonelength', 'start', 'end',
                       'geneid', 'strand', 'genename',
-                      'description', 'nseq']].to_csv(self.out + '_domaindetection_step1.tab', sep="\t",
+                      'description', 'nseq']].to_csv(self.out + '_domain_definition.tab', sep="\t",
                                                      header=None, index=False)
         except traceback:
             self.filelogerrorwrite(msg112)
         else:
             self.filelogstdoutwrite(msg113)
-            return self.out + '_domaindetection_step1.tab'
+            return self.out + '_domain_definition.tab'
 
     def cleantempfile(self):
         """
@@ -395,11 +396,16 @@ class DomainsDefinition(InputCheckDomainDefinition):
         os.remove(db1)
         os.remove(db2)
         os.remove(db3)
-        templistfilesingle = ["_def_blastnfiltered.fasta", "_otus_most_abundant.fa", "_def_clean.fasta", "_def_cluster_count.txt",
+        templistfile = ["_def_blastnfiltered.fasta", "_otus_most_abundant.fa", "_def_clean.fasta", "_def_cluster_count.txt",
                               "_def_clonestabular.tab", "_clonesdescription.bed", "_clonesannotatedfiltered.bed", "_clonesannotated.bed",
                               "_blastnclonesmerge.fasta", "_blastnclonesmerge.bed", "_blastnclonescountedfiltered.bed", "_blastnclonescounted.bed",
                               "_def_blastnclones.tab", "_def_blastclonesparsed.bed", "_blastnfiltered.fasta", "_clean.fasta",
-                              "_cluster_count.txt", "_clonestabular.tab", "_blastnclones.tab", "_blastclonesparsed.bed"]
-        for item in templistfilesingle:
+                              "_cluster_count.txt", "_clonestabular.tab", "_blastnclones.tab", "_blastclonesparsed.bed",'_mappingoutput.tab']
+        for item in templistfile:
             if os.path.isfile(self.out + item):
                 os.remove(self.out + item)
+        pickedlist = ["_blastnfiltered_otus.log","_blastnfiltered_otus.txt","_blastnfiltered_clusters.uc"]
+        for item in pickedlist:
+            if os.path.isfile(self.out + '_picked/' + self.outputid + item):
+                os.remove(self.out + '_picked/' + self.outputid + item)
+        os.rmdir(self.out + '_picked/')

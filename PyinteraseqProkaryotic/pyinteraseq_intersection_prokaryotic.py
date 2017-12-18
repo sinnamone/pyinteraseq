@@ -11,7 +11,7 @@ plt.switch_backend('agg')
 
 parser = optparse.OptionParser(usage='python %prog Intersection Prokaryotic', version='1.0')
 parser.add_option('--selection', action="append", dest='selections', default=[])
-parser.add_option('--labels', action="append", dest='labels', default=[])
+parser.add_option('--label', action="append", dest='labels', default=[])
 parser.add_option('--outputfolder', action="store", dest="outputfolder",
                   default=None, help='Output folder.')
 parser.add_option('--outputid', action="store", dest="outputid",
@@ -21,8 +21,8 @@ options, args = parser.parse_args()
 
 filelog = None
 count = 0
-interection = 'intersection.txt'
-unique = 'unique.txt'
+interection = options.outputid + '_intersection.txt'
+unique = options.outputid + '_unique.txt'
 for i in range(len(options.selections)):
     count += 1
 if options.log is None:

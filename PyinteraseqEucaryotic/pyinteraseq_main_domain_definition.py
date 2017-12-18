@@ -57,7 +57,8 @@ if __name__ == '__main__':
     DictInfo = dict()
     outformat6 = '6 sseqid sstart send qseqid score sstrand'
     DomainDefinitionClass = DomainsDefinition(optparseinstance=options)
-    DomainDefinitionClass.bam2fasta(bamfile=DomainDefinitionClass.mappingoutoput)
+    DictInfo["bam2fasta"] = DomainDefinitionClass.bam2fasta(bamfile=DomainDefinitionClass.mappingoutoput)
+    print DictInfo["bam2fasta"]
     # DictInfo["mappingoutputabular"] = DomainDefinitionClass.mappingoutput2tabular(
     #     tabularoutput=DomainDefinitionClass.mappingoutoput)
     # # Conversion Filter Blastn Table in Fasta
