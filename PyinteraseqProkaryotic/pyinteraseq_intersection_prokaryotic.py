@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from matplotlib_venn import venn2
 from matplotlib_venn import venn3
 import traceback
-import matplotlib
 plt.switch_backend('agg')
 
 parser = optparse.OptionParser(usage='python %prog Intersection Prokaryotic', version='1.0')
@@ -21,8 +20,8 @@ options, args = parser.parse_args()
 
 filelog = None
 count = 0
-interection = options.outputid + '_intersection.txt'
-unique = options.outputid + '_unique.txt'
+interection = 'intersection.txt'
+unique = 'unique.txt'
 for i in range(len(options.selections)):
     count += 1
 if options.log is None:
@@ -77,19 +76,19 @@ elif count == 3:
                                                                    options.labels[2]))
         plt.savefig(options.outputfolder + options.outputid + '.pdf', format='pdf')
         #
-        (a + b).moveto(options.outputfolder
+        (a + b).moveto(options.outputfolder + options.outputid + '_'
                        + '_'.join([options.labels[0], options.labels[1], interection]))
-        (a + c).moveto(options.outputfolder
+        (a + c).moveto(options.outputfolder + options.outputid + '_'
                        + '_'.join([options.labels[0], options.labels[2], interection]))
-        (b + c).moveto(options.outputfolder
+        (b + c).moveto(options.outputfolder + options.outputid + '_'
                        + '_'.join([options.labels[1], options.labels[2], interection]))
-        (a + b + c).moveto(options.outputfolder
+        (a + b + c).moveto(options.outputfolder + options.outputid + '_'
                            + '_'.join([options.labels[0], options.labels[1], options.labels[2] + '.txt']))
-        (a - b - c).moveto(options.outputfolder
+        (a - b - c).moveto(options.outputfolder + options.outputid + '_'
                            + '_'.join([options.labels[0], unique]))
-        (b - a - c).moveto(options.outputfolder
+        (b - a - c).moveto(options.outputfolder + options.outputid + '_'
                            + '_'.join([options.labels[1], unique]))
-        (c - a - b).moveto(options.outputfolder
+        (c - a - b).moveto(options.outputfolder + options.outputid + '_'
                            + '_'.join([options.labels[2], unique]))
 
     except traceback:

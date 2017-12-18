@@ -125,7 +125,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
             subprocess.check_call(['python', self.path_multiblastn,
                                    '--referencefasta', fasta,
                                    '--multifastasequence', multifasta,
-                                   '--dbname', self.genename,
+                                   '--dbname', self.outputid,
                                    '--outputfolder', self.outputfolder,
                                    '--outputid', self.outputid + suffix,
                                    '--thread', self.thread,
@@ -390,9 +390,9 @@ class DomainsDefinition(InputCheckDomainDefinition):
         Remove temporany files.
         :return:
         """
-        db1 = str(self.dbname + ".nsq")
-        db2 = str(self.dbname + ".nin")
-        db3 = str(self.dbname + ".nhr")
+        db1 = str(self.out + ".nsq")
+        db2 = str(self.out + ".nin")
+        db3 = str(self.out + ".nhr")
         os.remove(db1)
         os.remove(db2)
         os.remove(db3)

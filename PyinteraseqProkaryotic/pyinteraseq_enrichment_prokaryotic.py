@@ -148,34 +148,44 @@ class EnrichmentProkaryotic(object):
         df2 = df1.loc[(df1['logFC'] > 0.0)]
         df3 = pd.read_csv(outputdomaindetection, sep="\t", header=None,
                           names=['chr', 'clonestart', 'cloneend', 'clonelength', 'start',
-                                 'end', 'geneid','strand', 'genename', 'description', 'nseq'])
+                                 'end', 'geneid', 'strand', 'genename', 'description', 'nseq'])
         df4 = pd.merge(df3, df2, right_on='start', left_on='clonestart')
         df4[['chr_x', 'clonestart', 'cloneend', 'clonelength', 'start_x', 'end_x', 'geneid', 'logFC', 'PValue',
              'AdjPValue', 'strand', 'genename', 'description', 'nseq']].to_csv(
             self.out+'_enrichment.txt', sep="\t", header=None, index=False)
         return self.out+'_enrichment.txt'
 
+    def clean(self):
+        listempfile = ["_blastnbackgroundparsed.tab", "_blastntargetparsed.tab", "_outputtargetparsed.tab",
+                        "_back.bed", "_target.bed", "_backedgeready.bed", "_targetedgeready.bed"]
+        for item in listempfile:
+            if os.path.isfile(self.out + item):
+                os.remove(self.out + item)
+        os.remove(self.outputfolder + "genomicgenomic_" + self.outputid + '.txt')
+        os.remove(self.outputfolder + "genomic_" + self.outputid + ".sign_genes_adjpvalue_0.05.txt")
+
 
 if __name__ == '__main__':
     DictEnrichment = dict()
+    EnrichmentProkaryoticClass = EnrichmentProkaryotic(optparseinstance=options)
     # parsing input file, blastn output filtered both for background and genomic
-    DictEnrichment["blastnbackgroundparsed"] = EnrichmentProkaryotic(optparseinstance=options).blastninputparsing(
+    DictEnrichment["blastnbackgroundparsed"] = EnrichmentProkaryoticClass.blastninputparsing(
         fileinput=options.blastnoutputgenomic, idexit='_blastnbackgroundparsed')
-    DictEnrichment["blastntargetparsed"] = EnrichmentProkaryotic(optparseinstance=options).blastninputparsing(
+    DictEnrichment["blastntargetparsed"] = EnrichmentProkaryoticClass.blastninputparsing(
         fileinput=options.blastnoutputarget, idexit='_blastntargetparsed')
-    DictEnrichment["outputtargetparsed"] = EnrichmentProkaryotic(optparseinstance=options).domainsdefinitionparsing(
+    DictEnrichment["outputtargetparsed"] = EnrichmentProkaryoticClass.domainsdefinitionparsing(
         fileinput=options.domainstarget, idexit='_outputtargetparsed')
-    DictEnrichment["bedcoveragebackground"] = EnrichmentProkaryotic(optparseinstance=options).bedtoolscoveragebackgroung(
+    DictEnrichment["bedcoveragebackground"] = EnrichmentProkaryoticClass.bedtoolscoveragebackgroung(
         DictEnrichment["outputtargetparsed"], DictEnrichment["blastnbackgroundparsed"], '_back')
-    DictEnrichment["bedcoveragetarget"] = EnrichmentProkaryotic(optparseinstance=options).bedtoolscoveragebackgroung(
+    DictEnrichment["bedcoveragetarget"] = EnrichmentProkaryoticClass.bedtoolscoveragebackgroung(
         DictEnrichment["outputtargetparsed"], DictEnrichment["blastntargetparsed"], '_target')
-    DictEnrichment["bedcoveragebackgroundready"] = EnrichmentProkaryotic(optparseinstance=options).\
+    DictEnrichment["bedcoveragebackgroundready"] = EnrichmentProkaryoticClass.\
         edgerinputformatparsing(DictEnrichment["bedcoveragebackground"], '_backedgeready')
-    DictEnrichment["bedcoveragetargetready"] = EnrichmentProkaryotic(optparseinstance=options).edgerinputformatparsing(
+    DictEnrichment["bedcoveragetargetready"] = EnrichmentProkaryoticClass.edgerinputformatparsing(
         DictEnrichment["bedcoveragetarget"], '_targetedgeready')
-    DictEnrichment["edgertable"] = EnrichmentProkaryotic(optparseinstance=options).edger(
+    DictEnrichment["edgertable"] = EnrichmentProkaryoticClass.edger(
         DictEnrichment["bedcoveragebackgroundready"], DictEnrichment["bedcoveragetargetready"],
         options.outputid, options.outputfolder)
-    EnrichmentProkaryotic(optparseinstance=options).edgeroutparser(
+    EnrichmentProkaryoticClass.edgeroutparser(
         DictEnrichment["edgertable"], options.domainstarget)
-
+    EnrichmentProkaryoticClass.clean()
