@@ -19,8 +19,8 @@ query_opts.add_option('--outputfolder', action="store", dest="outputfolder", def
                       help='Output folder.')
 query_opts.add_option('--outputid', action="store", dest="outputid", default=None,
                       help='Output ID.')
-# query_opts.add_option('--log', action="store", dest="log", default=None,
-#                       help='Log file.')
+query_opts.add_option('--log', action="store", dest="log", default=None,
+                      help='Log file.')
 parser.add_option_group(query_opts)
 
 reference_opts = optparse.OptionGroup(

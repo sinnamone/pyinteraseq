@@ -39,6 +39,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.path_pickotus = os.path.dirname(os.path.realpath(__file__)) + '/pick_otus.sh'
         self.pythoneve = "/opt/miniconda3/envs/qiime1/bin/python"
 
+
     def filelogstdoutwrite(self, msg):
         """
         Write information about script esecution

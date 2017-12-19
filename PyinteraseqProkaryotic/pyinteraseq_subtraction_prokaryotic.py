@@ -3,6 +3,8 @@ import optparse
 import sys
 import pandas as pd
 import pybedtools
+import traceback
+import os
 
 parser = optparse.OptionParser(usage='python %prog Subtraction Prokaryotic', version='1.0',)
 parser.add_option('--enrichedcontrol', action="store", dest="enrichedcontrol", default=None,
@@ -28,8 +30,8 @@ reference_opts = optparse.OptionGroup(
     )
 reference_opts.add_option('--overlap', action="store", dest="overlap", default='0.50',
                           help='Minimum overlap required.')
-reference_opts.add_option('--thread', action="store", dest="thread", default='2',
-                          help='Number of thread.')
+reference_opts.add_option('--log', action="store", dest="log", default=None,
+                          help='Path/filelog.log.')
 parser.add_option_group(reference_opts)
 
 options, args = parser.parse_args()
@@ -39,22 +41,52 @@ class SubtractionProkaryotic(object):
 
     def __init__(self, optparseinstance):
         self.inputistance = optparseinstance
+        #
+        self.enrichedcontrol =  self.inputistance.enrichedcontrol
+        self.enrichedselection = self.inputistance.enrichedselection
+        self.overlap = self.inputistance.overlap
         if self.inputistance.outputfolder is not None:
             if self.inputistance.outputfolder.endswith('/') is True:
                 self.outputfolder = self.inputistance.outputfolder
             else:
                 self.outputfolder = self.inputistance.outputfolder + '/'
         else:
-            sys.stdout.write(msg9)
-            sys.exit(0)
+            self.filelogerrorwrite(msg9)
         #
         if self.inputistance.outputid is not None:
             self.outputid = self.inputistance.outputid
         else:
-            sys.stdout.write(msg10)
-            sys.exit(0)
+            self.filelogerrorwrite(msg10)
         #
         self.out = self.outputfolder + self.outputid
+        self.inputfilelogopen = None
+        self.inputfilelog = self.inputistance.log
+        if self.inputfilelog is None:
+            if os.path.isfile(self.out + "_subtraction.log"):
+                self.inputfilelog = self.out + "_subtraction.log"
+            else:
+                open(self.out + "_subtraction.log", 'a')
+                self.inputfilelog = self.out + "_subtraction.log"
+
+    def filelogstdoutwrite(self, msg):
+        """
+        Write information about script esecution
+        :param msg:
+        :return:
+        """
+        self.inputfilelogopen = open(str(self.inputfilelog), 'a')
+        self.inputfilelogopen.write(msg)
+
+    def filelogerrorwrite(self, msg):
+        """
+        Write error message
+        :param msg:
+        :return:
+        """
+        self.inputfilelogopen = open(str(self.inputfilelog), 'a')
+        self.inputfilelogopen.write(traceback.format_exc())
+        self.inputfilelogopen.write(msg)
+        sys.exit(1)
 
     def intersectresults(self, controlinput, selectioninput, overlap):
         """
@@ -64,15 +96,23 @@ class SubtractionProkaryotic(object):
         :param overlap:
         :return:
         """
-        control = pybedtools.BedTool(controlinput)
-        selection = pybedtools.BedTool(selectioninput)
-        res = selection.intersect(control, f=overlap, v=True)
-        df1 = pd.read_table(res.fn, sep="\t", header=None)
-        df1.to_csv(self.out + '_subtraction.txt', sep="\t", header=None, index=False)
-        return self.out + '_subtraction.txt'
+        try:
+            control = pybedtools.BedTool(controlinput)
+            selection = pybedtools.BedTool(selectioninput)
+            res = selection.intersect(control, f=overlap, v=True)
+            df1 = pd.read_table(res.fn, sep="\t", header=None)
+            df1.to_csv(self.out + '_subtraction.txt', sep="\t", header=None, index=False)
+        except traceback:
+            self.filelogerrorwrite(msg153)
+        else:
+            self.filelogstdoutwrite(msg154)
+            return self.out + '_subtraction.txt'
 
 
 if __name__ == '__main__':
     DictSubtraction = dict()
-    DictSubtraction["bedtoolsintersect"] = SubtractionProkaryotic(optparseinstance=options).intersectresults(
-        options.enrichedcontrol, options.enrichedselection, options.overlap)
+    ClassSubtraction = SubtractionProkaryotic(optparseinstance=options)
+    DictSubtraction["bedtoolsintersect"] = ClassSubtraction.intersectresults(
+        ClassSubtraction.inputistance.enrichedcontrol,
+        ClassSubtraction.enrichedselection,
+        ClassSubtraction.overlap)
