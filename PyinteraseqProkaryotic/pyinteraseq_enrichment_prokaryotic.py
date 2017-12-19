@@ -10,13 +10,13 @@ import traceback
 parser = optparse.OptionParser(usage='python %prog Enrichment Prokaryotic', version='1.0',)
 parser.add_option('--blastnoutputgenomic', action="store", dest="blastnoutputgenomic", default=None,
                   help='Read dataset concatenate derived from pyinteraseq_mapping.py'
-                       ' with suffix _output_mapping_step.tab')
+                       ' with suffix _mapping.tab')
 parser.add_option('--blastnoutputarget', action="store", dest="blastnoutputarget", default=None,
                   help='Read dataset concatenate derived from pyinteraseq_mapping.py '
-                       'with suffix _output_mapping_step.tab ',)
+                       'with suffix _mapping.tab ',)
 parser.add_option('--domainstarget', action="store", dest="domainstarget", default=None,
                   help='Output target derived from pyinteraseq_domain_definition.py'
-                       ' with suffix _domaindetection_step1.tab ',)
+                       ' with suffix _domain_detection.tab ',)
 
 query_opts = optparse.OptionGroup(
     parser, 'Output Options',
