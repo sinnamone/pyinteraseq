@@ -52,10 +52,12 @@ elif count == 2:
                   set_labels=(options.labels[0], options.labels[1]))
         plt.savefig(options.outputfolder + options.outputid + '.pdf', format='pdf')
         # write files
-        (a - b).moveto(options.outputfolder + options.outputid + '_'.join([options.labels[0], unique]))
-        (b - a).moveto(options.outputfolder + options.outputid + '_'.join([options.labels[1], unique]))
-        (a + b).moveto(options.outputfolder + options.outputid + '_'.join([options.labels[0], options.labels[1],
-                                                                           interection]))
+        (a - b).moveto(options.outputfolder + options.outputid + '_' + '_'.join(
+            [options.labels[0], unique]))
+        (b - a).moveto(options.outputfolder + options.outputid + '_' + '_'.join(
+            [options.labels[1], unique]))
+        (a + b).moveto(options.outputfolder + options.outputid + '_' + '_'.join(
+            [options.labels[0], options.labels[1],interection]))
     except traceback:
         filelogopen = open(str(filelog), 'a')
         filelogopen.write(msg155)
@@ -84,12 +86,12 @@ elif count == 3:
                        + '_'.join([options.labels[1], options.labels[2], interection]))
         (a + b + c).moveto(options.outputfolder + options.outputid + '_'
                            + '_'.join([options.labels[0], options.labels[1], options.labels[2] + '.txt']))
-        (a - b - c).moveto(options.outputfolder + options.outputid + '_'
-                           + '_'.join([options.labels[0], unique]))
-        (b - a - c).moveto(options.outputfolder + options.outputid + '_'
-                           + '_'.join([options.labels[1], unique]))
-        (c - a - b).moveto(options.outputfolder + options.outputid + '_'
-                           + '_'.join([options.labels[2], unique]))
+        (a - b - c).moveto(
+            options.outputfolder + options.outputid + '_' + '_'.join([options.labels[0], unique]))
+        (b - a - c).moveto(
+            options.outputfolder + options.outputid + '_' + '_'.join([options.labels[1], unique]))
+        (c - a - b).moveto(
+            options.outputfolder + options.outputid + '_' + '_'.join([options.labels[2], unique]))
 
     except traceback:
         filelogopen = open(str(filelog), 'a')
