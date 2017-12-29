@@ -147,8 +147,6 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return: cluster file
         """
         try:
-            # subprocess.check_call([self.pythoneve, self.pick_otus, '-i', blastnout, '-o',
-            #                        self.out + '_picked', '-s', '0.97'])
             subprocess.check_call([self.path_pickotus, blastnout, self.out + '_picked'])
         except subprocess.CalledProcessError:
             self.filelogerrorwrite(msg71)

@@ -1,112 +1,68 @@
-from pyinteraseq_inputcheck import InputCheckDomainDefinition
-from output_message import *
-import pandas as pd
-import sys
+import os
+from os import listdir
 import subprocess
-import re
+import sys
+import time
+import pandas as pd
+import numpy as np
+from output_message import *
+from pyinteraseq_inputcheck import InputCheckDomainDefinition
 import pybedtools
 import traceback
-import os
+import re
 from Bio import SeqIO
-import pysam
-
 
 class DomainsDefinition(InputCheckDomainDefinition):
 
     def __init__(self, optparseinstance):
         InputCheckDomainDefinition.__init__(self, optparseinstance)
-        self.df = None
-        self.allPossibilities = []
+        self.bedfile = None
+        self.sequencefasta = None
         self.df1 = None
-        self.df2 = None
-        self.df3 = None
-        self.df4 = None
-        self.df5 = None
-        self.input = None
-        self.output = None
-        self.end = None
-        self.bed = None
-        self.clones = None
-        self.intersection = None
-        self.dfplus = None
-        self.dfminus = None
+        self.aux = None
         self.seqix = 1
         self.id = '1'
         self.id = [(int(x) - 1) for x in self.id]
         self.header = None
-        self.path_multiblastn = os.path.dirname(os.path.realpath(__file__)) + '/pyinteraseq_multblastn.py'
-        self.dbname = self.outputfolder + os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0]
-        self.mappingoutoput = self.inputistance.mappingoutput
+        self.path_pickotus = os.path.dirname(os.path.realpath(__file__)) + '/pick_otus.sh'
         self.pythoneve = "/opt/miniconda3/envs/qiime1/bin/python"
-        self.outfasta = self.out + "_converted.fasta"
+        self.path_multiblastn = os.path.dirname(os.path.realpath(__file__)) + '/pyinteraseq_multblastn.py'
 
-    def filelogstdoutwrite(self, msg):
+    def bam2tabular(self):
         """
-        Write information about script esecution
-        :param msg:
-        :return:
-        """
-        self.filelog = self.logopen()
-        self.filelog.write(msg)
 
-    def filelogerrorwrite(self, msg):
-        """
-        Write error message
-        :param msg:
-        :return:
-        """
-        self.filelog = self.logopen()
-        self.filelog.write(traceback.format_exc())
-        self.filelog.write(msg)
-        sys.exit(1)
-
-    # def bam2rec(self, bamsorted):
-    #     """
-    #     Generator to convert BAM files into Biopython SeqRecords.
-    #     """
-    #     bam_file = pysam.Samfile(bamsorted, "rb")
-    #     for read in bam_file:
-    #         seq = Seq.Seq(read.seq)
-    #         if read.is_reverse:
-    #             seq = seq.reverse_complement()
-    #         rec = SeqRecord.SeqRecord(seq, read.qname, "", "")
-    #         yield rec
-    #
-    def bam2fasta(self, bamfile):
-
-
-
-    def fastq2fasta(self, fastq, nameid):
-        """
-        Covert Fastq in Fasta format
-        :param fastq: input Fastq file
-        :param nameid: output name
         :return:
         """
         self.filelog = self.logopen()
         try:
-            SeqIO.convert(fastq, 'fastq', self.out + nameid + '.fasta', 'fasta')
+            self.bedfile = pybedtools.BedTool(self.bamfile).bam_to_bed()
+            self.sequencefasta = self.bedfile.sequence(fi=self.fastasequence,tab=True).save_seqs(self.out + "_clones.tab")
         except traceback:
             self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg94)
+            self.filelog.write(msg89)
             sys.exit(1)
         else:
-            self.filelog.write(msg95)
-            return self.out + nameid + '.fasta'
+            self.filelog.write(msg90)
+            return self.out + "_clones.tab"
 
-    def mappingoutput2tabular(self, tabularoutput):
+    def seqrename(self, tabular):
         """
-
-        :param tabularoutput:
-        :return:
+        Rename Id fasta, first sequence will be 0 last is seq count
+        :param tabular: File fasta in tabular format
+        :return: path + name + _1_newid.tab
         """
-        self.df1 = pd.read_csv(tabularoutput, sep ="\t", header=None, names=[u'seq', u'chr', u'percmatch', u'length',
-                                                                             u'mismatch', u'op', u'cstart',
-                                                                             u'cend', u'start', u'end', u'evalue',
-                                                                             u'bitscore', u'nseq'])
-        self.df1 = self.df1.drop_duplicates(subset='seq', keep=False)
-        self.df1[[u'seq', u'nseq']].to_csv(self.out + '_mappingoutput.tab', sep="\t",header=None,index=False)
-        return self.out + '_mappingoutput.tab'
+        self.filelog = self.logopen()
+        try:
+            self.df1 = pd.read_csv(tabular, header=None, sep='\t')
+            self.df1['seq_id'] = self.df1.apply(lambda x: "seq1:1:" + str(x.name), axis=1)
+            self.df1[['seq_id', 1]].to_csv(self.out + '_newid.tab', header=None, sep='\t', index=False)
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg98)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg99)
+            return self.out + '_newid.tab'
 
     def tab2fasta(self, tabular, prefixoutput):
         """
@@ -115,6 +71,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param prefixoutput: prefix to append
         :return: path + idanalysis + prefix + .fasta
         """
+        self.filelog = self.logopen()
         try:
             with open(tabular, 'r') as f:
                 with open(self.out + prefixoutput + '.fasta', 'w') as f_out:
@@ -125,68 +82,29 @@ class DomainsDefinition(InputCheckDomainDefinition):
                         f_out.write(line[self.seqix] + '\n')
                 f_out.close()
         except traceback:
-            self.filelogerrorwrite(msg100)
-        else:
-            self.filelogstdoutwrite(msg101)
-            return self.out + prefixoutput + '.fasta'
-
-    def fasta2tabular(self, imp, prefix):
-        """
-        Function for conversion Fasta file in tabular format
-        :param imp: input file in fasta format
-        :param prefix: prefix to add at converted file
-        :return:
-        """
-        try:
-            SeqIO.convert(imp, 'fasta', self.out + prefix + '.tab', 'tab')
-        except traceback:
-            self.filelogerrorwrite(msg96)
-        else:
-            self.filelogstdoutwrite(msg97)
-            return self.out + prefix + '.tab'
-
-    def callmultiblastn(self, fasta, multifasta, outputformat, suffix):
-        """
-        Function to call multithread blastn,
-        :param fasta: Reference or fasta that will be use for makeblastdb
-        :param multifasta: Input multifasta file
-        :param outputformat: Blast output format
-        :param suffix: String added to outputfile
-        :return: blastn output
-        """
-        self.filelog = self.logopen()
-        fnull = open(os.devnull, 'w')
-        try:
-            subprocess.check_call(['python', self.path_multiblastn,
-                                   '--referencefasta', fasta,
-                                   '--multifastasequence', multifasta,
-                                   '--dbname', self.genename,
-                                   '--outputfolder', self.outputfolder,
-                                   '--outputid', self.outputid + suffix,
-                                   '--thread', self.thread,
-                                   '--outformat', outputformat])
-        except subprocess.CalledProcessError:
-            self.filelog.write(msg60)
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg100)
             sys.exit(1)
         else:
-            self.filelog.write(msg61)
-            self.filelog.close()
-            return self.out + suffix
+            self.filelog.write(msg101)
+            return self.out + prefixoutput + '.fasta'
 
-    def clustering(self, blastnout, prefixoutput):
+    def clustering(self, bowtie2out):
         """
         Perform read clustering algoritm
         :param blastnout: Table generated with filtering function
         :param prefixoutput: Prefix that will add to output
         :return: cluster file
         """
+        self.filelog = self.logopen()
         try:
-            subprocess.check_call([self.pythoneve, self.pick_otus, '-i', blastnout, '-o',
-                                   self.out + '_picked', '-s', '0.97'])
+            subprocess.check_call([self.path_pickotus, bowtie2out, self.out + '_picked'])
         except subprocess.CalledProcessError:
-            self.filelogerrorwrite(msg71)
+            self.filelog.write(msg71)
+            sys.exit(1)
         else:
-            return self.out + '_picked/' + self.outputid + prefixoutput + '_otus.txt'
+            self.filelog.write(msg93)
+            return self.out + '_picked/' + self.outputid + '_renamed_otus.txt'
 
     def pickrepseq(self, pickotus, fasta):
         """
@@ -195,15 +113,17 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param fasta: File generated with tab2fasta containing fasta sequence filtered genarated by blastn align
         :return:
         """
+        self.filelog = self.logopen()
         try:
             subprocess.check_call(
                 [self.pythoneve,self.pick_rep_set, '-i', pickotus, '-f',
                  fasta,
                  '-m', 'most_abundant', '-o', self.out + '_otus_most_abundant.fa'])
         except subprocess.CalledProcessError:
-            self.filelogerrorwrite(msg72)
+            self.filelog.write(msg72)
+            sys.exit(1)
         else:
-            self.filelogstdoutwrite(msg73)
+            self.filelog.write(msg73)
             return self.out + '_otus_most_abundant.fa'
 
     def pysed(self, pickrepseqoutput, idx, old, new):
@@ -222,12 +142,41 @@ class DomainsDefinition(InputCheckDomainDefinition):
             g.close()
         return self.out + idx
 
+    def callmultiblastn(self, fasta, multifasta, outputformat, suffix):
+        """
+        Function to call multithread blastn,
+        :param fasta: Reference or fasta that will be use for makeblastdb
+        :param multifasta: Input multifasta file
+        :param outputformat: Blast output format
+        :param suffix: String added to outputfile
+        :return: blastn output
+        """
+        self.filelog = self.logopen()
+        fnull = open(os.devnull, 'w')
+        try:
+            subprocess.check_call(['python', self.path_multiblastn,
+                                   '--referencefasta', fasta,
+                                   '--multifastasequence', multifasta,
+                                   '--dbname', self.outputid,
+                                   '--outputfolder', self.outputfolder,
+                                   '--outputid', self.outputid + suffix,
+                                   '--thread', self.thread,
+                                   '--outformat', outputformat])
+        except subprocess.CalledProcessError:
+            self.filelog.write(msg60)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg61)
+            self.filelog.close()
+            return self.out + suffix
+
     def bedparsing(self, blastnclonesinput):
         """
 
         :param blastnclonesinput:
         :return:
         """
+        self.filelog = self.logopen()
         try:
             self.df1 = pd.read_csv(blastnclonesinput, sep="\t", header=None,
                                    names=['chr', 'start', 'end', 'clonename', 'score', 'strand'])
@@ -243,10 +192,76 @@ class DomainsDefinition(InputCheckDomainDefinition):
                                  ignore_index=True).sort_values('start').reset_index(drop=True)
             self.df1.to_csv(self.out + '_blastclonesparsed.bed', sep="\t", header=None, index=False)
         except traceback:
-            self.filelogerrorwrite(msg104)
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg104)
+            sys.exit(1)
         else:
-            self.filelogstdoutwrite(msg105)
-            return self.out+'_blastclonesparsed.bed'
+            self.filelog.write(msg105)
+            return self.out + '_blastclonesparsed.bed'
+
+    def bedannotateparsing(self, bedparsed):
+        """
+        Fix start and end and prepare tab to be annotated
+        :param bedparsed:
+        :return:
+        """
+        self.filelog = self.logopen()
+        try:
+            self.df1 = pd.read_csv(bedparsed, sep="\t", header=None,
+                              names=["ID", "start_clone", "end_clone", "id_clone", "lenght", "strand"])
+            self.aux = self.df1["ID"].apply(lambda x: x.split('_'))
+            self.df1["start"] = self.aux.apply(lambda x: x[2]).astype(int)
+            self.df1["end"] = self.aux.apply(lambda x: x[3]).astype(int)
+            self.df1["new_start"] = self.df1.apply(lambda row: row.start_clone + row.start - 1, axis=1)
+            self.df1["new_end"] = self.df1.apply(lambda row: row.end_clone + row.end, axis=1)
+            self.df1[["ID", "new_start", "new_end", "id_clone", "lenght", "strand"]].to_csv(self.out + "_bedfixed.tab", header=None, sep="\t", index=False)
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg139)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg140)
+            return self.out + "_bedfixed.tab"
+
+    def bedtoolsannotatefiltering(self, bedtoolsannotateout, percthr):
+        """
+
+        :param bedtoolsannotateout:
+        :param percthr:
+        :return:
+        """
+        self.filelog = self.logopen()
+        try:
+            self.df1 = pd.read_csv(bedtoolsannotateout, sep="\t", header=None)
+            self.df2 = self.df1.loc[self.df1[6] >= float(percthr)].sort_values(1).reset_index(drop=True)
+            self.df2[[0, 1, 2, 3, 4, 5]].to_csv(self.out + '_clonesannotatedfiltered.bed', sep="\t",
+                                                header=None, index=False)
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg88)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg77)
+            return self.out + '_clonesannotatedfiltered.bed'
+
+    def bedtoolsannotate(self, clonesformatbed, annotation):
+        """
+        Perform Bedtools Annotate
+        :param clonesformatbed:
+        :param annotation:
+        :return:
+        """
+        self.filelog = self.logopen()
+        try:
+            with open(self.out + '_clonesannotated.bed', 'w') as f:
+                subprocess.check_call(['bedtools', 'annotate', '-i', clonesformatbed, '-files', annotation], stdout=f)
+            f.close()
+        except subprocess.CalledProcessError:
+            self.filelog.write(msg75)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg76)
+            return self.out + '_clonesannotated.bed'
 
     def clonescount(self, pickotusout):
         """
@@ -254,13 +269,15 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param pickotusout:
         :return:
         """
+        self.filelog = self.logopen()
         try:
             with open(self.out + '_cluster_count.txt', 'w') as f:
                 subprocess.check_call(['awk', 'BEGIN{FS="\t";OFS="\t"}{print $1,NF}', pickotusout], stdout=f)
         except subprocess.CalledProcessError:
-            self.filelogerrorwrite(msg106)
+            self.filelog.write(msg106)
+            sys.exit(1)
         else:
-            self.filelogstdoutwrite(msg107)
+            self.filelog.write(msg107)
             return self.out+'_cluster_count.txt'
 
     def mergingcount(self, bedparsed, clonescounted):
@@ -270,6 +287,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param clonescounted:
         :return: BED6 files with chr, start, end, clonename, count, strand
         """
+        self.filelog = self.logopen()
         try:
             self.df1 = pd.read_csv(bedparsed, sep="\t", header=None,
                                    names=['chr', 'start', 'end', 'clonename', 'score', 'strand'])
@@ -278,9 +296,11 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df3 = self.df3[['chr', 'start', 'end', 'clonename', 'count', 'strand']]
             self.df3.to_csv(self.out + '_blastnclonescounted.bed', sep="\t", header=None, index=False)
         except traceback:
-            self.filelogerrorwrite(msg108)
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg108)
+            sys.exit(1)
         else:
-            self.filelogstdoutwrite(msg109)
+            self.filelog.write(msg109)
             return self.out + '_blastnclonescounted.bed'
 
     def filteringclonescount(self, mergingcountoutput, frequency):
@@ -290,6 +310,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param frequency:
         :return:
         """
+        self.filelog = self.logopen()
         try:
             self.df1 = pd.read_csv(mergingcountoutput, sep="\t", header=None,
                                    names=['chr', 'start', 'end', 'clonename', 'count', 'strand'])
@@ -299,15 +320,30 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df2 = self.df2.drop_duplicates(subset='end', keep="last")
             self.df2.to_csv(self.out + '_blastnclonescountedfiltered.bed', sep="\t", header=None, index=False)
         except traceback:
-            self.filelogerrorwrite(msg108)
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg108)
+            sys.exit(1)
         else:
-            self.filelogstdoutwrite(msg109)
+            self.filelog.write(msg109)
             return self.out+'_blastnclonescountedfiltered.bed'
 
     def pybedtoolsmerge(self, filteringclonescountoutput):
-        self.input = pybedtools.example_bedtool(filteringclonescountoutput)
-        self.output = self.input.merge().moveto(self.out+'_blastnclonesmerge.bed')
-        return self.out+'_blastnclonesmerge.bed'
+        """
+
+        :param filteringclonescountoutput:
+        :return:
+        """
+        self.filelog = self.logopen()
+        try:
+            self.input = pybedtools.example_bedtool(filteringclonescountoutput)
+            self.output = self.input.merge().moveto(self.out + '_blastnclonesmerge.bed')
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg108)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg109)
+            return self.out + '_blastnclonesmerge.bed'
 
     def pybedtoolstofasta(self, pybedtoolsmergeoutput, fastqsequence):
         """
@@ -316,14 +352,17 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param fastqsequence: Input fasta file
         :return:
         """
+        self.filelog = self.logopen()
         try:
             self.bed = pybedtools.BedTool(pybedtoolsmergeoutput)
             self.fasta = pybedtools.BedTool(fastqsequence)
             self.end = self.bed.sequence(fi=self.fasta).save_seqs(self.out + '_blastnclonesmerge.fasta')
         except traceback:
-            self.filelogerrorwrite(msg88)
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg88)
+            sys.exit(1)
         else:
-            self.filelogstdoutwrite(msg91)
+            self.filelog.write(msg91)
             return self.out + '_blastnclonesmerge.fasta'
 
     def bedtoolsannotate(self, clonesformatbed, annotation):
@@ -333,14 +372,16 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param annotation:
         :return:
         """
+        self.filelog = self.logopen()
         try:
             with open(self.out + '_clonesannotated.bed', 'w') as f:
                 subprocess.check_call(['bedtools', 'annotate', '-i', clonesformatbed, '-files', annotation], stdout=f)
             f.close()
         except subprocess.CalledProcessError:
-            self.filelogerrorwrite(msg75)
+            self.filelog.write(msg75)
+            sys.exit(1)
         else:
-            self.filelogstdoutwrite(msg76)
+            self.filelog.write(msg76)
             return self.out + '_clonesannotated.bed'
 
     def bedtoolsannotatefiltering(self, bedtoolsannotateout, percthr):
@@ -350,15 +391,18 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param percthr:
         :return:
         """
+        self.filelog = self.logopen()
         try:
             self.df1 = pd.read_csv(bedtoolsannotateout, sep="\t", header=None)
             self.df2 = self.df1.loc[self.df1[6] >= float(percthr)].sort_values(1).reset_index(drop=True)
             self.df2[[0, 1, 2, 3, 4, 5]].to_csv(self.out + '_clonesannotatedfiltered.bed', sep="\t",
                                                 header=None, index=False)
         except traceback:
-            self.filelogerrorwrite(msg88)
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg88)
+            sys.exit(1)
         else:
-            self.filelogstdoutwrite(msg77)
+            self.filelog.write(msg77)
             return self.out + '_clonesannotatedfiltered.bed'
 
     def adddescription(self, clonesmerged, annotation, percthr):
@@ -369,6 +413,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param percthr: Overlap intersection
         :return:
         """
+        self.filelog = self.logopen()
         try:
             self.clones = pybedtools.BedTool(clonesmerged)
             self.annotation = pybedtools.BedTool(annotation)
@@ -383,9 +428,11 @@ class DomainsDefinition(InputCheckDomainDefinition):
                       'strand', 'genename', 'description']].to_csv(self.out + '_clonesdescription.bed', sep="\t",
                                                                    header=None, index=False)
         except traceback:
-            self.filelogerrorwrite(msg110)
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg110)
+            sys.exit(1)
         else:
-            self.filelogstdoutwrite(msg111)
+            self.filelog.write(msg111)
             return self.out + '_clonesdescription.bed'
 
     def addsequence(self, outputfromdescription, outputfasta2tab):
@@ -395,6 +442,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param outputfasta2tab:
         :return:
         """
+        self.filelog = self.logopen()
         try:
             # ex clones description sequence
             self.df1 = pd.read_csv(outputfromdescription,
@@ -411,265 +459,55 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df3[['chr', 'clonestart', 'cloneend',
                       'clonelength', 'start', 'end',
                       'geneid', 'strand', 'genename',
-                      'description', 'nseq']].to_csv(self.out + '_domaindetection_step1.tab', sep="\t",
+                      'description', 'nseq']].to_csv(self.out + '_domain_definition.tab', sep="\t",
                                                      header=None, index=False)
         except traceback:
-            self.filelogerrorwrite(msg112)
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg112)
+            sys.exit(1)
         else:
-            self.filelogstdoutwrite(msg113)
-            return self.out + '_domaindetection_step1.tab'
+            self.filelog.write(msg113)
+            return self.out + '_domain_definition.tab'
+
+    def fasta2tabular(self, imp, prefix):
+        """
+        Function for conversion Fasta file in tabular format
+        :param imp: input file in fasta format
+        :param prefix: prefix to add at converted file
+        :return:
+        """
+        self.filelog = self.logopen()
+        try:
+            SeqIO.convert(imp, 'fasta', self.out + prefix + '.tab', 'tab')
+        except traceback:
+            self.filelog.write(traceback.format_exc())
+            self.filelog.write(msg96)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg97)
+            return self.out + prefix + '.tab'
 
     def cleantempfile(self):
         """
         Remove temporany files.
         :return:
         """
-        db1 = str(self.dbname + ".nsq")
-        db2 = str(self.dbname + ".nin")
-        db3 = str(self.dbname + ".nhr")
+        db1 = str(self.out + ".nsq")
+        db2 = str(self.out + ".nin")
+        db3 = str(self.out + ".nhr")
         os.remove(db1)
         os.remove(db2)
         os.remove(db3)
-        templistfilesingle = ["_def_blastnfiltered.fasta", "_otus_most_abundant.fa", "_def_clean.fasta", "_def_cluster_count.txt",
+        templistfile = ["_def_blastnfiltered.fasta", "_otus_most_abundant.fa", "_def_clean.fasta", "_def_cluster_count.txt",
                               "_def_clonestabular.tab", "_clonesdescription.bed", "_clonesannotatedfiltered.bed", "_clonesannotated.bed",
                               "_blastnclonesmerge.fasta", "_blastnclonesmerge.bed", "_blastnclonescountedfiltered.bed", "_blastnclonescounted.bed",
                               "_def_blastnclones.tab", "_def_blastclonesparsed.bed", "_blastnfiltered.fasta", "_clean.fasta",
-                              "_cluster_count.txt", "_clonestabular.tab", "_blastnclones.tab", "_blastclonesparsed.bed"]
-        for item in templistfilesingle:
+                              "_cluster_count.txt", "_clonestabular.tab", "_blastnclones.tab", "_blastclonesparsed.bed",'_mappingoutput.tab']
+        for item in templistfile:
             if os.path.isfile(self.out + item):
                 os.remove(self.out + item)
-
-
-
-
-
-# import os
-# from os import listdir
-# import subprocess
-# import sys
-# import time
-# import pandas as pd
-# import numpy as np
-# import optparse
-#
-# parser = optparse.OptionParser(usage='%prog [options] \n'
-#                                      '\n -a or --bam [ Input file BAM ] '
-#                                      '\n -b or --bed [ Annotation BED file ] \n'
-#                                      '\n -c or --genome [ Genome format file ] '
-#                                      '\n -p or --path [ Path where write output file ] '
-#                                      '\n -t or --threshold [ Percentile threshold ] '
-#                                      '\n -o or --output [ Output ID ] '
-#                                      '\n -h [ show this help message and exit ]',
-#                                description='Domain Detection script. This script computes the identification of domain/epitopes starting from BAM file. Annotation and genome file are mandatory. Simone Puccio',
-#                                prog='domain_detection.py',
-#                                version='1.0'
-#                                )
-#
-# parser.add_option('-a', '--bam', action='store', dest='bam', default=False, help='Input file BAM')
-# parser.add_option('-b', '--bed', action='store', dest='bed', default=False, help='Annotation BED file')
-# parser.add_option('-c', '--genome', action='store', dest='genome', default=False, help='Genome format file')
-# parser.add_option('-p', '--path', action='store', dest='path', default=False, help='Path where write output file')
-# parser.add_option('-t', '--threshold', action='store', dest='threshold', type='int', default=30,
-#                   help='Percentile threshold')
-# parser.add_option('-o', '--output', action='store', dest='output', default=False, help='Output ID')
-# options, args = parser.parse_args()
-#
-#
-# class DomainsDefinition(object):
-#
-#     def __init__(self, optparseinstance):
-#         self.inputistance = optparseinstancea
-#
-#     def focus_calculation(file1, file2, path_out):
-#         dfA = pd.read_csv(file1, index_col=False, header=None, sep='\t')
-#         dfA.columns = ["chr", "num_read"]
-#         dfB = pd.read_csv(file2, index_col=False, header=None, sep='\t')
-#         dfB.columns = ["chr", "max"]
-#         dfC = pd.merge(dfA, dfB, on='chr')
-#         newcol = np.divide(dfC["max"], dfC["num_read"], dtype='float')
-#         dfC["focus"] = newcol
-#         dfC.to_csv(path_out + options.output + 'temp_6.bed', header=None, sep='\t', index=False)
-#
-#     def percentile(file, perc, path_out):
-#         # dataframe creation
-#         dfA = pd.read_csv(file, index_col=False, header=None, sep='\t')
-#         # labeling columns
-#         dfA.columns = ['a1', 'a2', 'a3']
-#         # list with values of depth
-#         p = dfA.a3
-#         # percentile function, value int perc is the threshold
-#         v = np.percentile(p, perc)
-#         dfD = dfA.loc[lambda df: df.a3 > v, :]
-#         dfD.to_csv(path_out + options.output + 'temp_8.bed', header=None,
-#                    sep='\t', index=False)
-#
-#     def merge_intervals_focus(file1, file2, file3, path_out):
-#         dfA = pd.read_csv(file2, index_col=False, header=None, sep='\t')
-#         dfA.columns = ['chr', 'start_int', 'end_int', 'mean_depth']
-#         dfB = pd.read_csv(file1, index_col=False, header=None, sep='\t')
-#         dfB.columns = ["chr", "num_read", "max", "focus"]
-#         dfC = pd.read_csv(file3, index_col=False, header=None, sep='\t')
-#         dfC.columns = ["chr", "start", "end", "gene_id", "point", "strand", "description"]
-#         dfD = pd.merge(dfA, dfB, on='chr')
-#         dfE = pd.merge(dfD, dfC, on='chr')
-#         dfE.to_csv(path_out + options.output + 'domain_detection.bed', header=None,
-#                    sep='\t', index=False)
-#
-#     def groupbyreads(file):
-#         df = pd.read_csv(file, index_col=False, header=None, sep='\t')
-#         df.columns = ['a', 'b', 'c', 'd', 'e', 'f']
-#         df1 = df.groupby(["a"], as_index=False)["d"].count()
-#         df1.to_csv(options.path + options.output + 'temp_4.bed', header=None, sep='\t', index=False)
-#
-#     def groupbydepth(file):
-#         df = pd.read_csv(file, index_col=False, header=None, sep='\t')
-#         df.columns = ['a', 'b', 'c', 'd', 'e']
-#         df1 = df.groupby(["a"], as_index=False)["b"].max()
-#         df1.to_csv(options.path + options.output + 'temp_5.bed', header=None, sep='\t', index=False)
-#
-#     def clean(dest):
-#         try:
-#             suffixdelete = ["temp_1.bed", "temp_2.bed", "temp_3.bed", "temp_4.bed", "temp_5.bed", "temp_6.bed",
-#                             "temp_7.bed", "temp_8.bed", "temp_9.bed", "temp_10.bed"]
-#             for file in os.listdir(dest):
-#                 for i in range(len(suffixdelete)):
-#                     if file.endswith(suffixdelete[i]):
-#                         os.remove(os.path.join(dest, file))
-#         except ValueError:
-#             sys.stdout.write('Error. Removing temporary files. Exit\n')
-#             sys.exit(0)
-#         else:
-#             sys.stdout.write('Removing temporary files. Complete.\n')
-#
-#     def groupby(file):
-#         df = pd.read_csv(file, index_col=False, header=None, sep='\t')
-#         df.columns = ['a', 'b', 'c']
-#         df1 = df.groupby(['a'], as_index=False)['b'].min()
-#         df2 = df.groupby(["a"], as_index=False)["b"].max()
-#         df3 = df.groupby(["a"], as_index=False)["c"].mean()
-#         dfA = pd.merge(df1, df2, on='a')
-#         dfB = pd.merge(dfA, df3, on='a')
-#         # print dfB.head()
-#         dfB.to_csv(options.path + options.output + 'temp_7.bed', header=None, sep='\t', index=False)
-#
-#     def groupbytwo(file):
-#         df = pd.read_csv(file, index_col=False, header=None, sep='\t')
-#         df.columns = ['a', 'b', 'c']
-#         df1 = df.groupby(['a'], as_index=False)['b'].min()
-#         df2 = df.groupby(["a"], as_index=False)["b"].max()
-#         df3 = df.groupby(["a"], as_index=False)["c"].mean()
-#         dfA = pd.merge(df1, df2, on='a')
-#         dfB = pd.merge(dfA, df3, on='a')
-#         dfB.to_csv(options.path + options.output + 'temp_9.bed', header=None, sep='\t', index=False)
-#
-#
-# if __name__ == '__main__' :
-#     try:
-#         with open(options.path + options.output + 'temp_1.bed', 'w') as a:
-#             subprocess.check_call([bedtools + 'genomeCoverageBed', '-dz', '-ibam', options.bam, '-g', options.genome],
-#                                   stdout=a)
-#     except subprocess.CalledProcessError:
-#         sys.stdout.write('Error in computing depth-of-coverage. Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Computing the depth-of-coverage complete.\n')
-#
-#     try:
-#         with open(options.path + options.output + 'temp_2.bed', 'w') as b:
-#             subprocess.check_call([bedtools + 'genomeCoverageBed', '-ibam', options.bam, '-g', options.genome],
-#                                   stdout=b)
-#     except subprocess.CalledProcessError:
-#         sys.stdout.write('Error in computing breadth-of-coverage. Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Computing the breadth-of-coverage complete.\n')
-#
-#     try:
-#         with open(options.path + options.output + 'temp_3.bed', 'w') as c:
-#             subprocess.check_call([bedtools + 'bamToBed', '-i', options.bam], stdout=c)
-#     except subprocess.CalledProcessError:
-#         sys.stdout.write('Error in conversion BAM to BED. Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Computing the conversion BAM to BED complete.\n')
-#
-#     try:
-#         groupbyreads(c.name)
-#     except subprocess.CalledProcessError:
-#         sys.stdout.write('Error. Grouping number of reads for each intervals failed.Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Grouping number of reads for each intervals.\n')
-#
-#     try:
-#         groupbydepth(b.name)
-#     except subprocess.CalledProcessError:
-#         sys.stdout.write('Error. Grouping number of reads for each intervals failed.Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Grouping number of reads for each intervals.\n')
-#
-#     try:
-#         focus_calculation(options.path + options.output + 'temp_4.bed', options.path + options.output + 'temp_5.bed',
-#                           options.path)
-#     except subprocess.CalledProcessError:
-#         sys.stdout.write('Error. During focus index calculation. Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Focus index complete.\n')
-#
-#     try:
-#         groupby(a.name)
-#     except subprocess.CalledProcessError:
-#         sys.stdout.write('Error. Parsing file for focus retrievement. Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Percentile calculation complete.\n')
-#
-#     # definizione intervalliii
-#     try:
-#         percentile(options.path + options.output + 'temp_1.bed', options.threshold, options.path)
-#     except subprocess.CalledProcessError:
-#         sys.stdout.write('Error. Percentile calculation failed. Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Percentile calculation complete.\n')
-#
-#     try:
-#         groupbytwo(options.path + options.output + 'temp_8.bed')
-#     except subprocess.CalledProcessError:
-#         sys.stdout.write('Error. Parsing file for focus retrievement. Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Percentile calculation complete.\n')
-#
-#     try:
-#         with open(options.path + options.output + 'temp_10.bed', 'w') as h:
-#             subprocess.check_call(['awk',
-#                                    'BEGIN{FS="\t";OFS="\t"}{split($1,a,"_");if($3-$2>"30" || $3-$2<"1200")print $1,($2+a[3]),($3+a[3]),$4}',
-#                                    options.path + options.output + 'temp_9.bed'],
-#                                   stdout=h)
-#     except subprocess.CalledProcessError:
-#         sys.stdout.write('Error parsing columns. Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Columns parsed complete\n')
-#
-#     try:
-#         merge_intervals_focus(options.path + options.output + 'temp_6.bed',
-#                               options.path + options.output + 'temp_10.bed', options.bed, options.path)
-#     except subprocess.CalledProcessError:
-#         sys.stdout.write('Error in merging intervals. Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Intervals merging complete\n')
-#
-#     try:
-#         clean(options.path)
-#     except Exception:
-#         sys.stdout.write('Error. Delete temp file failed. Exit\n')
-#         sys.exit(0)
-#     else:
-#         sys.stdout.write('Enrichement detection complete.\n')
-#
-#
+        pickedlist = ["_blastnfiltered_otus.log","_blastnfiltered_otus.txt","_blastnfiltered_clusters.uc"]
+        for item in pickedlist:
+            if os.path.isfile(self.out + '_picked/' + self.outputid + item):
+                os.remove(self.out + '_picked/' + self.outputid + item)
+        os.rmdir(self.out + '_picked/')

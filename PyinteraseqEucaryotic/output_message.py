@@ -89,10 +89,10 @@ msg86 = "\nOnly one input file found. No intersection will be performed."
 msg87 = "\n#Error#Gene Name is missing.Execution stop."
 msg88 = '\n#Error#Error during merging files.Execution stop.'
 msg89 = '\n#Error#Error in pybedtools. Function bedtools getfasta failed.Execution stop.'
-msg90 = '\n#Error#Error in pybedtools. Function bedtools getfasta failed.Execution stop.'
+msg90 = '\nBam2Fasta complete.'
 msg91 = '\nPybedtools getfasta complete.'
 msg92 = '\n#Error#Error while cleaning balstn output.Execution stop.'
-msg93 = '\nBlastn output hash clean complete.\n'
+msg93 = '\nClustering clones complete.\n'
 msg94 = '#Error#Error conversion FastQ ==>FastA.Execution stop.\n'
 msg95 = 'Conversion FastQ ==>FastA complete.\n'
 msg96 = "#Error#Error conversion FastA ==>Tabular.Execution stop.\n"
@@ -136,5 +136,7 @@ msg133 = "\nError#Get intervals with positive coverage failed.Execution stop."
 msg134 = "\nGet intervals with positive coverage complete."
 msg135 = "\nError#Parsing domains failed.Execution stop."
 msg136 = "\nParsing domains complete."
-msg137 = "\nError#Intervals parsing failed.Execution stop."
+msg137 = "\n#Error#Intervals parsing failed.Execution stop."
 msg138 = "\nIntervals parsing coverage complete."
+msg139 = "\n#Error#Prediction of Start and End on gene coordinates failed.Execution stop."
+msg140 = "\nPrediction of Start and End complete."

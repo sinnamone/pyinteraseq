@@ -252,6 +252,8 @@ class InputCheckDomainDefinition(object):
         # import instance with all input flag
         self.inputistance = optparseinstance
         # put all under this
+        self.bamfile = self.inputistance.mappingoutput
+        self.genome = self.inputistance.genome
         self.thread = self.inputistance.thread
         self.count = 0
         self.inputfilelog = self.inputistance.log
@@ -267,7 +269,7 @@ class InputCheckDomainDefinition(object):
         # check file log
         self.inputfilelog = self.logfilecreation()
         self.filelog = None
-
+        self.overlapintersect = self.inputistance.overlapintersect
         # check annotation
         if self.inputistance.annotation is not None:
             self.annotation = self.inputistance.annotation
@@ -279,8 +281,8 @@ class InputCheckDomainDefinition(object):
         """
         if os.access(self.outputfolder, os.W_OK) is True:
             if self.inputfilelog is None:
-                self.inputfilelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
-                return self.outputfolder + self.outputid + "_mapping.log"
+                self.inputfilelog = open(self.outputfolder + self.outputid + "_domain_definition.log", "a")
+                return self.outputfolder + self.outputid + "_domain_definition.log"
             else:
                 return self.inputfilelog
         else:
@@ -324,7 +326,7 @@ class InputCheckDomainDefinition(object):
 
     def logopen(self):
         if self.inputfilelog is None:
-            return open(self.outputfolder + self.outputid + "_domaind_definition.log", "a")
+            return open(self.outputfolder + self.outputid + "_domain_definition.log", "a")
         else:
             return open(str(self.inputfilelog), 'a')
 
