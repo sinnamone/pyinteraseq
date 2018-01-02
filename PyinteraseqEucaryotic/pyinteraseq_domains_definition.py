@@ -11,6 +11,9 @@ import pybedtools
 import traceback
 import re
 from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+from collections import defaultdict
 
 class DomainsDefinition(InputCheckDomainDefinition):
 
@@ -212,8 +215,8 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.aux = self.df1["ID"].apply(lambda x: x.split('_'))
             self.df1["start"] = self.aux.apply(lambda x: x[2]).astype(int)
             self.df1["end"] = self.aux.apply(lambda x: x[3]).astype(int)
-            self.df1["new_start"] = self.df1.apply(lambda row: row.start_clone + row.start - 1, axis=1)
-            self.df1["new_end"] = self.df1.apply(lambda row: row.end_clone + row.end, axis=1)
+            self.df1["new_start"] = self.df1.apply(lambda row: row.start + row.start_clone -1, axis=1)
+            self.df1["new_end"] = self.df1.apply(lambda row: row.new_start + row.lenght -1, axis=1)
             self.df1[["ID", "new_start", "new_end", "id_clone", "lenght", "strand"]].to_csv(self.out + "_bedfixed.tab", header=None, sep="\t", index=False)
         except traceback:
             self.filelog.write(traceback.format_exc())
@@ -329,7 +332,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
 
     def pybedtoolsmerge(self, filteringclonescountoutput):
         """
-
+        Merge overlap clones in order to define the domain
         :param filteringclonescountoutput:
         :return:
         """
@@ -354,16 +357,24 @@ class DomainsDefinition(InputCheckDomainDefinition):
         """
         self.filelog = self.logopen()
         try:
-            self.bed = pybedtools.BedTool(pybedtoolsmergeoutput)
-            self.fasta = pybedtools.BedTool(fastqsequence)
-            self.end = self.bed.sequence(fi=self.fasta).save_seqs(self.out + '_blastnclonesmerge.fasta')
+            SeqIO.convert(fastqsequence, 'fasta', self.out + 'fasta_seq.tab', 'tab')
+            self.pysed(self.out + 'fasta_seq.tab','_clean.tab', '>', '')
+            self.position = pd.read_csv(pybedtoolsmergeoutput, sep="\t", header=None, names=["ID", "START", "END"])
+            self.fasta = pd.read_csv(self.out + '_clean.tab', sep="\t", header=None, names=["ID", "SEQ"])
+            self.df1 = pd.merge(self.position, self.fasta, on="ID")
+            aux = self.df1["ID"].apply(lambda x: x.split('_'))
+            self.df1["start"] = aux.apply(lambda x: x[2]).astype(int)
+            self.df1["new_start"] = self.df1["START"] - self.df1["start"]
+            self.df1["new_end"] = self.df1["END"] - self.df1["start"]
+            self.df1["newseq"] = self.df1.apply(lambda x: x["SEQ"][x["new_start"]:x["new_end"]], 1)
+            self.df1[["ID","START","END","newseq"]].to_csv(self.out + "_clonestabular.tab",header=None,sep="\t",index=False)
         except traceback:
             self.filelog.write(traceback.format_exc())
             self.filelog.write(msg88)
             sys.exit(1)
         else:
             self.filelog.write(msg91)
-            return self.out + '_blastnclonesmerge.fasta'
+            return self.out + "_clonestabular.tab"
 
     def bedtoolsannotate(self, clonesformatbed, annotation):
         """
@@ -421,11 +432,11 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df1 = pd.read_table(self.intersection.fn,
                                      names=['chr', 'clonestart', 'cloneend',
                                             'chr2', 'start', 'end', 'geneid',
-                                            'cog', 'strand', 'genename', 'description', 'clonelength'])
+                                            'cog', 'strand', 'description', 'clonelength'])
             self.df2 = self.df1.loc[self.df1['clonelength'] != int(0)].sort_values('clonestart').reset_index(drop=True)
             self.df2[['chr', 'clonestart', 'cloneend',
                       'clonelength', 'start', 'end', 'geneid',
-                      'strand', 'genename', 'description']].to_csv(self.out + '_clonesdescription.bed', sep="\t",
+                      'strand', 'description']].to_csv(self.out + '_clonesdescription.bed', sep="\t",
                                                                    header=None, index=False)
         except traceback:
             self.filelog.write(traceback.format_exc())
@@ -447,20 +458,14 @@ class DomainsDefinition(InputCheckDomainDefinition):
             # ex clones description sequence
             self.df1 = pd.read_csv(outputfromdescription,
                                    sep="\t", header=None,
-                                   names=['chr', 'clonestart', 'cloneend', 'clonelength',
-                                          'start', 'end', 'geneid',
-                                          'strand', 'genename', 'description'])
-            self.df2 = pd.read_csv(outputfasta2tab, sep="\t", header=None, names=['id_tab', 'nseq'])
-            self.df1['temp_id_tab'] = self.df1[['clonestart', 'cloneend']].astype(str).apply(lambda x: '-'.join(x),
-                                                                                             axis=1)
-            self.df1['id_tab'] = self.df1[['chr', 'temp_id_tab']].astype(str).apply(lambda x: ':'.join(x), axis=1)
-            self.df1.drop('temp_id_tab', axis=1, inplace=True)
-            self.df3 = pd.merge(self.df1, self.df2, on='id_tab')
-            self.df3[['chr', 'clonestart', 'cloneend',
-                      'clonelength', 'start', 'end',
-                      'geneid', 'strand', 'genename',
-                      'description', 'nseq']].to_csv(self.out + '_domain_definition.tab', sep="\t",
-                                                     header=None, index=False)
+                                   names=['ID', 'CloneStart', 'CloneEnd', 'CloneLength',
+                                          'MergeTransciptStart', 'MergeTransciptEnd', 'Geneid',
+                                          'Strand', 'Description'])
+            self.df2 = pd.read_csv(outputfasta2tab, sep="\t", header=None, names=["ID","CloneStart","CloneEnd","NucleotideSeq"])
+            self.df3 = pd.merge(self.df1, self.df2, on='CloneStart')
+            self.df3[['ID', 'CloneStart', 'CloneEnd_x', 'CloneLength','MergeTransciptStart', 'MergeTransciptEnd', 'Geneid','Strand',
+                      'Description', 'NucleotideSeq']].to_csv(self.out + '_domain_definition.tab', sep="\t",
+                                                     header=True, index=False)
         except traceback:
             self.filelog.write(traceback.format_exc())
             self.filelog.write(msg112)
@@ -468,24 +473,6 @@ class DomainsDefinition(InputCheckDomainDefinition):
         else:
             self.filelog.write(msg113)
             return self.out + '_domain_definition.tab'
-
-    def fasta2tabular(self, imp, prefix):
-        """
-        Function for conversion Fasta file in tabular format
-        :param imp: input file in fasta format
-        :param prefix: prefix to add at converted file
-        :return:
-        """
-        self.filelog = self.logopen()
-        try:
-            SeqIO.convert(imp, 'fasta', self.out + prefix + '.tab', 'tab')
-        except traceback:
-            self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg96)
-            sys.exit(1)
-        else:
-            self.filelog.write(msg97)
-            return self.out + prefix + '.tab'
 
     def cleantempfile(self):
         """
@@ -511,3 +498,30 @@ class DomainsDefinition(InputCheckDomainDefinition):
             if os.path.isfile(self.out + '_picked/' + self.outputid + item):
                 os.remove(self.out + '_picked/' + self.outputid + item)
         os.rmdir(self.out + '_picked/')
+
+    def provagetfasta(self, inpclone, fastasequence):
+        positions = defaultdict(list)
+        with open(inpclone) as f:
+            for line in f:
+                print line.split()
+                name, start, stop = line.split()
+                positions[name].append((int(start), int(stop)))
+        records = SeqIO.to_dict(SeqIO.parse(open(fastasequence), 'fasta'))
+        print positions
+        short_seq_records = []
+        for name in positions:
+            for (start, stop) in positions[name]:
+                long_seq_record = records[name]
+                long_seq = long_seq_record.seq
+                alphabet = long_seq.alphabet
+                short_seq = str(long_seq)[start - 1:stop]
+                short_seq_record = SeqRecord(Seq(short_seq, alphabet), id=name, description='')
+                short_seq_records.append(short_seq_record)
+
+        # write to file
+        with open(self.out + 'output.fasta', 'w') as f:
+            SeqIO.write(short_seq_records, f, 'fasta')
+
+
+
+

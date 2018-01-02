@@ -92,22 +92,19 @@ if __name__ == '__main__':
     DictInfo["clonescounted"] = DomainDefinitionClass.mergingcount(
         DictInfo["bedfixed"], DictInfo["clustercount"])
     # #  Filtering the domains that are covered less than 10 clones
-    # DictInfo["clonescountedfiltered"] = DomainDefinitionClass.filteringclonescount(
-    #     DictInfo["clonescounted"], 5)
-    # # clone merge to get domains
-    # DictInfo["clonescountedmerged"] = DomainDefinitionClass.pybedtoolsmerge(
-    #     DictInfo["clonescountedfiltered"])
-    # # # Get fasta from intervels
-    # DictInfo["clonesmergedfasta"] = DomainDefinitionClass.pybedtoolstofasta(
-    #     pybedtoolsmergeoutput=DictInfo["clonescountedmerged"], fastqsequence=options.fastasequence)
-    # # Add description present in ptt 0.7 is the overlap of intersect cds
-    # DictInfo["tabwithdescription"] = DomainDefinitionClass.adddescription(
-    #     clonesmerged=DictInfo["clonescountedmerged"], annotation=options.annotation,
-    #     percthr=options.overlapintersect)
-    # # Conversion Fasta ==>Tabular
-    # DictInfo["clonenseqfasta"] = DomainDefinitionClass.fasta2tabular(
-    #     imp=DictInfo["clonesmergedfasta"], prefix='_clonestabular')
-    # # Add sequence to output table
-    # DictInfo["tabwithsequence"] = DomainDefinitionClass.addsequence(
-    #     outputfromdescription=DictInfo["tabwithdescription"], outputfasta2tab=DictInfo["clonenseqfasta"])
-    #DomainDefinitionClass.cleantempfile()
+    DictInfo["clonescountedfiltered"] = DomainDefinitionClass.filteringclonescount(
+        DictInfo["clonescounted"], 5)
+    # clone merge to get domains
+    DictInfo["clonescountedmerged"] = DomainDefinitionClass.pybedtoolsmerge(
+        DictInfo["clonescountedfiltered"])
+    # Get fasta from intervels
+    DictInfo["clonesmergedfasta"] = DomainDefinitionClass.pybedtoolstofasta(
+        pybedtoolsmergeoutput=DictInfo["clonescountedmerged"], fastqsequence=options.fastasequence)
+    # Add description present in ptt 0.7 is the overlap of intersect cds
+    DictInfo["tabwithdescription"] = DomainDefinitionClass.adddescription(
+        clonesmerged=DictInfo["clonescountedmerged"], annotation=options.annotation,
+        percthr=options.overlapintersect)
+    # Add sequence to output table
+    DictInfo["tabwithsequence"] = DomainDefinitionClass.addsequence(
+        outputfromdescription=DictInfo["tabwithdescription"], outputfasta2tab=DictInfo["clonesmergedfasta"])
+    # DomainDefinitionClass.cleantempfile()
