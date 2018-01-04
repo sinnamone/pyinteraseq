@@ -254,10 +254,8 @@ class InputCheckDomainDefinition(object):
         # put all under this
         self.bamfile = self.inputistance.mappingoutput
         self.genome = self.inputistance.genome
-        self.thread = self.inputistance.thread
         self.count = 0
         self.inputfilelog = self.inputistance.log
-        self.cloneslength = self.inputistance.minclonelength
         self.outputfolder = self.checkoutputpath()
         self.outputid = self.checkoutputid()
         self.fastasequence = self.checkfastasequence()
@@ -269,7 +267,7 @@ class InputCheckDomainDefinition(object):
         # check file log
         self.inputfilelog = self.logfilecreation()
         self.filelog = None
-        self.overlapintersect = self.inputistance.overlapintersect
+        self.threshold = self.inputistance.threshold
         # check annotation
         if self.inputistance.annotation is not None:
             self.annotation = self.inputistance.annotation

@@ -88,26 +88,27 @@ msg85 = "\nSorting of BAM file complete."
 msg86 = "\nOnly one input file found. No intersection will be performed."
 msg87 = "\n#Error#Gene Name is missing.Execution stop."
 msg88 = '\n#Error#Error during merging files.Execution stop.'
-msg89 = '\n#Error#Error in pybedtools. Function bedtools getfasta failed.Execution stop.'
-msg90 = '\nBam2Fasta complete.'
-msg91 = '\nPybedtools getfasta complete.'
-msg92 = '\n#Error#Error while cleaning balstn output.Execution stop.'
-msg93 = '\nClustering clones complete.\n'
-msg94 = '#Error#Error conversion FastQ ==>FastA.Execution stop.\n'
-msg95 = 'Conversion FastQ ==>FastA complete.\n'
-msg96 = "#Error#Error conversion FastA ==>Tabular.Execution stop.\n"
-msg97 = "Conversion FastA ==>Tabular complete.\n"
-msg98 = "#Error#Error renaming Fasta Id.Execution stop.\n"
-msg99 = "Renaming Fasta Id complete.\n"
-msg100 = "#Error#Error conversion Tabular ==>FastA.Execution stop.\n"
-msg101 = "Conversion Tabular ==>FastA complete.\n"
-msg102 = "\n#Error# Blastn Output filtering failed.Execution stop."
-msg103 = "\nBlastn Output filtering complete."
-msg104 = "\n#Error#Output Bed parsed failed.Execution stop."
-msg105 = "\nOutput Bed parsed complete."
-msg106 = "\n#Error#Error during clone cluster count.Execution stop."
-msg107 = "\nClone cluster count.Complete"
-msg108 = "\n#Error#Filtering cluster failed.Execution stop."
+msg89 = '\n#Error#Error in pybedtools. Error in computing depth-of-coverage.Execution stop.'
+msg90 = '\nComputing the depth-of-coverage complete.'
+msg91 = '\n#Error#Error in computing breadth-of-coverage.Execution stop.'
+msg92 = '\nComputing the breadth-of-coverage complete.'
+msg93 = '\nBam2bed complete.'
+msg94 = '\n#Error#Error in pybedtools. Function bedtools bam2bed failed.Execution stop.'
+msg95 = '\nRead group by Id complete.'
+msg96 = "\n#Error#Read group by ID failed.Execution stop."
+msg97 = "\nRead count complete."
+msg98 = "\n#Error#Read count failed.Execution stop."
+msg99 = "\n#Error#Error computing Max depth coverage.Execution stop."
+msg100 = "\nMax depth coverage computing complete."
+msg101 = "\n#Error#Percentile depth filtering failed.Execution stop."
+msg102 = "\nPercentile depth filtering complete."
+msg103 = "\n#Error#Raw definition of domains failed.Execution stop."
+msg104 = "\nRaw definition of domains complete."
+msg105 = "\n#Error#Error computing domain start and end.Execution stop."
+msg106 = "\nComputing domain start and end complete."
+msg107 = "\n#Error#Parsing output failed.Execution stop."
+msg108 = "\n#Parsing output complete"
+
 msg109 = "\nFiltering cluster complete."
 msg110 = "\n#Error# Add gene description failed.Execution stop."
 msg111 = "\nAdd gene description complete."
@@ -140,3 +141,19 @@ msg137 = "\n#Error#Intervals parsing failed.Execution stop."
 msg138 = "\nIntervals parsing coverage complete."
 msg139 = "\n#Error#Prediction of Start and End on gene coordinates failed.Execution stop."
 msg140 = "\nPrediction of Start and End complete."
+msg141 = "\n#Error#Parsing of domain definition output file failed.Execution stop."
+msg142 = "\nParsing of domain definition output file complete."
+msg143 = "\n#Error#Bedtools coverage failed.Execution stop."
+msg144 = "\nBedtools coverage complete."
+msg145 = "\n#Error#Bedtools coverage failed.Execution stop."
+msg146 = "\nBedtools coverage complete."
+msg147 = "\n#Error#Parsing output bedtools coverage failed.Execution stop."
+msg148 = "\nParsing output bedtools coverage complete."
+msg149 = "\n#Error#Differential expression analysis failed.Execution stop."
+msg150 = "\nDifferential expression analysis complete."
+msg151 = "\n#Error#Parsing output edgeR failed.Execution stop."
+msg152 = "\nParsing output edgeR complete."
+msg153 = "\n#Error#Substraction domains failed.Execution stop.\n"
+msg154 = "Substraction domains complete.\n"
+msg155 = "\n#Error#Intersection domains failed.Execution stop.\n"
+msg156 = "Intersection domains complete.\n"

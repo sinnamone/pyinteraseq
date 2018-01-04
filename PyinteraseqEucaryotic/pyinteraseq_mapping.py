@@ -194,14 +194,14 @@ class BlastNlucleotide(Trimming):
         """
         self.filelog = self.logopen()
         try:
-            pysam.sort("-@", self.thread, bamfile, "-o", self.out + "_output_mapping.bam")
-            pysam.index(self.out + "_output_mapping.bam")
+            pysam.sort("-@", self.thread, bamfile, "-o", self.out + "_mapping.bam")
+            pysam.index(self.out + "_mapping.bam")
         except subprocess.CalledProcessError:
             self.filelog.write(msg84)
             sys.exit(1)
         else:
             self.filelog.write(msg85)
-            return self.out + "_output_mapping.bam"
+            return self.out + "_mapping.bam"
 
     def cleantempfile(self):
         """
@@ -233,11 +233,3 @@ class BlastNlucleotide(Trimming):
                     if os.path.isfile(self.out + item):
                         os.remove(self.out + item)
 
-    # def test_bowtie2(self):
-    #     try:
-    #         subprocess.check_call([bowtie2, '--version'], stderr=self.FNULL, stdout=self.FNULL)
-    #     except subprocess.CalledProcessError:
-    #         sys.stdout.write('Error during checking Bowtie2 version . Exit\n')
-    #         sys.exit(0)
-    #     else:
-    #         sys.stdout.write('Bowtie2 version testing complete.\n')
