@@ -15,37 +15,16 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from collections import defaultdict
 
-
-#
-#     def cleantempfile(self):
-#         """
-#         Remove temporany files.
-#         :return:
-#         """
-#         db1 = str(self.out + ".nsq")
-#         db2 = str(self.out + ".nin")
-#         db3 = str(self.out + ".nhr")
-#         os.remove(db1)
-#         os.remove(db2)
-#         os.remove(db3)
-#         templistfile = ["_clones.tab","_newid.tab","_renamed.fasta","_otus_most_abundant.fa","_clean.fasta","_blastnclones.tab","_blastclonesparsed.bed",
-#                         "_bedfixed.tab","_clonesannotated.bed","_clonesannotatedfiltered.bed","_cluster_count.txt","_blastnclonescounted.bed","_blastnclonescountedfiltered.bed",
-#                         "_blastnclonesmerge.bed","fasta_seq.tab","_clean.tab","_clonestabular.tab","_clonesdescription.bed"]
-#         for item in templistfile:
-#             if os.path.isfile(self.out + item):
-#                 os.remove(self.out + item)
-#         pickedlist = ["_renamed_otus.log","_renamed_otus.txt","_renamed_clusters.uc"]
-#         for item in pickedlist:
-#             if os.path.isfile(self.out + '_picked/' + self.outputid + item):
-#                 os.remove(self.out + '_picked/' + self.outputid + item)
-#         os.rmdir(self.out + '_picked/')
-
 class DomainsDefinition(InputCheckDomainDefinition):
 
     def __init__(self, optparseinstance):
         InputCheckDomainDefinition.__init__(self, optparseinstance)
 
     def depthcoverage(self):
+        """
+        bedtoools genomecov for each base covered
+        :return:
+        """
         self.filelog = self.logopen()
         try:
             with open(self.out + '_DepthCoverageBed.txt', 'w') as b:
@@ -61,6 +40,10 @@ class DomainsDefinition(InputCheckDomainDefinition):
             return self.out + '_DepthCoverageBed.txt'
 
     def breadthcoverage(self):
+        """
+        Bedtools genomecov for read count
+        :return:
+        """
         self.filelog = self.logopen()
         try:
             with open(self.out + '_BreadthCoverageBed.txt', 'w') as b:
@@ -77,6 +60,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
 
     def bam2tabular(self):
         """
+        Convert BAM file to Bed
         :return:
         """
         self.filelog = self.logopen()
@@ -155,6 +139,11 @@ class DomainsDefinition(InputCheckDomainDefinition):
             return self.out + "_maxdepth.txt"
 
     def percentile(self, file):
+        """
+        Filtering domains with low coverage
+        :param file:
+        :return:
+        """
         try:
             # dataframe creation
             dfA = pd.read_csv(file, index_col=False, header=None, sep='\t')
@@ -176,6 +165,11 @@ class DomainsDefinition(InputCheckDomainDefinition):
             return self.out + '_percentilefiltered.bed'
 
     def startenddefinition(self, file):
+        """
+        Setepu start and end domain
+        :param file:
+        :return:
+        """
         try:
             df = pd.read_csv(file, index_col=False, header=None, sep='\t')
             df.columns = ['a', 'b', 'c']
@@ -194,6 +188,11 @@ class DomainsDefinition(InputCheckDomainDefinition):
             return self.out + '_raw_domains.txt'
 
     def domainparsing(self, outputstartenddefinition):
+        """
+
+        :param outputstartenddefinition:
+        :return:
+        """
         try:
             df = pd.read_csv(outputstartenddefinition,sep="\t", header=None,
                              names=["ID", "start_clone", "end_clone", "ave_depth"])
@@ -219,6 +218,12 @@ class DomainsDefinition(InputCheckDomainDefinition):
             return self.out + "_domainnot_merged.tab"
 
     def parsingoutput(self,outputdomainparsing,outputbedtoolscoverage):
+        """
+        parsing output file
+        :param outputdomainparsing:
+        :param outputbedtoolscoverage:
+        :return:
+        """
         try:
             df1 = pd.read_csv(outputdomainparsing,sep="\t", header=None,
                               names=["ID","chr","domain_start", "domain_end","length", "average_depth", "start", "end","geneID"])
@@ -236,20 +241,15 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.filelog.write(msg108)
             return self.out + "_domain_definition.tab"
 
-
-    # def clean(self, dest):
-    #     try:
-    #         suffixdelete = ["temp_1.bed", "temp_2.bed", "temp_3.bed", "temp_4.bed", "temp_5.bed", "temp_6.bed",
-    #                         "temp_7.bed", "temp_8.bed", "temp_9.bed", "temp_10.bed"]
-    #         for file in os.listdir(dest):
-    #             for i in range(len(suffixdelete)):
-    #                 if file.endswith(suffixdelete[i]):
-    #                     os.remove(os.path.join(dest, file))
-    #     except ValueError:
-    #         sys.stdout.write('Error. Removing temporary files. Exit\n')
-    #         sys.exit(0)
-    #     else:
-    #         sys.stdout.write('Removing temporary files. Complete.\n')
-    #
+    def cleantempfile(self):
+        """
+        Remove temporany files.
+        :return:
+        """
+        templistfile = ["_DepthCoverageBed.txt","_BreadthCoverageBed.txt",".bed","_bedfixed.tab","_readcov.bed","_maxdepth.txt",
+                        "_percentilefiltered.bed","_raw_domains.txt","_domainnot_merged.tab"]
+        for item in templistfile:
+            if os.path.isfile(self.out + item):
+                os.remove(self.out + item)
 
 

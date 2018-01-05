@@ -107,7 +107,7 @@ msg104 = "\nRaw definition of domains complete."
 msg105 = "\n#Error#Error computing domain start and end.Execution stop."
 msg106 = "\nComputing domain start and end complete."
 msg107 = "\n#Error#Parsing output failed.Execution stop."
-msg108 = "\n#Parsing output complete"
+msg108 = "\nParsing output complete"
 
 msg109 = "\nFiltering cluster complete."
 msg110 = "\n#Error# Add gene description failed.Execution stop."

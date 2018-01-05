@@ -60,3 +60,4 @@ if __name__ == '__main__':
     DictInfo["startenddef"] = DomainDefinitionClass.startenddefinition(DictInfo["percentile"])
     DictInfo["domainnotmerged"] = DomainDefinitionClass.domainparsing(DictInfo["startenddef"])
     DictInfo["domaindefinition"] = DomainDefinitionClass.parsingoutput(DictInfo["domainnotmerged"], DictInfo["readcount"])
+    DomainDefinitionClass.cleantempfile()
