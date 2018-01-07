@@ -61,12 +61,12 @@ class BlastNlucleotide(Trimming):
         try:
             if self.readforwardtype == 'fastq':
                 subprocess.check_call(
-                    ["/usr/local/bin/bowtie2", '--very-sensitive-local', '-p', self.thread, '-x',
+                    ["/usr/local/bin/bowtie2", '-p', self.thread, '-x',
                      database, '-q', multifasta, ' -S', self.out + '.sam'],
                     stderr=fnull, stdout=fnull)
-            else:
+            elif self.readforwardtype == 'fasta':
                 subprocess.check_call(
-                    ["/usr/local/bin/bowtie2", '--very-sensitive-local', '-p', self.thread, '-x',
+                    ["/usr/local/bin/bowtie2", '-p', self.thread, '-x',
                      database, '-f', multifasta, ' -S', self.out + '.sam'],
                     stderr=fnull, stdout=fnull)
         except subprocess.CalledProcessError:
