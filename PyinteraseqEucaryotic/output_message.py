@@ -122,3 +122,7 @@ msg119 = "\n#Error#Error parsing output file with common domains.Execution stop.
 msg120 = "\nParsing output file with common domains complete."
 msg121 = "\n#Error#Error parsing output file with unique domains.Execution stop."
 msg122 = "\nParsing output file with unique domains complete."
+msg123 = "\nReference sequence index already exist."
+msg124 = "\nParsing genome complete."
+msg125 = "\nError#Conversion BED to BAM failed.Execution stop."
+msg126 = "\nConversion BED to BAM complete."

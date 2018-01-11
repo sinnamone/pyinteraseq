@@ -179,7 +179,7 @@ class EnrichmentProkaryotic(object):
             dff.rename(columns={'start_y': 'start', 'end_x': 'end'}, inplace=True)
             dff[['ID', 'domain_start', 'domain_end', "length", "chr", "geneID", "start", "end", "strand",
                  "logFC", "PValue", "AdjPValue", "description"]].to_csv(
-                self.out + '_common_intervals.bed', header=None, sep='\t', index=False)
+                self.out + '_common_intervals.bed', header=True, sep='\t', index=False)
         except traceback:
             self.filelogstdoutwrite(msg119)
         else:
@@ -197,7 +197,7 @@ class EnrichmentProkaryotic(object):
             dfc = pd.merge(dfa, dfb, on='ID')
             dfc.rename(columns={'start_y': 'start', 'end_x': 'end', "strand_x": "strand"}, inplace=True)
             dfc[['ID', 'domain_start', 'domain_end', "length", "chr", "geneID", "start", "end", "strand", "description"]].to_csv(
-                self.out + '_unique_intervals.bed', header=None, sep='\t', index=False)
+                self.out + '_unique_intervals.bed', header=True, sep='\t', index=False)
         except traceback:
             self.filelogstdoutwrite(msg121)
         else:
