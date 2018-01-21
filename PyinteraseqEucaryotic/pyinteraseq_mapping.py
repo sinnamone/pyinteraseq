@@ -8,6 +8,8 @@ import traceback
 import urllib
 import collections
 import pysam
+from Bio import SeqIO
+import numpy as np
 
 
 class BlastNlucleotide(Trimming):
@@ -61,7 +63,7 @@ class BlastNlucleotide(Trimming):
         try:
             if self.readforwardtype == 'fastq':
                 subprocess.check_call(
-                    ["/usr/local/bin/bowtie2", '--fast-local', '-p', self.thread, '-x',
+                    ["/usr/local/bin/bowtie2", '--fast-local', '-p', '20', '-x',
                      database, '-q', multifasta, ' -S', self.out + '.sam'],
                     stderr=fnull, stdout=fnull)
             elif self.readforwardtype == 'fasta':
@@ -202,6 +204,53 @@ class BlastNlucleotide(Trimming):
         else:
             self.filelog.write(msg85)
             return self.out + "_mapping.bam"
+
+    def kallistoindexvalues(self, fastaconcatenate):
+        try:
+            a = []
+            for seq_record in SeqIO.parse(fastaconcatenate, "fastq"):
+                a.append((len(seq_record)))
+        except traceback:
+            self.filelog.write(msg131)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg132)
+            return np.mean(a), np.std(a)
+
+    def indexkallisto(self):
+        self.filelog = self.logopen()
+        fnull = open(os.devnull, 'w')
+        try:
+            if os.path.exists(self.dbname):
+                self.filelog.write(msg123)
+            else:
+                subprocess.check_call(["/opt/miniconda3/bin/kallisto", "index", "-i", self.dbname, self.fastasequence],
+                                      stderr=fnull, stdout=fnull)
+        except subprocess.CalledProcessError:
+            self.filelog.write(msg43)
+            sys.exit(1)
+        except traceback:
+            self.filelog.write(msg43)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg44)
+            return self.dbname
+
+    def mappingkallisto(self, indexkallisto, avefragmlen, stdfragmlen, reads):
+        self.filelog = self.logopen()
+        fnull = open(os.devnull, 'w')
+        try:
+            with open(self.out + '.sam') as sam:
+                subprocess.check_call(
+                    ["/opt/miniconda3/bin/kallisto", 'quant', '-i', indexkallisto, '-o', self.outputfolder,
+                     '--pseudobam', '--single', '-l', str(avefragmlen), '-s', str(stdfragmlen), reads],
+                    stderr=fnull, stdout=sam)
+        except subprocess.CalledProcessError:
+            self.filelog.write(msg60)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg61)
+            return self.out + '.sam'
 
     def cleantempfile(self):
         """

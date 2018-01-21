@@ -80,7 +80,7 @@ if __name__ == '__main__':
         })
     log = open(MappingClass.inputfilelog, "a")
     if MappingClass.sequencingtype in "Single-End":
-        log.write(msg120)
+        log.write(msg127)
         try:
             if (MappingClass.primer5forward is not None) and (MappingClass.primer3forward is not None):
                 DictInfo["forward5trimmed"] = MappingClass.trimming5single(readfile=MappingClass.readforward,
@@ -94,15 +94,17 @@ if __name__ == '__main__':
             elif (MappingClass.primer5forward is None) and (MappingClass.primer3forward is None):
                 DictInfo["Trimmedreadconcatenated"] = MappingClass.readforward
             else:
-                log.write(msg116)
-                sys.exit(1)
+                DictInfo["Trimmedreadconcatenated"] = MappingClass.trimming5single(readfile=MappingClass.readforward,
+                                                                                   primer5=MappingClass.primer5forward,
+                                                                                   direction="_forward5trimmed.",
+                                                                                   readtype=MappingClass.readforwardtype)
         except traceback:
             log.write(msg118)
             sys.exit(1)
         else:
             log.write(msg119)
     elif MappingClass.sequencingtype in "Paired-End":
-        log.write(msg121)
+        #log.write(msg129)
         try:
             if (MappingClass.primer5forward is not None) and (MappingClass.primer3forward is not None) and (
                         MappingClass.primer5reverse is not None) and (MappingClass.primer3reverse is not None):
@@ -156,9 +158,15 @@ if __name__ == '__main__':
         except traceback:
             log.write(msg118)
             sys.exit(1)
-    log.write(msg122)
-    DictInfo["dbname"] = MappingClass.indexing_bowtie()
-    DictInfo["sam"] = MappingClass.mapping_bowtie(DictInfo["Trimmedreadconcatenated"], DictInfo["dbname"])
+    #log.write(msg130)
+    DictInfo["dbname"] = MappingClass.indexkallisto()
+    # DictInfo["dbname"] = MappingClass.indexing_bowtie()
+    DictInfo["indexvalues"] = MappingClass.kallistoindexvalues(DictInfo["Trimmedreadconcatenated"])
+    print DictInfo["indexvalues"]
+    DictInfo["sam"] = MappingClass.mappingkallisto(DictInfo["dbname"], DictInfo["indexvalues"][0],
+                                                   DictInfo["indexvalues"][1],
+                                                   DictInfo["Trimmedreadconcatenated"])
+    # DictInfo["sam"] = MappingClass.mapping_bowtie(DictInfo["Trimmedreadconcatenated"], DictInfo["dbname"])
     DictInfo["headersam"] = MappingClass.getheadersam(samfile=DictInfo["sam"])
     MappingClass.parsesamfiles(samfile=DictInfo["sam"])
     DictInfo["filteredsam"] = MappingClass.filteringmismatches()
