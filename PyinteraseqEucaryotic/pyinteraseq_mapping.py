@@ -25,6 +25,8 @@ class BlastNlucleotide(Trimming):
                               "ASCORE", "ABASES", "MISMATCHES", "GAPOPENS", "GAPEXTENSIONS", "EDITDISTANCE",
                               "MISMATCHEDREFBASES", "PAIR"]
         self.SAMRecord = collections.namedtuple("SAMRecord", self.samInfoFields)
+        self.samInfoFallistoFields = ["QNAME", "FLAG", "RNAME", "POS", "MAPQ", "CIGAR", "RNEXT", "PNEXT", "TLEN", "SEQ","QUAL","NH"]
+        self.SAMRecordKallisto = collections.namedtuple("SAMRecord", self.samInfoFallistoFields)
 
     def indexing_bowtie(self):
         """
@@ -144,6 +146,44 @@ class BlastNlucleotide(Trimming):
         else:
             self.filelog.write(msg64)
 
+    def parsesamkallistofiles(self, samfile):
+        """
+
+        :param samfile:
+        :return:
+        """
+        self.filelog = self.logopen()
+        try:
+            with open(samfile) as infile:
+                for line in infile:
+                    if line.startswith("@"):
+                        continue
+                    if line.split("\t")[5] is '*':
+                        continue
+                    self.parts = line.split("\t")
+                    assert len(self.parts) == len(self.samInfoFallistoFields)
+                    # Normalize data
+                    normalizedinfo = {
+                        "QNAME": None if self.parts[0] == "." else urllib.unquote(self.parts[0]),
+                        "FLAG": None if self.parts[1] == "." else urllib.unquote(self.parts[1]),
+                        "RNAME": None if self.parts[2] == "." else urllib.unquote(self.parts[2]),
+                        "POS": None if self.parts[3] == "." else urllib.unquote(self.parts[3]),
+                        "MAPQ": None if self.parts[4] == "." else urllib.unquote(self.parts[4]),
+                        "CIGAR": None if self.parts[5] == "." else urllib.unquote(self.parts[5]),
+                        "RNEXT": None if self.parts[6] == "." else urllib.unquote(self.parts[6]),
+                        "PNEXT": None if self.parts[7] == "." else urllib.unquote(self.parts[7]),
+                        "TLEN": None if self.parts[8] == "." else urllib.unquote(self.parts[8]),
+                        "SEQ": None if self.parts[9] == "." else urllib.unquote(self.parts[9]),
+                        "QUAL": None if self.parts[10] == "." else urllib.unquote(self.parts[10]),
+                        "NH": None if self.parts[10] == "." else urllib.unquote(self.parts[11])
+                    }
+                    yield self.SAMRecordKallisto(**normalizedinfo)
+        except traceback:
+            self.filelog.write(msg63)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg64)
+
     def filteringmismatches(self):
         self.filelog = self.logopen()
         try:
@@ -169,6 +209,33 @@ class BlastNlucleotide(Trimming):
                                                                                                     -1]) * 100) / len(
                                                                                                 record.SEQ)))
 
+            target.close()
+        except traceback:
+            self.filelog.write(msg80)
+            sys.exit(1)
+        else:
+            self.filelog.write(msg81)
+            return self.out + '_filtered.sam'
+
+    def filteringmismatcheskallisto(self):
+        self.filelog = self.logopen()
+        try:
+            target = open(self.out + '_filtered.sam', 'w')
+            for i in range(len(self.header)):
+                target.write(self.header[i].strip('\n') + '\n')
+            for record in self.parsesamkallistofiles(samfile=self.out + '.sam'):
+                target.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (record.QNAME,
+                                                                                   record.FLAG,
+                                                                                   record.RNAME,
+                                                                                   record.POS,
+                                                                                   record.MAPQ,
+                                                                                   record.CIGAR,
+                                                                                   record.RNEXT,
+                                                                                   record.PNEXT,
+                                                                                   record.TLEN,
+                                                                                   record.SEQ,
+                                                                                   record.QUAL,
+                                                                                   record.NH))
             target.close()
         except traceback:
             self.filelog.write(msg80)
@@ -240,7 +307,7 @@ class BlastNlucleotide(Trimming):
         self.filelog = self.logopen()
         fnull = open(os.devnull, 'w')
         try:
-            with open(self.out + '.sam') as sam:
+            with open(self.out + '.sam', 'w') as sam:
                 subprocess.check_call(
                     ["/opt/miniconda3/bin/kallisto", 'quant', '-i', indexkallisto, '-o', self.outputfolder,
                      '--pseudobam', '--single', '-l', str(avefragmlen), '-s', str(stdfragmlen), reads],
