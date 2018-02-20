@@ -373,16 +373,19 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df1['id_tab'] = self.df1[['chr', 'temp_id_tab']].astype(str).apply(lambda x: ':'.join(x), axis=1)
             self.df1.drop('temp_id_tab', axis=1, inplace=True)
             self.df3 = pd.merge(self.df1, self.df2, on='id_tab')
-            self.df3[['chr', 'clonestart', 'cloneend',
-                      'clonelength', 'start', 'end',
-                      'geneid', 'strand', 'genename',
-                      'description', 'nseq']].to_csv(self.out + '_domain_definition.tab', sep="\t",
-                                                     header=None, index=False)
+            self.df4 = self.df3[['chr', 'clonestart', 'cloneend',
+                                 'clonelength', 'start', 'end',
+                                 'geneid', 'strand', 'genename',
+                                 'description', 'nseq']]
+            self.df4.columns = ["Chr", "CloneStart", "CloneEnd", "CloneLength", "Start", "End", "GeneID", "Strand",
+                                "GeneName", "Description", "NuclSeq"]
+            self.df4.to_csv(self.out + '_definition.txt', sep="\t", header=True, index=False)
+
         except traceback:
             self.filelogerrorwrite(msg112)
         else:
             self.filelogstdoutwrite(msg113)
-            return self.out + '_domain_definition.tab'
+            return self.out + '_definition.txt'
 
     def cleantempfile(self):
         """

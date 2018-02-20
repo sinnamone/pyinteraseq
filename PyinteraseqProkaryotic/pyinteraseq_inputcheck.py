@@ -295,8 +295,8 @@ class InputCheckDomainDefinition(object):
             """
             if os.access(self.outputfolder, os.W_OK) is True:
                 if self.inputfilelog is None:
-                    self.inputfilelog = open(self.outputfolder + self.outputid + "_domain_definition.log", "a")
-                    return self.outputfolder + self.outputid + "_domain_definition.log"
+                    self.inputfilelog = open(self.outputfolder + self.outputid + "_definition.log", "a")
+                    return self.outputfolder + self.outputid + "_definition.log"
                 else:
                     return self.inputfilelog
             else:

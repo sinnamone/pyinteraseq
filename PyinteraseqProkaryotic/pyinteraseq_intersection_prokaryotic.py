@@ -50,21 +50,20 @@ elif count == 2:
         bunique = b.intersect(a, v=True)
         v = venn2(subsets=((a - b).count(), (a + b).count(), (b - a).count()),
                   set_labels=(options.labels[0], options.labels[1]))
-        plt.savefig(options.outputfolder + options.outputid + '.pdf', format='pdf')
+        plt.savefig(options.outputfolder + options.outputid + '.png', format='png')
         # write files
         (a - b).moveto(options.outputfolder + options.outputid + '_' + '_'.join(
             [options.labels[0], unique]))
         (b - a).moveto(options.outputfolder + options.outputid + '_' + '_'.join(
             [options.labels[1], unique]))
         (a + b).moveto(options.outputfolder + options.outputid + '_' + '_'.join(
-            [options.labels[0], options.labels[1],interection]))
+            [options.labels[0], options.labels[1], interection]))
     except traceback:
         filelogopen = open(str(filelog), 'a')
         filelogopen.write(msg155)
         sys.exit(1)
     else:
         filelogopen.write(msg156)
-        sys.exit(1)
 
 elif count == 3:
     try:
@@ -76,7 +75,7 @@ elif count == 3:
             (a - b - c).count(), (b - a - c).count(), (a + b - c).count(), (c - a - b).count(), (c + a - b).count(),
             (c + b - a).count(), (a + b + c).count()), set_labels=(options.labels[0], options.labels[1],
                                                                    options.labels[2]))
-        plt.savefig(options.outputfolder + options.outputid + '.pdf', format='pdf')
+        plt.savefig(options.outputfolder + options.outputid + '.png', format='png')
         #
         (a + b).moveto(options.outputfolder + options.outputid + '_'
                        + '_'.join([options.labels[0], options.labels[1], interection]))
@@ -85,7 +84,7 @@ elif count == 3:
         (b + c).moveto(options.outputfolder + options.outputid + '_'
                        + '_'.join([options.labels[1], options.labels[2], interection]))
         (a + b + c).moveto(options.outputfolder + options.outputid + '_'
-                           + '_'.join([options.labels[0], options.labels[1], options.labels[2] + '.txt']))
+                           + '_'.join([options.labels[0], options.labels[1], options.labels[2] + '_' + interection]))
         (a - b - c).moveto(
             options.outputfolder + options.outputid + '_' + '_'.join([options.labels[0], unique]))
         (b - a - c).moveto(
@@ -99,5 +98,4 @@ elif count == 3:
         sys.exit(1)
     else:
         filelogopen.write(msg156)
-        sys.exit(1)
 

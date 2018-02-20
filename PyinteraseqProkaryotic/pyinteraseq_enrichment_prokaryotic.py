@@ -100,7 +100,8 @@ class EnrichmentProkaryotic(object):
         :return: bed 4 columns, chr, start, end, seqid related to mapping reads
         """
         try:
-            df = pd.read_csv(fileinput, sep="\t", header=None)
+            df = pd.read_csv(fileinput, sep="\t", header=0)
+            df.columns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
             df1 = df[[1, 8, 9, 0]]
             df1 = df1.rename(columns={1: 0, 8: 1, 9: 2, 0: 3})
             df2 = df1[df1[1] > df1[2]].reset_index(drop=True)
@@ -122,7 +123,8 @@ class EnrichmentProkaryotic(object):
         :return:
         """
         try:
-            self.df1 = pd.read_csv(fileinput, sep="\t", header=None)
+            self.df1 = pd.read_csv(fileinput, sep="\t", header=0)
+            self.df1.columns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
             self.df1[[0, 1, 2, 6, 8, 7]].sort_values(by=[1]).to_csv(self.out + idexit + '.tab',
                                                                     sep="\t", header=None, index=False)
         except traceback:
@@ -162,6 +164,8 @@ class EnrichmentProkaryotic(object):
         """
         try:
             self.df1 = pd.read_csv(outputbedtoolscoverage, sep="\t", header=None)
+            # filter
+            self.df1 = self.df1.loc[self.df1[3] != "."]
             # add column with dataframe index
             self.df1['index1'] = self.df1.index
             # merge gene id with index in order to create unique geneid
@@ -208,13 +212,15 @@ class EnrichmentProkaryotic(object):
         try:
             df1 = pd.read_csv(edgeroutput, sep="\t", header=0)
             df2 = df1.loc[(df1['logFC'] > 0.0)]
-            df3 = pd.read_csv(outputdomaindetection, sep="\t", header=None,
+            df3 = pd.read_csv(outputdomaindetection, sep="\t", header=0,
                               names=['chr', 'clonestart', 'cloneend', 'clonelength', 'start',
                                      'end', 'geneid', 'strand', 'genename', 'description', 'nseq'])
             df4 = pd.merge(df3, df2, right_on='start', left_on='clonestart')
-            df4[['chr_x', 'clonestart', 'cloneend', 'clonelength', 'start_x', 'end_x', 'geneid', 'logFC', 'PValue',
-                 'AdjPValue', 'strand', 'genename', 'description', 'nseq']].to_csv(
-                self.out + '_enrichment.txt', sep="\t", header=None, index=False)
+            df5 = df4[['chr_x', 'clonestart', 'cloneend', 'clonelength', 'start_x', 'end_x', 'geneid', 'logFC', 'PValue',
+                       'AdjPValue', 'strand', 'genename', 'description', 'nseq']]
+            df5.columns = ["Chr", "CloneStart", "CloneEnd", "CloneLength", "Start", "End", "GeneID", "logFC",
+                           "PValue", "AdjPValue", "Strand", "GeneName", "Description", "NuclSeq"]
+            df5.to_csv(self.out + '_enrichment.txt', sep="\t", header=True, index=False)
         except traceback:
             self.filelogerrorwrite(msg151)
         else:
