@@ -5,6 +5,7 @@ import sys
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2
 from matplotlib_venn import venn3
+import pandas as pd
 import traceback
 plt.switch_backend('agg')
 
@@ -22,6 +23,8 @@ filelog = None
 count = 0
 interection = 'intersection.txt'
 unique = 'unique.txt'
+header = ["#Chr", "CloneStart", "CloneEnd", "CloneLength", "Start", "End", "GeneID",
+          "logFC", "PValue", "AdjPValue", "Strand", "Description", "NuclSeq"]
 for i in range(len(options.selections)):
     count += 1
 if options.log is None:
@@ -52,12 +55,23 @@ elif count == 2:
                   set_labels=(options.labels[0], options.labels[1]))
         plt.savefig(options.outputfolder + options.outputid + '.png', format='png')
         # write files
-        (a - b).moveto(options.outputfolder + options.outputid + '_' + '_'.join(
-            [options.labels[0], unique]))
-        (b - a).moveto(options.outputfolder + options.outputid + '_' + '_'.join(
-            [options.labels[1], unique]))
-        (a + b).moveto(options.outputfolder + options.outputid + '_' + '_'.join(
-            [options.labels[0], options.labels[1], interection]))
+        dfa_b = pd.read_table((a - b).fn, header=None)
+        dfa_b[3] = dfa_b[12]
+        dfa_b[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+                                                                 '_'.join([options.labels[0], unique]),
+                                                                 sep="\t", header=header, index=False)
+        #
+        dfb_a = pd.read_table((b - a).fn, header=None)
+        dfb_a[3] = dfb_a[12]
+        dfb_a[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+                                                                 '_'.join([options.labels[1], unique]),
+                                                                 sep="\t", header=header, index=False)
+        #
+        dfAB = pd.read_table((a + b).fn, header=None)
+        dfAB[3] = dfAB[12]
+        dfAB[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+                                                                '_'.join([options.labels[0], options.labels[1], interection]),
+                                                                sep="\t", header=header, index=False)
     except traceback:
         filelogopen = open(str(filelog), 'a')
         filelogopen.write(msg155)
@@ -77,21 +91,48 @@ elif count == 3:
                                                                    options.labels[2]))
         plt.savefig(options.outputfolder + options.outputid + '.png', format='png')
         #
-        (a + b).moveto(options.outputfolder + options.outputid + '_'
-                       + '_'.join([options.labels[0], options.labels[1], interection]))
-        (a + c).moveto(options.outputfolder + options.outputid + '_'
-                       + '_'.join([options.labels[0], options.labels[2], interection]))
-        (b + c).moveto(options.outputfolder + options.outputid + '_'
-                       + '_'.join([options.labels[1], options.labels[2], interection]))
-        (a + b + c).moveto(options.outputfolder + options.outputid + '_'
-                           + '_'.join([options.labels[0], options.labels[1], options.labels[2] + '_' + interection]))
-        (a - b - c).moveto(
-            options.outputfolder + options.outputid + '_' + '_'.join([options.labels[0], unique]))
-        (b - a - c).moveto(
-            options.outputfolder + options.outputid + '_' + '_'.join([options.labels[1], unique]))
-        (c - a - b).moveto(
-            options.outputfolder + options.outputid + '_' + '_'.join([options.labels[2], unique]))
-
+        dfAB = pd.read_table((a + b).fn, header=None)
+        dfAB[3] = dfAB[12]
+        dfAB[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_'
+                                                                + '_'.join([options.labels[0], options.labels[1], interection]), sep="\t",
+                                                                header=header, index=False)
+        #
+        dfAC = pd.read_table((a + c).fn, header=None)
+        dfAC[3] = dfAC[12]
+        dfAC[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+                                                                '_'.join([options.labels[0], options.labels[2],
+                                                                          interection]), sep="\t",
+                                                                header=header,  index=False)
+        #
+        dfBC = pd.read_table((b + c).fn, header=None)
+        dfBC[3] = dfBC[12]
+        dfBC[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+                                                                '_'.join([options.labels[1], options.labels[2], interection]), sep="\t",
+                                                                header=header, index=False)
+        #
+        dfABC = pd.read_table((a + b + c).fn, header=None)
+        dfABC[3] = dfABC[12]
+        dfABC[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+                                                                 '_'.join([options.labels[0], options.labels[1], options.labels[2] + '_' + interection]), sep="\t",
+                                                                 header=header, index=False)
+        #
+        dfa_b_c = pd.read_table((a - b - c).fn, header=None)
+        dfa_b_c[3] = dfa_b_c[12]
+        dfa_b_c[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+                                                                   '_'.join([options.labels[0], unique]), sep="\t",
+                                                                   header=header, index=False)
+        #
+        dfb_a_c = pd.read_table((b - a - c).fn, header=None)
+        dfb_a_c[3] = dfb_a_c[12]
+        dfb_a_c[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+                                                                   '_'.join([options.labels[1], unique]), sep="\t",
+                                                                   header=header, index=False)
+        #
+        dfc_a_b = pd.read_table((c - a - b).fn,  header=None)
+        dfc_a_b[3] = dfc_a_b[12]
+        dfc_a_b[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+                                                                   '_'.join([options.labels[2], unique]), sep="\t",
+                                                                   header=header, index=False)
     except traceback:
         filelogopen = open(str(filelog), 'a')
         filelogopen.write(msg155)

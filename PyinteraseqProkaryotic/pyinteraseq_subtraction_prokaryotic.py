@@ -99,9 +99,9 @@ class SubtractionProkaryotic(object):
         try:
             control = pybedtools.BedTool(controlinput)
             selection = pybedtools.BedTool(selectioninput)
-            res = selection.intersect(control, f=overlap, v=True)
-            df1 = pd.read_table(res.fn, sep="\t", header=None)
-            df1.to_csv(self.out + '_subtraction.txt', sep="\t", header=None, index=False)
+            res = selection.intersect(control, f=overlap, v=True, header=True)
+            df1 = pd.read_table(res.fn, sep="\t", header=0)
+            df1.to_csv(self.out + '_subtraction.txt', sep="\t", header=True, index=False)
         except traceback:
             self.filelogerrorwrite(msg153)
         else:

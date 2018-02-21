@@ -218,7 +218,7 @@ class EnrichmentProkaryotic(object):
             df4 = pd.merge(df3, df2, right_on='start', left_on='clonestart')
             df5 = df4[['chr_x', 'clonestart', 'cloneend', 'clonelength', 'start_x', 'end_x', 'geneid', 'logFC', 'PValue',
                        'AdjPValue', 'strand', 'genename', 'description', 'nseq']]
-            df5.columns = ["Chr", "CloneStart", "CloneEnd", "CloneLength", "Start", "End", "GeneID", "logFC",
+            df5.columns = ["#Chr", "CloneStart", "CloneEnd", "CloneLength", "Start", "End", "GeneID", "logFC",
                            "PValue", "AdjPValue", "Strand", "GeneName", "Description", "NuclSeq"]
             df5.to_csv(self.out + '_enrichment.txt', sep="\t", header=True, index=False)
         except traceback:
