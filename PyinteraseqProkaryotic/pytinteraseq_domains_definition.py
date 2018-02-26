@@ -364,21 +364,22 @@ class DomainsDefinition(InputCheckDomainDefinition):
             # ex clones description sequence
             self.df1 = pd.read_csv(outputfromdescription,
                                    sep="\t", header=None,
-                                   names=['chr', 'clonestart', 'cloneend', 'clonelength',
+                                   names=['chr', 'clonestart', 'cloneend', 'score',
                                           'start', 'end', 'geneid',
-                                          'strand', 'genename', 'description'])
+                                          'strand', 'description', 'clonelength'])
             self.df2 = pd.read_csv(outputfasta2tab, sep="\t", header=None, names=['id_tab', 'nseq'])
             self.df1['temp_id_tab'] = self.df1[['clonestart', 'cloneend']].astype(str).apply(lambda x: '-'.join(x),
                                                                                              axis=1)
             self.df1['id_tab'] = self.df1[['chr', 'temp_id_tab']].astype(str).apply(lambda x: ':'.join(x), axis=1)
             self.df1.drop('temp_id_tab', axis=1, inplace=True)
             self.df3 = pd.merge(self.df1, self.df2, on='id_tab')
+            self.df3 = self.df3.loc[self.df3['geneid'] != "."].reset_index(drop=True)
             self.df4 = self.df3[['chr', 'clonestart', 'cloneend',
                                  'clonelength', 'start', 'end',
-                                 'geneid', 'strand', 'genename',
+                                 'geneid', 'strand',
                                  'description', 'nseq']]
             self.df4.columns = ["Chr", "CloneStart", "CloneEnd", "CloneLength", "Start", "End", "GeneID", "Strand",
-                                "GeneName", "Description", "NuclSeq"]
+                                "Description", "NuclSeq"]
             self.df4.to_csv(self.out + '_definition.txt', sep="\t", header=True, index=False)
 
         except traceback:
@@ -402,7 +403,8 @@ class DomainsDefinition(InputCheckDomainDefinition):
                               "_def_clonestabular.tab", "_clonesdescription.bed", "_clonesannotatedfiltered.bed", "_clonesannotated.bed",
                               "_blastnclonesmerge.fasta", "_blastnclonesmerge.bed", "_blastnclonescountedfiltered.bed", "_blastnclonescounted.bed",
                               "_def_blastnclones.tab", "_def_blastclonesparsed.bed", "_blastnfiltered.fasta", "_clean.fasta",
-                              "_cluster_count.txt", "_clonestabular.tab", "_blastnclones.tab", "_blastclonesparsed.bed",'_mappingoutput.tab']
+                              "_cluster_count.txt", "_clonestabular.tab", "_blastnclones.tab", "_blastclonesparsed.bed",
+                        '_mappingoutput.tab']
         for item in templistfile:
             if os.path.isfile(self.out + item):
                 os.remove(self.out + item)

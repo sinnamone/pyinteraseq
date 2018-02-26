@@ -92,45 +92,45 @@ elif count == 3:
         plt.savefig(options.outputfolder + options.outputid + '.png', format='png')
         #
         dfAB = pd.read_table((a + b).fn, header=None)
-        dfAB[3] = dfAB[12]
-        dfAB[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_'
+
+        dfAB.to_csv(options.outputfolder + options.outputid + '_'
                                                                 + '_'.join([options.labels[0], options.labels[1], interection]), sep="\t",
                                                                 header=header, index=False)
         #
         dfAC = pd.read_table((a + c).fn, header=None)
-        dfAC[3] = dfAC[12]
-        dfAC[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+
+        dfAC.to_csv(options.outputfolder + options.outputid + '_' +
                                                                 '_'.join([options.labels[0], options.labels[2],
                                                                           interection]), sep="\t",
                                                                 header=header,  index=False)
         #
         dfBC = pd.read_table((b + c).fn, header=None)
-        dfBC[3] = dfBC[12]
-        dfBC[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+
+        dfBC.to_csv(options.outputfolder + options.outputid + '_' +
                                                                 '_'.join([options.labels[1], options.labels[2], interection]), sep="\t",
                                                                 header=header, index=False)
         #
         dfABC = pd.read_table((a + b + c).fn, header=None)
-        dfABC[3] = dfABC[12]
-        dfABC[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+
+        dfABC.to_csv(options.outputfolder + options.outputid + '_' +
                                                                  '_'.join([options.labels[0], options.labels[1], options.labels[2] + '_' + interection]), sep="\t",
                                                                  header=header, index=False)
         #
         dfa_b_c = pd.read_table((a - b - c).fn, header=None)
-        dfa_b_c[3] = dfa_b_c[12]
-        dfa_b_c[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+
+        dfa_b_c.to_csv(options.outputfolder + options.outputid + '_' +
                                                                    '_'.join([options.labels[0], unique]), sep="\t",
                                                                    header=header, index=False)
         #
         dfb_a_c = pd.read_table((b - a - c).fn, header=None)
-        dfb_a_c[3] = dfb_a_c[12]
-        dfb_a_c[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+
+        dfb_a_c.to_csv(options.outputfolder + options.outputid + '_' +
                                                                    '_'.join([options.labels[1], unique]), sep="\t",
                                                                    header=header, index=False)
         #
         dfc_a_b = pd.read_table((c - a - b).fn,  header=None)
-        dfc_a_b[3] = dfc_a_b[12]
-        dfc_a_b[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13]].to_csv(options.outputfolder + options.outputid + '_' +
+
+        dfc_a_b.to_csv(options.outputfolder + options.outputid + '_' +
                                                                    '_'.join([options.labels[2], unique]), sep="\t",
                                                                    header=header, index=False)
     except traceback:

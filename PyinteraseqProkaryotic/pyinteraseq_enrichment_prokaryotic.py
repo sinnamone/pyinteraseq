@@ -124,7 +124,7 @@ class EnrichmentProkaryotic(object):
         """
         try:
             self.df1 = pd.read_csv(fileinput, sep="\t", header=0)
-            self.df1.columns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            self.df1.columns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
             self.df1[[0, 1, 2, 6, 8, 7]].sort_values(by=[1]).to_csv(self.out + idexit + '.tab',
                                                                     sep="\t", header=None, index=False)
         except traceback:
@@ -214,12 +214,12 @@ class EnrichmentProkaryotic(object):
             df2 = df1.loc[(df1['logFC'] > 0.0)]
             df3 = pd.read_csv(outputdomaindetection, sep="\t", header=0,
                               names=['chr', 'clonestart', 'cloneend', 'clonelength', 'start',
-                                     'end', 'geneid', 'strand', 'genename', 'description', 'nseq'])
+                                     'end', 'geneid', 'strand', 'description', 'nseq'])
             df4 = pd.merge(df3, df2, right_on='start', left_on='clonestart')
             df5 = df4[['chr_x', 'clonestart', 'cloneend', 'clonelength', 'start_x', 'end_x', 'geneid', 'logFC', 'PValue',
-                       'AdjPValue', 'strand', 'genename', 'description', 'nseq']]
+                       'AdjPValue', 'strand', 'description', 'nseq']]
             df5.columns = ["#Chr", "CloneStart", "CloneEnd", "CloneLength", "Start", "End", "GeneID", "logFC",
-                           "PValue", "AdjPValue", "Strand", "GeneName", "Description", "NuclSeq"]
+                           "PValue", "AdjPValue", "Strand", "Description", "NuclSeq"]
             df5.to_csv(self.out + '_enrichment.txt', sep="\t", header=True, index=False)
         except traceback:
             self.filelogerrorwrite(msg151)
