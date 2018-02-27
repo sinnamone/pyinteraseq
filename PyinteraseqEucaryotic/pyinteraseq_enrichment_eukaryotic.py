@@ -94,9 +94,9 @@ class EnrichmentProkaryotic(object):
         self.inputfilelogopen = open(str(self.inputfilelog), 'a')
         try:
             dfa = pd.read_csv(inputfile, index_col=False, header=0, sep='\t', names=[
-                "ID", "domain_start", "domain_end", "length", "read_count", "strand", "average_depth", "chr",
-                "geneID", "start", "end_x", "description"])
-            dfa[["ID", "domain_start", "domain_end", "geneID", "read_count", "strand"]].to_csv(
+                "Chr", "CloneStart", "CloneEnd", "lenght", "GeneID", "strand",
+                "read_count", "ave_depth", "description"])
+            dfa[["Chr", "CloneStart", "CloneEnd", "GeneID", "read_count", "strand"]].to_csv(
                 self.out + prefixout + '.bed', header=None,
                 sep='\t', index=False)
         except traceback:
@@ -135,12 +135,16 @@ class EnrichmentProkaryotic(object):
         self.inputfilelogopen = open(str(self.inputfilelog), 'a')
         try:
             dfa = pd.read_csv(filecommondomains, index_col=False, header=None, sep='\t',
-                              names=["ID_t", "domain_start_t", "domain_end_t", "geneID_t", "read_count_t", "strand_t",
-                                     "ID_c", "domain_start_c", "domain_end_c", "geneID_c", "read_count_c", "strand_c",
+                              names=["Chr", "domain_start_t", "domain_end_t", "geneID_t", "read_count_t", "strand_t",
+                                     "Chr_2", "domain_start_c", "domain_end_c", "geneID_c", "read_count_c", "strand_c",
                                      "length"])
-            dfa[["ID_t", "domain_start_t", "domain_end_t", "ID_t", "read_count_t", "strand_t"]].to_csv(
+            dfa['new'] = dfa.index + 1
+            dfa['new'] = dfa['new'].astype(str)
+            dfa['geneID_t_1'] = dfa[['geneID_t', 'new']].apply(lambda x: '_'.join(x), axis=1)
+            dfa['geneID_c_2'] = dfa[['geneID_c', 'new']].apply(lambda x: '_'.join(x), axis=1)
+            dfa[["Chr", "domain_start_t", "domain_end_t", "geneID_t_1", "read_count_t", "strand_t"]].to_csv(
                 self.out + '_target.bed', header=None, sep='\t', index=False)
-            dfa[["ID_c", "domain_start_c", "domain_end_c", "ID_c", "read_count_c", "strand_c"]].to_csv(
+            dfa[["Chr_2", "domain_start_c", "domain_end_c", "geneID_c_2", "read_count_c", "strand_c"]].to_csv(
                 self.out + '_control.bed', header=None, sep='\t', index=False)
         except traceback:
             self.filelogstdoutwrite(msg115)
@@ -227,8 +231,8 @@ if __name__ == '__main__':
                                                             DictEnrichment["controlparsed"])
     DictEnrichment["rfiles"] = ClassEnrichment.parserforedger(DictEnrichment["common"])
     DictEnrichment["edger"] = ClassEnrichment.edger(DictEnrichment["rfiles"])
-    DictEnrichment["parsingcommon"] = ClassEnrichment.parsingoutputcommon(DictEnrichment["edger"],
-                                                                          options.outputarget)
-    DictEnrichment["parsingunique"] = ClassEnrichment.parsingoutputunique(DictEnrichment["unique"],
-                                                                          options.outputcontrol)
-    ClassEnrichment.cleantempfile()
+    # DictEnrichment["parsingcommon"] = ClassEnrichment.parsingoutputcommon(DictEnrichment["edger"],
+    #                                                                       options.outputarget)
+    # DictEnrichment["parsingunique"] = ClassEnrichment.parsingoutputunique(DictEnrichment["unique"],
+    #                                                                       options.outputcontrol)
+    # ClassEnrichment.cleantempfile()

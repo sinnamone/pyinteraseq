@@ -19,16 +19,18 @@ class DomainsDefinition(InputCheckDomainDefinition):
 
     def __init__(self, optparseinstance):
         InputCheckDomainDefinition.__init__(self, optparseinstance)
+        self.filelog = self.logopen()
 
     def depthcoverage(self):
         """
         bedtoools genomecov for each base covered
         :return:
         """
-        self.filelog = self.logopen()
+
         try:
             with open(self.out + '_DepthCoverageBed.txt', 'w') as b:
-                subprocess.check_call(['bedtools', 'genomecov','-dz', '-ibam', self.bamfile, '-g', self.genome],stdout=b)
+                subprocess.check_call(['bedtools', 'genomecov', '-dz', '-ibam', self.bamfile, '-g', self.genome],
+                                      stdout=b)
         except subprocess.CalledProcessError:
             self.filelog.write(msg89)
             sys.exit(1)
@@ -44,7 +46,6 @@ class DomainsDefinition(InputCheckDomainDefinition):
         Bedtools genomecov for read count
         :return:
         """
-        self.filelog = self.logopen()
         try:
             with open(self.out + '_BreadthCoverageBed.txt', 'w') as b:
                 subprocess.check_call(['bedtools', 'genomecov','-ibam', self.bamfile, '-g', self.genome],stdout=b)
@@ -63,10 +64,15 @@ class DomainsDefinition(InputCheckDomainDefinition):
         Convert BAM file to Bed
         :return:
         """
-        self.filelog = self.logopen()
         try:
             bedfile = pybedtools.BedTool(self.bamfile).bam_to_bed()
-            bedfile = pybedtools.BedTool(self.bamfile).bam_to_bed().saveas(self.out + '.bed')
+            # bedfile = pybedtools.BedTool(self.bamfile).bam_to_bed().saveas(self.out + '.bed')
+            bedfiledf = pd.read_table(bedfile.fn, header=None,sep="\t")
+            annot = pd.read_csv(self.annotation, header=None, sep="\t")
+            df3 = pd.merge(bedfiledf, annot, left_on=0,right_on=3)
+            df3["start"] = df3.apply(lambda x: x["1_y"] + x["1_x"], axis=1)
+            df3["end"] = df3.apply(lambda x: x["1_y"] + x["2_x"], axis=1)
+            df3[["0_y", "start", "end", "0_x", "4_x", "5_x"]].to_csv(self.out + '.bed', sep="\t", header=None, index=False)
         except traceback:
             self.filelog.write(traceback.format_exc())
             self.filelog.write(msg94)
@@ -94,29 +100,30 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :param bedparsed:
         :return:
         """
-        self.filelog = self.logopen()
         try:
             self.df1 = pd.read_csv(convertedbam, sep="\t", header=None,
                                    names=["ID", "start_clone", "end_clone", "id_clone", "score", "strand"])
-            self.aux = self.df1["ID"].apply(lambda x: x.split('_'))
-            self.df1["start"] = self.aux.apply(lambda x: x[2]).astype(int)
-            self.df1["end"] = self.aux.apply(lambda x: x[3]).astype(int)
-            self.df1["new_start"] = self.df1.apply(lambda row: row.start + row.start_clone, axis=1)
-            self.df1["new_end"] = self.df1.apply(lambda row: row.new_start + row.end_clone, axis=1)
-            self.df1[["ID", "new_start", "new_end", "id_clone", "score", "strand"]].to_csv(self.out + "_bedfixed.tab", header=None, sep="\t", index=False)
+            # print self.df1.head()
+
+            # self.aux = self.df1["ID"].apply(lambda x: x.split('_'))
+            # self.df1["start"] = self.aux.apply(lambda x: x[2]).astype(int)
+            # self.df1["end"] = self.aux.apply(lambda x: x[3]).astype(int)
+            # self.df1["new_start"] = self.df1.apply(lambda row: row.start + row.start_clone, axis=1)
+            # self.df1["new_end"] = self.df1.apply(lambda row: row.new_start + row.end_clone, axis=1)
+            # self.df1[["ID", "new_start", "new_end", "id_clone", "score", "strand"]].to_csv(self.out + "_bedfixed.tab", header=None, sep="\t", index=False)
         except traceback:
             self.filelog.write(traceback.format_exc())
-            self.filelog.write(msg139)
+            self.filelog.write(msg74)
             sys.exit(1)
         else:
-            self.filelog.write(msg140)
+            self.filelog.write(msg73)
             return self.out + "_bedfixed.tab"
 
     def bedtoolscoverage(self, outputcoordinatesfix):
         try:
             bed = pybedtools.BedTool(outputcoordinatesfix)
             annotation = pybedtools.BedTool(self.annotation)
-            cov = annotation.coverage(bed,counts=True).saveas(self.out + '_readcov.bed')
+            cov = annotation.coverage(bed, counts=True).saveas(self.out + '_readcov.bed')
         except traceback:
             self.filelog.write(traceback.format_exc())
             self.filelog.write(msg98)
@@ -127,7 +134,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
 
     def groupbydepth(self, outputbreadthcoverage):
         try:
-            df = pd.read_csv(outputbreadthcoverage, header=None, sep='\t', names=["chr","depth","numbasdepth","lenght","perccov"])
+            df = pd.read_csv(outputbreadthcoverage, header=None, sep='\t', names=["chr", "depth", "numbasdepth", "lenght", "perccov"])
             df1 = df.groupby(["chr"],sort=False)["depth"].max()
             df1.to_csv(self.out + "_maxdepth.txt", header=None, sep='\t', index=True)
         except:
@@ -194,21 +201,28 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return:
         """
         try:
-            df = pd.read_csv(outputstartenddefinition,sep="\t", header=None,
+            df = pd.read_csv(outputstartenddefinition, sep="\t", header=None,
                              names=["ID", "start_clone", "end_clone", "ave_depth"])
-            aux = df["ID"].apply(lambda x: x.split('_'))
-            df["geneid"] = aux.apply(lambda x: x[0])
-            df["chr"] = aux.apply(lambda x: x[1])
-            df["start"] = aux.apply(lambda x: x[2]).astype(int)
-            df["end"] = aux.apply(lambda x: x[3]).astype(int)
-            df["new_start"] = df.apply(lambda row: row.start + row.start_clone, axis=1)
-            df["new_end"] = df.apply(lambda row: row.new_start + row.end_clone, axis=1)
-            df["lenght"] = df["new_end"] - df["new_start"]
-            df = df.loc[df["lenght"] > 30].reset_index(drop=True)
-            df = df.loc[df["lenght"] < 1200].reset_index(drop=True)
-            df = df.sort_values(by=["chr","start"],ascending=[True,True])
-            df[["ID","chr","new_start", "new_end","lenght", "ave_depth", "start", "end","geneid"]].to_csv(self.out + "_domainnot_merged.tab",
-                                                                                   header=None, sep="\t", index=False)
+            annot = pd.read_csv(self.annotation, header=None, sep="\t")
+            aux = pd.merge(df, annot, left_on="ID",right_on=3)
+            aux["start"] = aux.apply(lambda x: x[1] + x["start_clone"], axis=1)
+            aux["end"] = aux.apply(lambda x: x[1] + x["end_clone"], axis=1)
+            aux["lenght"] = aux["end"] - aux["start"]
+            # aux = df["ID"].apply(lambda x: x.split('_'))
+            # df["geneid"] = aux.apply(lambda x: x[0])
+            # df["chr"] = aux.apply(lambda x: x[1])
+            # df["start"] = aux.apply(lambda x: x[2]).astype(int)
+            # df["end"] = aux.apply(lambda x: x[3]).astype(int)
+            # df["new_start"] = df.apply(lambda row: row.start + row.start_clone, axis=1)
+            # df["new_end"] = df.apply(lambda row: row.new_start + row.end_clone, axis=1)
+            # df["lenght"] = df["new_end"] - df["new_start"]
+            aux = aux.loc[aux["lenght"] > 30].reset_index(drop=True)
+            aux = aux.loc[aux["lenght"] < 1200].reset_index(drop=True)
+            aux = aux.sort_values(by=[0, "start"], ascending=[True, True])
+            # aux[["ID", "chr", "new_start", "new_end", "lenght", "ave_depth", "start", "end", "geneid"]].to_csv(
+            #     self.out + "_domainnot_merged.tab", header=None, sep="\t", index=False)
+            aux[[0, "start", "end", "ID", "lenght", "ave_depth", 1, 2]].to_csv(
+                self.out + "_domainnot_merged.tab", header=None, sep="\t", index=False)
         except traceback:
             self.filelog.write(traceback.format_exc())
             self.filelog.write(msg105)
@@ -217,7 +231,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.filelog.write(msg106)
             return self.out + "_domainnot_merged.tab"
 
-    def parsingoutput(self,outputdomainparsing,outputbedtoolscoverage):
+    def parsingoutput(self, outputdomainparsing, outputbedtoolscoverage):
         """
         parsing output file
         :param outputdomainparsing:
@@ -225,12 +239,14 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return:
         """
         try:
-            df1 = pd.read_csv(outputdomainparsing,sep="\t", header=None,
-                              names=["ID","chr","domain_start", "domain_end","length", "average_depth", "start", "end","geneID"])
-            df2 = pd.read_csv(outputbedtoolscoverage,sep="\t", header=None,
-                              names=["ID","start", "end","geneID","score","strand","description","read_count"])
-            df3 = pd.merge(df1,df2,on="ID")
-            df3[["ID","domain_start", "domain_end","length","read_count","strand","average_depth","chr","geneID_x","start_x", "end_x","description"]].to_csv(
+            df1 = pd.read_csv(outputdomainparsing, sep="\t", header=None,
+                              names=["Chr", "CloneStart", "CloneEnd", "GeneID", "lenght", "ave_depth", "GeneStart",
+                                     "GeneEnd"])
+            df2 = pd.read_csv(outputbedtoolscoverage, sep="\t", header=None, index_col=False,
+                              names=["ID", "start", "end", "GeneID", "dot1", "strand", "dot2", "description", "read_count"])
+            df3 = pd.merge(df1, df2, on="GeneID")
+            df3[["Chr", "CloneStart", "CloneEnd", "lenght", "GeneID", "strand", "read_count", "ave_depth",
+                 "description"]].to_csv(
                 self.out + "_domain_definition.tab",
                 header=True, sep="\t", index=False)
         except traceback:
@@ -239,17 +255,16 @@ class DomainsDefinition(InputCheckDomainDefinition):
             sys.exit(1)
         else:
             self.filelog.write(msg108)
-            return self.out + "_domain_definition.tab"
+            return self.out + "_definition.txt"
 
     def cleantempfile(self):
         """
         Remove temporany files.
         :return:
         """
-        templistfile = ["_DepthCoverageBed.txt","_BreadthCoverageBed.txt",".bed","_bedfixed.tab","_readcov.bed","_maxdepth.txt",
-                        "_percentilefiltered.bed","_raw_domains.txt","_domainnot_merged.tab"]
+        templistfile = ["_DepthCoverageBed.txt", "_BreadthCoverageBed.txt", ".bed", "_bedfixed.tab", "_readcov.bed",
+                        "_maxdepth.txt",
+                        "_percentilefiltered.bed", "_raw_domains.txt", "_domainnot_merged.tab"]
         for item in templistfile:
             if os.path.isfile(self.out + item):
                 os.remove(self.out + item)
-
-
