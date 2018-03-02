@@ -113,8 +113,10 @@ elif count == 3:
         dfABC = pd.read_table((a + b + c).fn, header=None)
 
         dfABC.to_csv(options.outputfolder + options.outputid + '_' +
-                                                                 '_'.join([options.labels[0], options.labels[1], options.labels[2] + '_' + interection]), sep="\t",
-                                                                 header=header, index=False)
+                                                                 '_'.join([options.labels[0], options.labels[1],
+                                                                           options.labels[2] + '_' + interection]),
+                     sep="\t",
+                     header=header, index=False)
         #
         dfa_b_c = pd.read_table((a - b - c).fn, header=None)
 
