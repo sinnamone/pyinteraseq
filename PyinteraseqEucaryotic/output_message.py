@@ -132,3 +132,4 @@ msg129 = "\nPaired-end analysis start."
 msg130 = "\nTrimming complete.Starting mapping."
 msg131 = "\nEstimating average and standard deviation of fragment length failed.Execution stop."
 msg132 = "\nEstimating average and standard deviation of fragment length complete"
+
