@@ -330,6 +330,12 @@ class BlastNlucleotide(Trimming):
         templistfilepaired = ["_forward.fastq", "_reverse.fastq", "_forward5trimmed.fastq", "_reverse5trimmed.fastq",
                               "_forward3trimmed.fastq", "_reverse3trimmed.fastq", "_con.fastq", ".sam", "_filtered.sam",
                               ".bam"]
+        if os.path.isfile(self.outputfolder + "abundance.tsv"):
+            os.remove(self.outputfolder + "abundance.tsv")
+        if os.path.isfile(self.outputfolder + "run_info.json"):
+            os.remove(self.outputfolder + "run_info.json")
+        if os.path.isfile(self.outputfolder + "abundance.h5"):
+            os.remove(self.outputfolder + "abundance.h5")
         if self.sequencingtype in "Single-End":
             if self.readforwardtype in "fastq":
                 for item in templistfilesingle:
@@ -348,4 +354,3 @@ class BlastNlucleotide(Trimming):
                 for item in templistfilepaired:
                     if os.path.isfile(self.out + item):
                         os.remove(self.out + item)
-
