@@ -197,7 +197,7 @@ class EnrichmentProkaryotic(object):
         except subprocess.CalledProcessError:
             self.inputfilelog.write(msg149)
         except traceback:
-            self.filelogerrorwrite(msg149)
+            self.inputfilelog.write(msg149)
         else:
             self.filelogstdoutwrite(msg150)
             return outpath + 'genomic_' + idex + '.sign_genes_adjpvalue_0.05.txt'

@@ -158,18 +158,12 @@ if __name__ == '__main__':
         except traceback:
             log.write(msg118)
             sys.exit(1)
-    #log.write(msg130)
+    # log.write(msg130)
     DictInfo["dbname"] = MappingClass.indexkallisto()
-    # DictInfo["dbname"] = MappingClass.indexing_bowtie()
     DictInfo["indexvalues"] = MappingClass.kallistoindexvalues(DictInfo["Trimmedreadconcatenated"])
-    print DictInfo["indexvalues"]
     DictInfo["sam"] = MappingClass.mappingkallisto(DictInfo["dbname"], DictInfo["indexvalues"][0],
                                                    DictInfo["indexvalues"][1],
                                                    DictInfo["Trimmedreadconcatenated"])
-    # DictInfo["sam"] = MappingClass.mapping_bowtie(DictInfo["Trimmedreadconcatenated"], DictInfo["dbname"])
-    DictInfo["headersam"] = MappingClass.getheadersam(samfile=DictInfo["sam"])
-    MappingClass.parsesamfiles(samfile=DictInfo["sam"])
-    DictInfo["filteredsam"] = MappingClass.filteringmismatches()
-    DictInfo["bam"] = MappingClass.conversionsam2bam(samfile=DictInfo["filteredsam"])
+    DictInfo["bam"] = MappingClass.conversionsam2bam(samfile=DictInfo["sam"])
     DictInfo["sortedbam"] = MappingClass.sortbam(bamfile=DictInfo["bam"])
     MappingClass.cleantempfile()

@@ -354,3 +354,4 @@ class BlastNlucleotide(Trimming):
                 for item in templistfilepaired:
                     if os.path.isfile(self.out + item):
                         os.remove(self.out + item)
+

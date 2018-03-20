@@ -6,6 +6,7 @@ import os
 import subprocess
 import traceback
 import sys
+import warnings
 
 parser = optparse.OptionParser(usage='python %prog Enrichment Prokaryotic', version='1.0',)
 parser.add_option('--outputcontrol', action="store", dest="outputcontrol", default=None,
@@ -44,6 +45,7 @@ class EnrichmentProkaryotic(object):
         self.inputistance = optparseinstance
         self.df1 = None
         self.bedfile = None
+        warnings.filterwarnings("ignore")
         self.path_edgeR = os.path.dirname(os.path.realpath(__file__)) + '/diff_edgeR.Rscript'
         #
         if self.inputistance.outputfolder is not None:
@@ -142,22 +144,21 @@ class EnrichmentProkaryotic(object):
             dfa['new'] = dfa['new'].astype(str)
             dfa['geneID_t_1'] = dfa[['geneID_t', 'new']].apply(lambda x: '_'.join(x), axis=1)
             dfa['geneID_c_2'] = dfa[['geneID_c', 'new']].apply(lambda x: '_'.join(x), axis=1)
-            dfa[["Chr", "domain_start_t", "domain_end_t", "geneID_t_1", "read_count_t", "strand_t"]].to_csv(
-                self.out + '_target.bed', header=None, sep='\t', index=False)
-            dfa[["Chr_2", "domain_start_c", "domain_end_c", "geneID_c_2", "read_count_c", "strand_c"]].to_csv(
-                self.out + '_control.bed', header=None, sep='\t', index=False)
+            dfa[["Chr", "domain_start_t", "domain_end_t", "geneID_t_1", "read_count_t", "read_count_c",
+                 "strand_c"]].to_csv(
+                self.out + '_mergecount.bed', header=True, sep='\t', index=False)
         except traceback:
             self.filelogstdoutwrite(msg115)
         else:
             self.filelogstdoutwrite(msg116)
-            return self.out + '_target.bed', self.out + '_control.bed'
+            return self.out + '_mergecount.bed'
 
-    def edger(self, parserforedger):
+    def edger(self, mergecounts):
         self.inputfilelogopen = open(str(self.inputfilelog), 'a')
         fnull = open(os.devnull, 'w')
         try:
             subprocess.check_call(['Rscript', '--vanilla',
-                                   self.path_edgeR, parserforedger[1], parserforedger[0], 'genomic', self.outputid,
+                                   self.path_edgeR, mergecounts, self.outputid,
                                    self.outputfolder], stdout=fnull, stderr=fnull)
         except subprocess.CalledProcessError:
             self.filelogstdoutwrite(msg117)
@@ -176,13 +177,13 @@ class EnrichmentProkaryotic(object):
                                      'AdjPValue'])
             dfb = dfa.loc[lambda df: df.logFC > 0, :]
             dfc = dfb[['ID', 'start', 'end', 'logFC', 'PValue', 'AdjPValue']]
-            dfd = pd.read_csv(inputtargetfile, index_col=False, header=None, sep='\t',
-                              names=["ID", "domain_start", "domain_end", "length", "read_count",
-                                     "strand", "average_depth", "chr", "geneID", "start", "end_x", "description"])
-            dff = pd.merge(dfc, dfd, on='ID')
-            dff.rename(columns={'start_y': 'start', 'end_x': 'end'}, inplace=True)
-            dff[['ID', 'domain_start', 'domain_end', "length", "chr", "geneID", "start", "end", "strand",
-                 "logFC", "PValue", "AdjPValue", "description"]].to_csv(
+            dfc['ID_split'] = dfc['ID'].str.split('_', 1).str[0]
+            dfd = pd.read_csv(inputtargetfile, index_col=False, header=0, sep='\t')
+            dff = pd.merge(dfc, dfd, left_on='ID_split', right_on='GeneID')
+            dff.rename(columns={"lenght": "length"}, inplace=True)
+            dff[['ID', 'CloneStart', 'CloneEnd', "length", "Chr", "GeneID", "start", "end", "strand",
+                 'read_count', 'ave_depth', "logFC",
+                 "PValue", "AdjPValue", "description"]].to_csv(
                 self.out + '_common_intervals.bed', header=True, sep='\t', index=False)
         except traceback:
             self.filelogstdoutwrite(msg119)
@@ -195,12 +196,11 @@ class EnrichmentProkaryotic(object):
         try:
             dfa = pd.read_csv(uniquedomains, index_col=False, header=None, sep='\t',
                               names=['ID', 'start', 'end', 'GeneID', 'read', 'strand'])
-            dfb = pd.read_csv(inputcontrolfile, index_col=False, header=None, sep='\t',
-                              names=["ID", "domain_start", "domain_end", "length", "read_count",
-                                     "strand", "average_depth", "chr", "geneID", "start", "end_x", "description"])
-            dfc = pd.merge(dfa, dfb, on='ID')
-            dfc.rename(columns={'start_y': 'start', 'end_x': 'end', "strand_x": "strand"}, inplace=True)
-            dfc[['ID', 'domain_start', 'domain_end', "length", "chr", "geneID", "start", "end", "strand", "description"]].to_csv(
+            dfb = pd.read_csv(inputcontrolfile, index_col=False, header=0, sep='\t')
+            dfc = pd.merge(dfa, dfb, on='GeneID')
+            dfc.rename(columns={"lenght": "length", "strand_x": "strand"}, inplace=True)
+            dfc[['Chr', 'CloneStart', 'CloneEnd', "length", "GeneID", "start", "end", "strand", "read_count",
+                 "ave_depth", "description"]].to_csv(
                 self.out + '_unique_intervals.bed', header=True, sep='\t', index=False)
         except traceback:
             self.filelogstdoutwrite(msg121)
@@ -214,7 +214,8 @@ class EnrichmentProkaryotic(object):
         :return:
         """
         templistfile = ["_intersect_commondomains.bed", "_intersect_uniquedomains.bed",
-                        "_target.bed", "_control.bed", "_edger.txt", ".sign_genes_adjpvalue_0.05.txt", ""]
+                        "_target.bed", "_control.bed", "_edger.txt", ".sign_genes_adjpvalue_0.05.txt",
+                        "_mergecount.bed"]
         for item in templistfile:
             if os.path.isfile(self.out + item):
                 os.remove(self.out + item)
@@ -231,8 +232,8 @@ if __name__ == '__main__':
                                                             DictEnrichment["controlparsed"])
     DictEnrichment["rfiles"] = ClassEnrichment.parserforedger(DictEnrichment["common"])
     DictEnrichment["edger"] = ClassEnrichment.edger(DictEnrichment["rfiles"])
-    # DictEnrichment["parsingcommon"] = ClassEnrichment.parsingoutputcommon(DictEnrichment["edger"],
-    #                                                                       options.outputarget)
-    # DictEnrichment["parsingunique"] = ClassEnrichment.parsingoutputunique(DictEnrichment["unique"],
-    #                                                                       options.outputcontrol)
-    # ClassEnrichment.cleantempfile()
+    DictEnrichment["parsingcommon"] = ClassEnrichment.parsingoutputcommon(DictEnrichment["edger"],
+                                                                          options.outputarget)
+    DictEnrichment["parsingunique"] = ClassEnrichment.parsingoutputunique(DictEnrichment["unique"],
+                                                                          options.outputarget)
+    ClassEnrichment.cleantempfile()
