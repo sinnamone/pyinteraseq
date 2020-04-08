@@ -8,8 +8,6 @@ InteractomeSeq data analysis workflow is composed of four sequential steps that,
 
 # 1)  Installation 
 
-The source code of InteactomeSeq pipeline are available on github at this address: https://github.com/sinnamone/InteractomeSeq
-
 With this steps below users can mirror the excecution of the webserver https://interactomeseq.ba.itb.cnr.it/ in order to perform analysis from command line. 
 
 ### Install Miniconda
