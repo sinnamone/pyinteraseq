@@ -39,7 +39,7 @@ pycosat==0.6.2
 pycparser==2.18
 Pygments==2.2.0
 pynast==1.2.2
-pyOpenSSL==17.2.0
+pyOpenSSL==17.5.0
 pyparsing==2.2.0
 pyqi==0.3.2
 pysam==0.13
