@@ -1,6 +1,6 @@
-# 0) Introduction
+# InteractomSeq
 
-InteractomeSeq
+### A web server for the identification and profiling of domains and epitopes from Phage Display and Next Generation Sequencing data.
 
 InteractomeSeq: a web server for the identification and profiling of domains and epitopes from Phage Display and Next Generation Sequencing data. InteractomeSeq is a webtool allowing either genomic or single gene domainome analysis of phage libraries generated and selected by following the interactome-sequencing approach.
 
