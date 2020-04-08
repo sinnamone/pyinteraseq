@@ -89,9 +89,9 @@ class InputCheck(object):
         :return:
         """
         if self.inputistance.log is None:
-            return open(self.outputfolder + self.outputid + "_mapping.log", "a")
+            return open(self.outputfolder + self.outputid + "_mapping.log", "a", 0)
         else:
-            return open(self.inputfilelog, "a")
+            return open(self.inputfilelog, "a", 0)
 
     def gzipopen(self, readfile, direction):
         """
@@ -103,10 +103,13 @@ class InputCheck(object):
         if str(readfile).endswith(".gz"):
             outfile = readfile.split(".")
             outstring = self.outputfolder + self.outputid + direction + outfile[1]
-            with gzip.open(readfile, "rt") as handle:
-                with open(outstring, "w") as outfastq:
-                    filecontent = handle.read()
-                    outfastq.write(filecontent)
+            # GIORGIO >>>>
+            if not os.path.isfile(outstring):
+            # GIORGIO <<<<
+                with gzip.open(readfile, "rt") as handle:
+                    with open(outstring, "w") as outfastq:
+                        filecontent = handle.read()
+                        outfastq.write(filecontent)
             return outstring
         else:
             return readfile
@@ -118,7 +121,7 @@ class InputCheck(object):
         """
         if os.access(self.outputfolder, os.W_OK) is True:
             if self.inputistance.log is None:
-                open(self.outputfolder + self.outputid + "_mapping.log", "a")
+                open(self.outputfolder + self.outputid + "_mapping.log", "a", 0)
                 return self.outputfolder + self.outputid + "_mapping.log"
             else:
                 return self.inputistance.log
@@ -214,10 +217,10 @@ class InputCheck(object):
 
         if self.sequencingtype == 'Paired-End':
             # check dataset
-            self.logopen().write(msg17 + self.checkreads(varreads=self.readforward,
-                                                           message=msg2))
-            self.logopen().write(msg18 + self.checkreads(varreads=self.readreverse,
-                                                           message=msg3))
+            self.logopen().write(msg17 + os.path.basename(self.checkreads(varreads=self.readforward,
+                                                           message=msg2)))
+            self.logopen().write(msg18 + os.path.basename(self.checkreads(varreads=self.readreverse,
+                                                           message=msg3)))
             self.logopen().write(msg21 + self.primer5forward)
             self.logopen().write(msg22 + self.primer3forward)
             self.logopen().write(msg23 + self.primer5reverse)
@@ -228,8 +231,8 @@ class InputCheck(object):
             #                                                rtype=self.readreversetype)) #TODO
         else:
             self.readforward = self.gzipopen(self.readforward, "_forward.")
-            self.logopen().write(msg28 + self.checkreads(varreads=self.readforward,
-                                                         message=msg1))
+            self.logopen().write(msg28 + os.path.basename(self.checkreads(varreads=self.readforward,
+                                                         message=msg1)))
             self.logopen().write(msg29 + self.readforwardtype)
             if self.primer5forward is not None:
                 self.logopen().write(msg30 + self.primer5forward)
@@ -238,7 +241,7 @@ class InputCheck(object):
             self.logopen().write(msg49 + self.fastqcount(fastq=self.readforward,
                                                          rtype=self.readforwardtype))
         self.logopen().write(msg25 + self.outputid)
-        self.logopen().write(msg26 + self.checkfasta())
+        self.logopen().write(msg26 + os.path.basename(self.checkfasta()))
         self.logopen().write(msg27 + self.checkgenename())
         self.logopen().write(msg33 + subprocess.check_output(['cutadapt', '--version']))
         self.logopen().write(msg0)
@@ -279,7 +282,7 @@ class InputCheckDomainDefinition(object):
         """
         if os.access(self.outputfolder, os.W_OK) is True:
             if self.inputfilelog is None:
-                self.inputfilelog = open(self.outputfolder + self.outputid + "_domain_definition.log", "a")
+                self.inputfilelog = open(self.outputfolder + self.outputid + "_domain_definition.log", "a", 0)
                 return self.outputfolder + self.outputid + "_domain_definition.log"
             else:
                 return self.inputfilelog
@@ -324,9 +327,9 @@ class InputCheckDomainDefinition(object):
 
     def logopen(self):
         if self.inputfilelog is None:
-            return open(self.outputfolder + self.outputid + "_domain_definition.log", "a")
+            return open(self.outputfolder + self.outputid + "_domain_definition.log", "a", 0)
         else:
-            return open(str(self.inputfilelog), 'a')
+            return open(str(self.inputfilelog), 'a', 0)
 
     def checkfastasequence(self):
         if self.inputistance.fastasequence is None:

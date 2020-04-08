@@ -263,12 +263,34 @@ class DomainsDefinition(InputCheckDomainDefinition):
             self.df2 = self.df2.drop_duplicates(subset='start', keep="last")
             self.df2 = self.df2.drop_duplicates(subset='end', keep="last")
             self.df2.to_csv(self.out + '_blastnclonescountedfiltered.bed', sep="\t", header=None, index=False)
+	    with open(self.out + '_inputformerge.bed', 'w') as f:
+		subprocess.check_call(['cut','-f','1,2,3,5',self.out + '_blastnclonescountedfiltered.bed'],stdout=f)
+	    f.close()
+            with open(self.out + '_inputfobigwig.bed', 'w') as f:
+            	subprocess.check_call(['/usr/local/bin/bedtools','merge','-c','4','-o','sum','-i',self.out + '_inputformerge.bed'],stdout=f)
+            f.close()
         except traceback:
             self.filelogerrorwrite(msg108)
         else:
             self.filelogstdoutwrite(msg109)
             return self.out+'_blastnclonescountedfiltered.bed'
-
+    
+    def bigwigcreation(self):
+    	"""
+    	Bigwig creation
+    	"""
+	try:
+		with open(self.outputfolder + self.namefilefasta.split('.')[0] + '.genome', "wb") as self.genome:
+	    		for rec in SeqIO.parse(self.fastasequence,"fasta"):
+     				self.genome.write(rec.id+"\t"+str(len(rec.seq)))
+			self.genome.close()
+			subprocess.check_call(['/opt/bedGraphToBigWig',self.out + '_inputfobigwig.bed',self.genome.name,self.out + '.bw'])
+        except subprocess.CalledProcessError:
+            self.filelogerrorwrite(msg75)
+        else:
+            self.filelogstdoutwrite(msg76)
+            return self.out + '.bw'
+			
     def pybedtoolsmerge(self, filteringclonescountoutput):
         self.input = pybedtools.example_bedtool(filteringclonescountoutput)
         self.output = self.input.merge().moveto(self.out+'_blastnclonesmerge.bed')
@@ -404,7 +426,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
                               "_blastnclonesmerge.fasta", "_blastnclonesmerge.bed", "_blastnclonescountedfiltered.bed", "_blastnclonescounted.bed",
                               "_def_blastnclones.tab", "_def_blastclonesparsed.bed", "_blastnfiltered.fasta", "_clean.fasta",
                               "_cluster_count.txt", "_clonestabular.tab", "_blastnclones.tab", "_blastclonesparsed.bed",
-                        '_mappingoutput.tab']
+                              "_mappingoutput.tab", "_inputfobigwig.bed", "_inputformerge.bed", ".genome"]
         for item in templistfile:
             if os.path.isfile(self.out + item):
                 os.remove(self.out + item)
@@ -413,3 +435,4 @@ class DomainsDefinition(InputCheckDomainDefinition):
             if os.path.isfile(self.out + '_picked/' + self.outputid + item):
                 os.remove(self.out + '_picked/' + self.outputid + item)
         os.rmdir(self.out + '_picked/')
+

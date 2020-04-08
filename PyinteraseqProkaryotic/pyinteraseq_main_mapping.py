@@ -60,6 +60,7 @@ advance_opts.add_option('--mismatch', action="store", dest="mismatch", type="flo
                         default=3.0, help='Percentage of Mismatch allowed.')
 parser.add_option_group(advance_opts)
 
+
 options, args = parser.parse_args()
 
 if __name__ == '__main__':
@@ -84,10 +85,10 @@ if __name__ == '__main__':
                 "LogInfoAppended": InpClass.inputinformationappen()
             })
         elif InpClass.readforwardtype is "fastq" and InpClass.readreversetype is "fasta":
-            log = open(InpClass.inputfilelog, "a")
+            log = open(InpClass.inputfilelog, "a", 0)
             log.write(msg5)
         elif InpClass.readforwardtype is "fasta" and InpClass.readreversetype is "fastq":
-            log = open(InpClass.inputfilelog, "a")
+            log = open(InpClass.inputfilelog, "a", 0)
             log.write(msg6)
     elif InpClass.readreverse is None:
         DictInfo.update({
@@ -95,8 +96,8 @@ if __name__ == '__main__':
             "LogInfoAppended": InpClass.inputinformationappen()
         })
     # start analysis
-    log = open(InpClass.inputfilelog, "a")
-    if (InpClass.sequencingtype in "Single-End") and (InpClass.readforwardtype in "fastq"):
+    log = open(InpClass.inputfilelog, "a", 0)
+    if (InpClass.sequencingtype == "Single-End") and (InpClass.readforwardtype == "fastq"):
         if (InpClass.primer5forward is not None) and (InpClass.primer3forward is not None):
             # Trimming Single-End fastQ
             DictInfo["Trimmed5single"] = TrimSingle.trimming5single()
@@ -123,7 +124,7 @@ if __name__ == '__main__':
             outputformat=outformat7,
             suffix='_blastn.txt')
         # End Single fastq
-    elif (InpClass.sequencingtype in "Single-End") and (InpClass.readforwardtype in "fasta"):
+    elif (InpClass.sequencingtype == "Single-End") and (InpClass.readforwardtype == "fasta"):
         if (InpClass.primer5forward is not None) and (InpClass.primer3forward is not None):
             # Trimming Single-End fastA
             DictInfo["Trimmed5single"] = TrimSingle.trimming5single()
@@ -145,7 +146,7 @@ if __name__ == '__main__':
             outputformat=outformat7,
             suffix='_blastn.txt')
         # End Single fastA
-    elif (InpClass.sequencingtype in "Paired-End") and (InpClass.readforwardtype in "fastq"):
+    elif (InpClass.sequencingtype == "Paired-End") and (InpClass.readforwardtype == "fastq"):
         if (InpClass.primer5forward is not None) and (InpClass.primer3forward is not None) and (InpClass.primer5reverse is not None) and (InpClass.primer3reverse is not None):
             DictInfo["Trimmed5paired"] = TrimPaired.trimming5paired()
             # Conversion Fastq<==>Fasta Paired-end
@@ -186,7 +187,7 @@ if __name__ == '__main__':
             multifasta=DictInfo["Trimmedreadconcatenated"],
             outputformat=outformat7,
             suffix='_blastn.txt')
-    elif (InpClass.sequencingtype in "Paired-End") and (InpClass.readforwardtype in "fasta"):
+    elif (InpClass.sequencingtype == "Paired-End") and (InpClass.readforwardtype == "fasta"):
         if (InpClass.primer5forward is not None) and (InpClass.primer5reverse is not None):
             DictInfo["Trimmed5paired"] = TrimPaired.trimming5paired()
             # Conversion  Fasta<==>Tabular

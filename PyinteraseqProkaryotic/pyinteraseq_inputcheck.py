@@ -7,6 +7,7 @@ from Bio import SeqIO
 import traceback
 import gzip
 
+Gzip = False
 
 class InputCheck(object):
 
@@ -63,9 +64,9 @@ class InputCheck(object):
 
     def logopen(self):
         if self.inputfilelog is None:
-            return open(self.outputfolder + self.outputid + "_mapping.log", "a")
+            return open(self.outputfolder + self.outputid + "_mapping.log", "a", 0)
         else:
-            return open(str(self.inputfilelog), 'a')
+            return open(str(self.inputfilelog), 'a', 0)
 
     def gzipopen(self, readfile, direction):
         """
@@ -77,10 +78,13 @@ class InputCheck(object):
         if str(readfile).endswith(".gz"):
             outfile = readfile.split(".")
             outstring = self.outputfolder + self.outputid + direction + outfile[1]
-            with gzip.open(readfile, "rt") as handle:
-                with open(outstring, "w") as outfastq:
-                    filecontent = handle.read()
-                    outfastq.write(filecontent)
+            # GIORGIO >>>>
+            if not os.path.isfile(outstring):
+            # GIORGIO <<<<
+                with gzip.open(readfile, "rt") as handle:
+                    with open(outstring, "w") as outfastq:
+                        filecontent = handle.read()
+                        outfastq.write(filecontent)
             return outstring
         else:
             return readfile
@@ -92,7 +96,7 @@ class InputCheck(object):
         """
         if os.access(self.outputfolder, os.W_OK) is True:
             if self.inputfilelog is None:
-                self.inputfilelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+                self.inputfilelog = open(self.outputfolder + self.outputid + "_mapping.log", "a", 0)
                 return self.outputfolder + self.outputid + "_mapping.log"
             else:
                 return self.inputfilelog
@@ -158,7 +162,7 @@ class InputCheck(object):
 
         :return:
         """
-        self.filelog = open(self.inputfilelog, 'a')
+        self.filelog = open(self.inputfilelog, 'a', 0)
         # check if the name of chromosome was given by the user
         if self.namefilefasta.split('.')[0] is None:
             self.filelog.write(msg87)
@@ -231,10 +235,10 @@ class InputCheck(object):
             # check dataset
             self.readforward = self.gzipopen(self.readforward, "_forward.")
             self.readreverse = self.gzipopen(self.readreverse, "_reverse.")
-            self.filelog.write(msg17 + self.checkreads(varreads=self.readforward,
-                                                       message=msg2))
-            self.filelog.write(msg18 + self.checkreads(varreads=self.readreverse,
-                                                       message=msg3))
+            self.filelog.write(msg17 + os.path.basename(self.checkreads(varreads=self.readforward,
+                                                       message=msg2)))
+            self.filelog.write(msg18 + os.path.basename(self.checkreads(varreads=self.readreverse,
+                                                       message=msg3)))
             # check primers
             self.filelog.write(msg21 + self.primer5forward)
             self.filelog.write(msg22 + self.primer3forward)
@@ -246,15 +250,15 @@ class InputCheck(object):
                                                        rtype=self.readreversetype))
         else:
             self.readforward = self.gzipopen(self.readforward, "_forward.")
-            self.filelog.write(msg28 + self.checkreads(varreads=self.readforward,
-                                                       message=msg1))
+            self.filelog.write(msg28 + os.path.basename(self.checkreads(varreads=self.readforward,
+                                                       message=msg1)))
             self.filelog.write(msg29 + self.readforwardtype)
             self.filelog.write(msg30 + self.primer5forward)
             self.filelog.write(msg31 + self.primer3forward)
             self.filelog.write(msg49 + self.fastqcount(fastq=self.readforward,
                                                        rtype=self.readforwardtype))
         self.filelog.write(msg25 + self.outputid)
-        self.filelog.write(msg26 + self.checkfasta())
+        self.filelog.write(msg26 + os.path.basename(self.checkfasta()))
         self.filelog.write(msg27 + self.checkgenename())
         self.filelog.write(msg33 + subprocess.check_output(['cutadapt', '--version']))
         self.filelog.write(msg0)
@@ -295,7 +299,7 @@ class InputCheckDomainDefinition(object):
             """
             if os.access(self.outputfolder, os.W_OK) is True:
                 if self.inputfilelog is None:
-                    self.inputfilelog = open(self.outputfolder + self.outputid + "_definition.log", "a")
+                    self.inputfilelog = open(self.outputfolder + self.outputid + "_definition.log", "a", 0)
                     return self.outputfolder + self.outputid + "_definition.log"
                 else:
                     return self.inputfilelog
@@ -340,9 +344,9 @@ class InputCheckDomainDefinition(object):
 
         def logopen(self):
             if self.inputfilelog is None:
-                return open(self.outputfolder + self.outputid + "_domain_definition.log", "a")
+                return open(self.outputfolder + self.outputid + "_domain_definition.log", "a", 0)
             else:
-                return open(str(self.inputfilelog), 'a')
+                return open(str(self.inputfilelog), 'a', 0)
 
         def checkfastasequence(self):
             if self.inputistance.fastasequence is None:

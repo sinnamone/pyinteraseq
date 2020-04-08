@@ -24,7 +24,9 @@ class BlastNlucleotide(InputCheck):
         self.header = None
         self.dbid = os.path.basename(self.fastasequence.split('/')[-1])
         self.path_multiblastn = os.path.dirname(os.path.realpath(__file__)) + '/pyinteraseq_multblastn.py'
-        self.pool = Pool(processes=int(self.thread))
+        # GIORGIO >>>>
+        # self.pool = Pool(processes=int(self.thread))
+        # GIORGIO <<<<
         self.df = None
         self.df2 = None
         self.dfOp = None

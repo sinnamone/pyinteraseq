@@ -68,7 +68,7 @@ class EnrichmentProkaryotic(object):
             if os.path.isfile(self.out + "_enrichment.log"):
                 self.inputfilelog = self.out + "_enrichment.log"
             else:
-                open(self.out + "_enrichment.log", 'a')
+                open(self.out + "_enrichment.log", 'a', 0)
                 self.inputfilelog = self.out + "_enrichment.log"
 
     def filelogstdoutwrite(self, msg):
@@ -77,7 +77,7 @@ class EnrichmentProkaryotic(object):
         :param msg:
         :return:
         """
-        self.inputfilelogopen = open(str(self.inputfilelog), 'a')
+        self.inputfilelogopen = open(str(self.inputfilelog), 'a', 0)
         self.inputfilelogopen.write(msg)
 
     def filelogerrorwrite(self, msg):
@@ -87,7 +87,7 @@ class EnrichmentProkaryotic(object):
         :return:
         """
 
-        self.inputfilelogopen = open(str(self.inputfilelog), 'a')
+        self.inputfilelogopen = open(str(self.inputfilelog), 'a', 0)
         self.inputfilelogopen.write(traceback.format_exc())
         self.inputfilelogopen.write(msg)
         sys.exit(1)

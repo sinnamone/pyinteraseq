@@ -99,7 +99,7 @@ class TrimmingPaired(InputCheck):
         Trimming 3' paired-end
         :return:
         """
-        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a")
+        self.filelog = open(self.outputfolder + self.outputid + "_mapping.log", "a", 0)
         try:
             subprocess.check_call(
                 ['cutadapt',

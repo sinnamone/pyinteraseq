@@ -41,7 +41,7 @@ reference_opts = optparse.OptionGroup(
     'Options for advanced analysis.',
     )
 reference_opts.add_option('--threshold', action="store", dest="threshold", type="int",
-                          default=30, help='Percentile threshold')
+                          default=1, help='Percentile threshold')
 parser.add_option_group(reference_opts)
 
 options, args = parser.parse_args()

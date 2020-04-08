@@ -65,7 +65,7 @@ class SubtractionProkaryotic(object):
             if os.path.isfile(self.out + "_subtraction.log"):
                 self.inputfilelog = self.out + "_subtraction.log"
             else:
-                open(self.out + "_subtraction.log", 'a')
+                open(self.out + "_subtraction.log", 'a', 0)
                 self.inputfilelog = self.out + "_subtraction.log"
 
     def filelogstdoutwrite(self, msg):
@@ -74,7 +74,7 @@ class SubtractionProkaryotic(object):
         :param msg:
         :return:
         """
-        self.inputfilelogopen = open(str(self.inputfilelog), 'a')
+        self.inputfilelogopen = open(str(self.inputfilelog), 'a', 0)
         self.inputfilelogopen.write(msg)
 
     def filelogerrorwrite(self, msg):
@@ -83,7 +83,7 @@ class SubtractionProkaryotic(object):
         :param msg:
         :return:
         """
-        self.inputfilelogopen = open(str(self.inputfilelog), 'a')
+        self.inputfilelogopen = open(str(self.inputfilelog), 'a', 0)
         self.inputfilelogopen.write(traceback.format_exc())
         self.inputfilelogopen.write(msg)
         sys.exit(1)
