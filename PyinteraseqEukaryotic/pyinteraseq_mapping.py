@@ -19,9 +19,9 @@ class BlastNlucleotide(Trimming):
         #self.genomesize = "/Users/simone/Pyinteraseq/PyinteraseqEucaryotic/output/HS/sizes.genome"
         #self.kallistoindex="/Users/simone/Pyinteraseq/PyinteraseqEucaryotic/output/HS/Homo_sapiens"
         #self.gtf = "/Users/simone/Pyinteraseq/PyinteraseqEucaryotic/output/HS/Homo_sapiens.GRCh38.99.chr.gtf"
-        self.genomesize = "/home/spuccio/PhageRnaBinding/size.genome"
-        self.kallistoindex="/home/spuccio/PhageRnaBinding/HStranscriptome.idx"
-        self.gtf = "/home/spuccio/PhageRnaBinding//Homo_sapiens.GRCh38.99.chr.gtf"
+        #self.genomesize = "/home/spuccio/PhageRnaBinding/size.genome"
+        #self.kallistoindex="/home/spuccio/PhageRnaBinding/HStranscriptome.idx"
+        #self.gtf = "/home/spuccio/PhageRnaBinding//Homo_sapiens.GRCh38.99.chr.gtf"
         return
 
 

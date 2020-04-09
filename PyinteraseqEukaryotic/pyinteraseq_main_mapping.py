@@ -41,8 +41,14 @@ reference_opts = optparse.OptionGroup(
     )
 reference_opts.add_option('--fastasequence', action="store", dest="fastasequence", default=None,
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
-reference_opts.add_option('--organism', action="store", dest="organism", default=None,
-                          help='organims')
+reference_opts.add_option('--kallistoindex', action="store", dest="kallistoindex", default=None,
+                                          help='Kallisto index genome')
+reference_opts.add_option('--genomesize', action="store", dest="genomesize", default=None,
+                                                  help='Chr lenght ')
+reference_opts.add_option('--transcriptsize', action="store", dest="transcriptsize", default=None,
+                                                          help='Transcript lenght')
+reference_opts.add_option('--gtf', action="store", dest="gtf", default=None,
+                                                                  help='Transcript lenght')
 reference_opts.add_option('--thread', action="store", dest="thread", default='10',
                           help='Number of thread.')
 reference_opts.add_option('--log', action="store", dest="log", default=None,
@@ -171,25 +177,14 @@ if __name__ == '__main__':
         except traceback:
             log.write(msg118)
             sys.exit(1)
-    if options.organism == "Homo_sapiens":
-	foldergenome= "/".join(["/Users/simone/Pyinteraseq/PyinteraseqEucaryotic/output","HS"])
-	#gtf = "/".join([foldergenome,"Homo_sapiens.GRCh38.99.chr.gtf"])
-	#genomesize =  "/".join([foldergenome,"sizes.genome"])
-        gtf = "/home/spuccio/PhageRnaBinding/Homo_sapiens.GRCh38.99.chr.gtf"
-        genomesize = "/home/spuccio/PhageRnaBinding/size.genome"
-        indextranscriptome = "/home/spuccio/PhageRnaBinding/HStranscriptome.idx"
-    elif options.organism == "Mus_musculus":
-	foldergenome= "/".join(["/Users/simone/Pyinteraseq/PyinteraseqEucaryotic/output","MM"])
-        gtf = "/".join([foldergenome,"Mus_musculus.GRCm38.99.chr.gtf"])
-        genomesize =  "/".join([foldergenome,"size.genome"])
     if MappingClass.sequencingtype == "Single-End":
     	DictInfo["indexvalues"] = MappingClass.kallistoindexvalues(DictInfo["Trimmedreadconcatenated"])
-	DictInfo["bam"] = MappingClass.mappingkallisto(indextranscriptome, gtf,genomesize,DictInfo["indexvalues"][0],DictInfo["indexvalues"][1],DictInfo["Trimmedreadconcatenated"])
-	DictInfo["samtr"] = MappingClass.mappingkallistotran(indextranscriptome, DictInfo["indexvalues"][0],DictInfo["indexvalues"][1],DictInfo["Trimmedreadconcatenated"])
+	DictInfo["bam"] = MappingClass.mappingkallisto(options.kallistoindex, options.gtf,options.genomesize,DictInfo["indexvalues"][0],DictInfo["indexvalues"][1],DictInfo["Trimmedreadconcatenated"])
+	DictInfo["samtr"] = MappingClass.mappingkallistotran(options.kallistoindex, DictInfo["indexvalues"][0],DictInfo["indexvalues"][1],DictInfo["Trimmedreadconcatenated"])
 	DictInfo["sortedbam"] = MappingClass.sortbam(bamfile=DictInfo["samtr"])
     elif MappingClass.sequencingtype == "Paired-End":
-        DictInfo["bam"] = MappingClass.mappingkallistopaired(indextranscriptome,gtf,genomesize,DictInfo["forward5trimmed"],DictInfo["reverse5trimmed"])
-	DictInfo["samtr"] = MappingClass.mappingkallistopairedttran(indextranscriptome,
+        DictInfo["bam"] = MappingClass.mappingkallistopaired(options.kallistoindex, options.gtf,options.genomesize,DictInfo["forward5trimmed"],DictInfo["reverse5trimmed"])
+	DictInfo["samtr"] = MappingClass.mappingkallistopairedttran(options.kallistoindex,
                                                    DictInfo["forward5trimmed"],DictInfo["reverse5trimmed"])
     	DictInfo["sortedbam"] = MappingClass.sortbam(bamfile=DictInfo["samtr"])
     
@@ -198,4 +193,4 @@ if __name__ == '__main__':
     DictInfo["filtbam"] = MappingClass.conversionsam2bam(samfile=DictInfo["filtsam"])
     DictInfo["bedgraph"] = MappingClass.bam2bedgraph(bamfile=DictInfo["filtbam"])
     DictInfo["bw"] = MappingClass.bedgraph2bw(bedgraph=DictInfo["bedgraph"])
-    #MappingClass.cleantempfile()
+    MappingClass.cleantempfile()

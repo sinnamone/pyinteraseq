@@ -31,19 +31,19 @@ class InputCheck(object):
         #
         self.count = 0
         self.out = self.outputfolder + self.outputid
-        self.cutadapt = '/usr/local/bin/cutadapt'
+        self.cutadapt = 'cutadapt'
         self.trimmomatic = '/opt/Trimmomatic-0.36/trimmomatic-0.36.jar'
-        self.samtools = '/usr/bin/samtools'
-        self.bowtie2 = '/usr/local/bin/bowtie2'
-        self.bowtie2build = '/usr/local/bin/bowtie2-build'
+        self.samtools = 'samtools'
         self.cutadaptversion = "1.12"
-        self.pick_otus = "/opt/miniconda3/envs/qiime1/bin/pick_otus.py"
-        self.pick_rep_set = "/opt/miniconda3/envs/qiime1/bin/pick_rep_set.py"
         # check if input forward file is gz
         self.namefilefasta = os.path.basename(self.fastasequence.split('/')[-1])
         self.genename = self.namefilefasta.split('.')[0]
         # check file log
-
+        self.genomesize = self.inputistance.genomesize
+        self.transcriptsize = self.inputistance.transcriptsize
+        self.kallistoindex = self.inputistance.kallistoindex
+        self.gtf = self.inputistance.gtf
+        #self.gtf = self.inputistance.gtf
         #
         self.sequencingtype = self.sequencingtypecheck()
         self.first_line = None
@@ -265,8 +265,6 @@ class InputCheckDomainDefinition(object):
         self.namefilefasta = os.path.basename(self.fastasequence.split('/')[-1])
         self.genename = self.namefilefasta.split('.')[0]
         self.out = self.outputfolder + self.outputid
-        self.pick_otus = "/opt/miniconda3/envs/qiime1/bin/pick_otus.py"
-        self.pick_rep_set = "/opt/miniconda3/envs/qiime1/bin/pick_rep_set.py"
         # check file log
         self.inputfilelog = self.logfilecreation()
         self.filelog = None
