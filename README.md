@@ -24,7 +24,7 @@ InteractomeSeq consists of native Python 2.7 code and additionally wraps many ex
 
 
 ```bash
-conda create -n interactomeseq python=2.7 matplotlib=1.5.3 trimmomatic=0.36 kallisto=0.46.0 cutadapt=1.12 blast r-base=3.4.1  cython biom-format biopython pysam pybedtools bioconductor-edger -c conda-forge -c bioconda -c r -c anaconda
+conda create -n interactomeseq python=2.7 matplotlib=1.5.3 trimmomatic=0.36 kallisto=0.46.0 cutadapt=1.12 blast r-base=3.4.1  cython biom-format biopython pybedtools bioconductor-edger ucsc-bedgraphtobigwig -c conda-forge -c bioconda -c r -c anaconda
 ```
 
 ### Activate your InteractomeSeq environment and test your installation
@@ -54,6 +54,16 @@ pip install https://pypi.python.org/packages/source/m/matplotlib/matplotlib-1.4.
 ```
 
 Then install qiime1 version 1.91.1
+
+
+```bash
+conda install -c bioconda pysam
+```
+
+
+```bash
+conda install -c conda-forge readline=6.2
+```
 
 
 ```bash
