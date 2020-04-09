@@ -4,7 +4,8 @@ from pyinteraseq_trimming import *
 from pyinteraseq_genomefileparsing import *
 from output_message import *
 
-parser = optparse.OptionParser(usage='python %prog pyinteraseq_main_mapping.py', version='1.0',)
+parser = optparse.OptionParser(
+    usage='python %prog pyinteraseq_main_mapping.py', version='1.0',)
 parser.add_option('--readforward', action="store", dest="readforward", default=None,
                   help='Read dataset input forward')
 parser.add_option('--readreverse', action="store", dest="readreverse", default=None,
@@ -13,7 +14,7 @@ parser.add_option('--readreverse', action="store", dest="readreverse", default=N
 query_opts = optparse.OptionGroup(
     parser, 'Output Options',
     'Options for the output destionation and name.',
-    )
+)
 query_opts.add_option('--outputfolder', action="store", dest="outputfolder", default=None,
                       help='Output folder.')
 query_opts.add_option('--outputid', action="store", dest="outputid", default=None,
@@ -23,7 +24,7 @@ parser.add_option_group(query_opts)
 primer_opts = optparse.OptionGroup(
     parser, 'Primers Options',
     'Options for primer sequence and trimming.',
-    )
+)
 primer_opts.add_option('--primer5forward', action="store", dest="primer5forward", default=None,
                        help='Output folder.')
 primer_opts.add_option('--primer3forward', action="store", dest="primer3forward", default=None,
@@ -37,7 +38,7 @@ parser.add_option_group(primer_opts)
 reference_opts = optparse.OptionGroup(
     parser, 'Primers Options',
     'Options for primer sequence and trimming.',
-    )
+)
 reference_opts.add_option('--fastasequence', action="store", dest="fastasequence", default=None,
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
 reference_opts.add_option('--thread', action="store", dest="thread", default='2',
@@ -49,7 +50,7 @@ parser.add_option_group(reference_opts)
 advance_opts = optparse.OptionGroup(
     parser, 'Advanced Options',
     'Options for advanced analysis.',
-    )
+)
 advance_opts.add_option('--minclonelength', action="store", dest="minclonelength", default='100',
                         help='Minumum clones length.')
 advance_opts.add_option('--overlapintersect', action="store", dest="overlapintersect", type="float",
@@ -79,7 +80,7 @@ if __name__ == '__main__':
                 "CutadaptPath": InpClass.cutadaptcheck(),
                 "LogInfoAppended": InpClass.inputinformationappen()
             })
-	elif (InpClass.readforwardtype is "fasta") and (InpClass.readreversetype is "fasta"):
+        elif (InpClass.readforwardtype is "fasta") and (InpClass.readreversetype is "fasta"):
             DictInfo.update({
                 "CutadaptPath": InpClass.cutadaptcheck(),
                 "LogInfoAppended": InpClass.inputinformationappen()
@@ -133,7 +134,8 @@ if __name__ == '__main__':
         else:
             log.write(msg116)
             sys.exit(1)
-        DictInfo["TabularReadsForward"] = MappingClass.fasta2tabular(imp=DictInfo["Trimmed5single"], prefix="forward")
+        DictInfo["TabularReadsForward"] = MappingClass.fasta2tabular(
+            imp=DictInfo["Trimmed5single"], prefix="forward")
         # Rename Sequence ID forward
         DictInfo["TabularRenamedForward"] = MappingClass.seqrename(
             tabular=DictInfo["TabularReadsForward"], readirection="forward")
@@ -223,11 +225,10 @@ if __name__ == '__main__':
             multifasta=DictInfo["Trimmedreadconcatenated"],
             outputformat=outformat7,
             suffix='_blastn.txt')
-    #End Paired fastq
+    # End Paired fastq
     DictInfo["blastoutputnohash"] = MappingClass.hashclean(
         blastnout=DictInfo["blastoutput"], prefix="_blastn_nohash")
     # Filter reads steps (NO open-gaps, mismatch)
     DictInfo["blastoutputnohashfiltered"] = MappingClass.blastnfiltering(
         blastnout=DictInfo["blastoutputnohash"])
-    #MappingClass.cleantempfile()
-
+    MappingClass.cleantempfile()

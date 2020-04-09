@@ -53,23 +53,23 @@ elif count == 2:
         bunique = b.intersect(a, v=True)
         v = venn2(subsets=((a - b).count(), (a + b).count(), (b - a).count()),
                   set_labels=(options.labels[0], options.labels[1]))
-        plt.savefig(options.outputfolder + options.outputid + '.png', format='png')
+        plt.savefig("/".join([options.outputfolder,"".join([options.outputid,'.png'])]), format='png')
         # write files
         dfa_b = pd.read_table((a - b).fn, header=None)
         dfa_b[3] = dfa_b[12]
-        dfa_b[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]].to_csv(options.outputfolder + options.outputid + '_' +
+        dfa_b[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]].to_csv(options.outputfolder + '/' + options.outputid + '_' +
                                                                  '_'.join([options.labels[0], unique]),
                                                                  sep="\t", header=header, index=False)
         #
         dfb_a = pd.read_table((b - a).fn, header=None)
         dfb_a[3] = dfb_a[12]
-        dfb_a[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]].to_csv(options.outputfolder + options.outputid + '_' +
+        dfb_a[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]].to_csv(options.outputfolder + '/' +options.outputid + '_' +
                                                                  '_'.join([options.labels[0], options.labels[1], interection]),
                                                                  sep="\t", header=header, index=False)
         #
         dfAB = pd.read_table((a + b).fn, header=None)
         dfAB[3] = dfAB[12]
-        dfAB[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]].to_csv(options.outputfolder + options.outputid + '_' +
+        dfAB[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]].to_csv(options.outputfolder + '/' + options.outputid + '_' +
                                                                 '_'.join( [options.labels[1], unique]),
                                                                 sep="\t", header=header, index=False)
     except traceback:

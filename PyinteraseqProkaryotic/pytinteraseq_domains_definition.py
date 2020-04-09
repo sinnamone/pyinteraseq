@@ -37,7 +37,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         self.dbname = self.outputfolder + os.path.basename(self.fastasequence.split('/')[-1]).split('.')[0]
         self.mappingoutoput = self.inputistance.mappingoutput
         self.path_pickotus = os.path.dirname(os.path.realpath(__file__)) + '/pick_otus.sh'
-        self.pythoneve = "/opt/miniconda3/envs/qiime1/bin/python"
+        #self.pythoneve = "/opt/miniconda3/envs/qiime1/bin/python"
 
 
     def filelogstdoutwrite(self, msg):
