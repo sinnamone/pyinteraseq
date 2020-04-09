@@ -192,7 +192,7 @@ class EnrichmentProkaryotic(object):
         fnull = open(os.devnull, 'w')
         try:
             subprocess.check_call(['Rscript', '--vanilla',
-                                   self.path_edgeR, backgroundedgeparsed, targetedgeparsed, 'genomic', idex, outpath],
+                                  'diff_edgeR.Rscript', backgroundedgeparsed, targetedgeparsed, 'genomic', idex, outpath],
                                   stderr=fnull, stdout=fnull)
         except subprocess.CalledProcessError:
             self.inputfilelog.write(msg149)

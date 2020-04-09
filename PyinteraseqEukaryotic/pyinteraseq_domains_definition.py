@@ -29,7 +29,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
 
         try:
             with open(self.out + '_DepthCoverageBed.txt', 'w') as b:
-                subprocess.check_call(['bedtools', 'genomecov', '-dz', '-ibam', self.bamfile, '-g', self.genome],stdout=b)
+                subprocess.check_call(['bedtools', 'genomecov', '-dz', '-ibam', self.bamfile],stdout=b)
         except subprocess.CalledProcessError:
             self.filelog.write(msg89)
             sys.exit(1)
@@ -47,7 +47,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         """
         try:
             with open(self.out + '_BreadthCoverageBed.txt', 'w') as b:
-                subprocess.check_call(['bedtools', 'genomecov','-ibam', self.bamfile, '-g', self.genome],stdout=b)
+                subprocess.check_call(['bedtools', 'genomecov','-ibam', self.bamfile],stdout=b)
         except subprocess.CalledProcessError:
             self.filelog.write(msg91)
             sys.exit(1)

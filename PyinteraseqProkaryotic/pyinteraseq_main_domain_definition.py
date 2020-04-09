@@ -97,10 +97,10 @@ if __name__ == '__main__':
     # clone merge to get domains
     DictInfo["clonescountedmerged"] = DomainDefinitionClass.pybedtoolsmerge(
         DictInfo["clonescountedfiltered"])
-    # # Get fasta from intervels
+    # Get fasta from intervels
     DictInfo["clonesmergedfasta"] = DomainDefinitionClass.pybedtoolstofasta(
         pybedtoolsmergeoutput=DictInfo["clonescountedmerged"], fastqsequence=options.fastasequence)
-    DictInfo["bigwig"] = DomainDefinitionClass.bigwigcreation()
+    #DictInfo["bigwig"] = DomainDefinitionClass.bigwigcreation()
     # Add description present in ptt 0.7 is the overlap of intersect cds
     DictInfo["tabwithdescription"] = DomainDefinitionClass.adddescription(
         clonesmerged=DictInfo["clonescountedmerged"], annotation=options.annotation,

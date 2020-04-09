@@ -147,7 +147,8 @@ class DomainsDefinition(InputCheckDomainDefinition):
         :return: cluster file
         """
         try:
-            subprocess.check_call([self.path_pickotus, blastnout, self.out + '_picked'])
+            #"$pickotus" -i "$blastnoutput" -o "$outputfoler" -s 0.97
+            subprocess.check_call(['pick_otus.py','-i',blastnout,'-o',self.out + '_picked','-s','0.97','-m','sumaclust','--threads', self.thread])
         except subprocess.CalledProcessError:
             self.filelogerrorwrite(msg71)
         else:
@@ -162,7 +163,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         """
         try:
             subprocess.check_call(
-                [self.pythoneve,self.pick_rep_set, '-i', pickotus, '-f',
+                ['pick_rep_set.py', '-i', pickotus, '-f',
                  fasta,
                  '-m', 'most_abundant', '-o', self.out + '_otus_most_abundant.fa'])
         except subprocess.CalledProcessError:
@@ -267,7 +268,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
 		subprocess.check_call(['cut','-f','1,2,3,5',self.out + '_blastnclonescountedfiltered.bed'],stdout=f)
 	    f.close()
             with open(self.out + '_inputfobigwig.bed', 'w') as f:
-            	subprocess.check_call(['/usr/local/bin/bedtools','merge','-c','4','-o','sum','-i',self.out + '_inputformerge.bed'],stdout=f)
+            	subprocess.check_call(['bedtools','merge','-c','4','-o','sum','-i',self.out + '_inputformerge.bed'],stdout=f)
             f.close()
         except traceback:
             self.filelogerrorwrite(msg108)
@@ -284,7 +285,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
 	    		for rec in SeqIO.parse(self.fastasequence,"fasta"):
      				self.genome.write(rec.id+"\t"+str(len(rec.seq)))
 			self.genome.close()
-			subprocess.check_call(['/opt/bedGraphToBigWig',self.out + '_inputfobigwig.bed',self.genome.name,self.out + '.bw'])
+			subprocess.check_call(['bedGraphToBigWig',self.out + '_inputfobigwig.bed',self.genome.name,self.out + '.bw'])
         except subprocess.CalledProcessError:
             self.filelogerrorwrite(msg75)
         else:

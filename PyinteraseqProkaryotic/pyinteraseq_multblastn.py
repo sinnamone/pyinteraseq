@@ -83,7 +83,7 @@ def makeblastdb(outputfolder, dbname, fasta):
         fnull = open(os.devnull, 'w')
         try:
             subprocess.check_call(
-                ['/opt/ncbi-blast-2.7.1+/bin/makeblastdb',
+                ['makeblastdb',
                  '-in', fasta,
                  '-dbtype',
                  'nucl',
@@ -105,7 +105,7 @@ def blastn(outputname, fastainpu, dbname, outputformat):
     :return:
     """
     fnull = open(os.devnull, 'w')
-    return (subprocess.check_call(['/opt/ncbi-blast-2.7.1+/bin/blastn', '-out', outputname,
+    return (subprocess.check_call(['blastn', '-out', outputname,
                                    '-outfmt',
                                    outputformat,
                                    '-query', fastainpu,

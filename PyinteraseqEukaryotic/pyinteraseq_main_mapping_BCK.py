@@ -4,7 +4,6 @@ from output_message import *
 import sys
 import traceback
 
-
 parser = optparse.OptionParser(usage='python %prog pyinteraseq_main_mapping.py', version='1.0',)
 parser.add_option('--readforward', action="store", dest="readforward", default=None,
                   help='Read dataset input forward')
@@ -41,8 +40,8 @@ reference_opts = optparse.OptionGroup(
     )
 reference_opts.add_option('--fastasequence', action="store", dest="fastasequence", default=None,
                           help='Genome sequence fasta file.(.fasta|.fna|.fa)')
-reference_opts.add_option('--organism', action="store", dest="organism", default=None,
-                          help='organims')
+reference_opts.add_option('--annotationpath', action="store", dest="annotationpath", default=None,
+                          help='annotation path')
 reference_opts.add_option('--thread', action="store", dest="thread", default='10',
                           help='Number of thread.')
 reference_opts.add_option('--log', action="store", dest="log", default=None,
@@ -74,15 +73,15 @@ if __name__ == '__main__':
                 "LogInfoAppended": MappingClass.inputinformationappen()
             })
         else:
-            log = open(MappingClass.inputfilelog, "a")
+            log = open(MappingClass.inputfilelog, "a", 0)
             log.write(msg5)
             sys.exit(1)
-    elif MappingClass.sequencingtype is "Single-End":
+    elif MappingClass.sequencingtype == "Single-End":
         DictInfo.update({
             "LogInfoAppended": MappingClass.inputinformationappen()
         })
-    log = open(MappingClass.inputfilelog, "a")
-    if MappingClass.sequencingtype in "Single-End":
+    log = open(MappingClass.inputfilelog, "a", 0)
+    if MappingClass.sequencingtype == "Single-End":
         log.write(msg127)
         try:
             if (MappingClass.primer5forward is not None) and (MappingClass.primer3forward is not None):
@@ -102,12 +101,12 @@ if __name__ == '__main__':
                                                                                    direction="_forward5trimmed.",
                                                                                    readtype=MappingClass.readforwardtype)
         except traceback:
-            log.write(msg118)
+            log.write(msg41)
             sys.exit(1)
         else:
-            log.write("")
-    elif MappingClass.sequencingtype in "Paired-End":
-        #log.wDictInforite(msg129)
+            log.write(msg130)
+    elif MappingClass.sequencingtype == "Paired-End":
+        log.write(msg129)
         try:
             if (MappingClass.primer5forward is not None) and (MappingClass.primer3forward is not None) and (
                         MappingClass.primer5reverse is not None) and (MappingClass.primer3reverse is not None):
@@ -169,33 +168,29 @@ if __name__ == '__main__':
                 log.write(msg4)
                 sys.exit(1)
         except traceback:
-            log.write(msg118)
+            log.write(msg41)
             sys.exit(1)
-    if options.organism == "Homo_sapiens":
-	foldergenome= "/".join(["/Users/simone/Pyinteraseq/PyinteraseqEucaryotic/output","HS"])
-	#gtf = "/".join([foldergenome,"Homo_sapiens.GRCh38.99.chr.gtf"])
-	#genomesize =  "/".join([foldergenome,"sizes.genome"])
-        gtf = "/home/spuccio/PhageRnaBinding/Homo_sapiens.GRCh38.99.chr.gtf"
-        genomesize = "/home/spuccio/PhageRnaBinding/size.genome"
-        indextranscriptome = "/home/spuccio/PhageRnaBinding/HStranscriptome.idx"
-    elif options.organism == "Mus_musculus":
-	foldergenome= "/".join(["/Users/simone/Pyinteraseq/PyinteraseqEucaryotic/output","MM"])
-        gtf = "/".join([foldergenome,"Mus_musculus.GRCm38.99.chr.gtf"])
-        genomesize =  "/".join([foldergenome,"size.genome"])
+	else:
+            log.write(msg130)
+
+    #MappingClass.gtf = options.annotationpath + ".chr.gtf"
+    MappingClass.gtf = "/home/spuccio/PhageRnaBinding/Homo_sapiens.GRCh38.99.chr.gtf"
+    MappingClass.genomesize = "/home/spuccio/PhageRnaBinding/sizes.genome"
+    MappingClass.genomeorganism = "/home/spuccio/PhageRnaBinding/HStranscriptome.idx"
+
     if MappingClass.sequencingtype == "Single-End":
     	DictInfo["indexvalues"] = MappingClass.kallistoindexvalues(DictInfo["Trimmedreadconcatenated"])
-	DictInfo["bam"] = MappingClass.mappingkallisto(indextranscriptome, gtf,genomesize,DictInfo["indexvalues"][0],DictInfo["indexvalues"][1],DictInfo["Trimmedreadconcatenated"])
-	DictInfo["samtr"] = MappingClass.mappingkallistotran(indextranscriptome, DictInfo["indexvalues"][0],DictInfo["indexvalues"][1],DictInfo["Trimmedreadconcatenated"])
+	DictInfo["bam"] = MappingClass.mappingkallisto(MappingClass.genomeorganism,MappingClass.gtf,MappingClass.genomesize,DictInfo["indexvalues"][0],DictInfo["indexvalues"][1],DictInfo["Trimmedreadconcatenated"])
+	DictInfo["samtr"] = MappingClass.mappingkallistotran(MappingClass.genomeorganism, DictInfo["indexvalues"][0],DictInfo["indexvalues"][1],DictInfo["Trimmedreadconcatenated"])
 	DictInfo["sortedbam"] = MappingClass.sortbam(bamfile=DictInfo["samtr"])
     elif MappingClass.sequencingtype == "Paired-End":
-        DictInfo["bam"] = MappingClass.mappingkallistopaired(indextranscriptome,gtf,genomesize,DictInfo["forward5trimmed"],DictInfo["reverse5trimmed"])
-	DictInfo["samtr"] = MappingClass.mappingkallistopairedttran(indextranscriptome,
-                                                   DictInfo["forward5trimmed"],DictInfo["reverse5trimmed"])
+        DictInfo["bam"] = MappingClass.mappingkallistopaired(MappingClass.genomeorganism,MappingClass.gtf,MappingClass.genomesize,DictInfo["forward5trimmed"],DictInfo["reverse5trimmed"])
+	DictInfo["samtr"] = MappingClass.mappingkallistopairedttran(MappingClass.genomeorganism,DictInfo["forward5trimmed"],DictInfo["reverse5trimmed"])
     	DictInfo["sortedbam"] = MappingClass.sortbam(bamfile=DictInfo["samtr"])
-    
+
     DictInfo["sam"] = MappingClass.conversionbam2sam(bamfile=DictInfo["bam"])
     DictInfo["filtsam"] = MappingClass.filtersam(samfile=DictInfo["sam"])
     DictInfo["filtbam"] = MappingClass.conversionsam2bam(samfile=DictInfo["filtsam"])
     DictInfo["bedgraph"] = MappingClass.bam2bedgraph(bamfile=DictInfo["filtbam"])
     DictInfo["bw"] = MappingClass.bedgraph2bw(bedgraph=DictInfo["bedgraph"])
-    #MappingClass.cleantempfile()
+    MappingClass.cleantempfile()

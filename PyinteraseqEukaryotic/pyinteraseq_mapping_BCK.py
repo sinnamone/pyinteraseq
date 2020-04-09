@@ -16,12 +16,7 @@ class BlastNlucleotide(Trimming):
         self.dbname = self.outputfolder + os.path.basename(self.fastasequence.split('/')[(-1)]).split('.')[0]
         self.filelog = None
         self.parts = ''
-        #self.genomesize = "/Users/simone/Pyinteraseq/PyinteraseqEucaryotic/output/HS/sizes.genome"
-        #self.kallistoindex="/Users/simone/Pyinteraseq/PyinteraseqEucaryotic/output/HS/Homo_sapiens"
-        #self.gtf = "/Users/simone/Pyinteraseq/PyinteraseqEucaryotic/output/HS/Homo_sapiens.GRCh38.99.chr.gtf"
-        self.genomesize = "/home/spuccio/PhageRnaBinding/size.genome"
-        self.kallistoindex="/home/spuccio/PhageRnaBinding/HStranscriptome.idx"
-        self.gtf = "/home/spuccio/PhageRnaBinding//Homo_sapiens.GRCh38.99.chr.gtf"
+	self.TrascriptTag = '_Trascript'
         return
 
 
@@ -166,13 +161,13 @@ class BlastNlucleotide(Trimming):
         self.filelog = self.logopen()
         fnull = open(os.devnull, 'w')
         try:
-	   subprocess.check_call(['kallisto', 'quant', '-i', indexkallisto,'--single','--pseudobam', '-l', str(avefragmlen), '-s', str(stdfragmlen),"-o","".join([self.outputfolder, ('/').join(["".join([self.outputid,"tr"]), ''])]),reads], stdout=fnull,stderr=fnull)
+	   subprocess.check_call(['kallisto', 'quant', '-i', indexkallisto,'--single','--pseudobam', '-l', str(avefragmlen), '-s', str(stdfragmlen),"-o","".join([self.outputfolder, ('').join(["".join([self.outputid,self.TrascriptTag]), ''])]),reads], stdout=fnull,stderr=fnull)
         except subprocess.CalledProcessError:
             self.filelog.write(msg60)
             sys.exit(1)
         else:
             self.filelog.write(msg61)
-            return "".join([self.outputfolder, ('').join(["".join([self.outputid,"tr"]), '/pseudoalignments.bam'])])
+            return "".join([self.outputfolder, ('').join(["".join([self.outputid,self.TrascriptTag]), '/pseudoalignments.bam'])])
 
 
     def mappingkallistopaired(self, indexkallisto,gtf,genomesize,read1, read2):
@@ -203,13 +198,13 @@ class BlastNlucleotide(Trimming):
         self.filelog = self.logopen()
         fnull = open(os.devnull, 'w')
         try:
-           subprocess.check_call(['kallisto', 'quant', '-i', indexkallisto,'--pseudobam', '-o', ('/').join([self.outputfolder, "".join([self.outputid,"tr"])]),read1, read2], stdout=fnull,stderr=fnull)
+           subprocess.check_call(['kallisto', 'quant', '-i', indexkallisto,'--pseudobam', '-o', ('/').join([self.outputfolder, "".join([self.outputid,self.TrascriptTag])]),read1, read2], stdout=fnull,stderr=fnull)
         except subprocess.CalledProcessError:
             self.filelog.write(msg60)
             sys.exit(1)
         else:
             self.filelog.write(msg61)
-            return ('/').join([self.outputfolder, ('/').join(["".join([self.outputid,"tr"]), "pseudoalignments.bam"])])
+            return ('/').join([self.outputfolder, ('/').join(["".join([self.outputid,self.TrascriptTag]), "pseudoalignments.bam"])])
 
     def convert(self, samfile):
         self.filelog = self.logopen()
@@ -258,7 +253,7 @@ class BlastNlucleotide(Trimming):
             os.remove(self.outputfolder +  self.outputid + 'run_info.json')
         if os.path.isfile(self.outputfolder +  self.outputid + 'abundance.h5'):
             os.remove(self.outputfolder +  self.outputid + 'abundance.h5')
-	subprocess.check_call(['rm','-rf',self.outputfolder + self.outputid + "tr"])
+	subprocess.check_call(['rm','-rf',self.outputfolder + self.outputid + self.TrascriptTag])
 	subprocess.check_call(['rm','-rf',self.outputfolder + self.outputid])
         if self.sequencingtype in 'Single-End':
             if self.readforwardtype in 'fastq':
