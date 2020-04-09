@@ -24,7 +24,7 @@ InteractomeSeq consists of native Python 2.7 code and additionally wraps many ex
 
 
 ```bash
-conda create -n interactomeseq python=2.7 matplotlib=1.5.3 trimmomatic=0.36 kallisto=0.46.0 cutadapt=1.12 blast r-base=3.4.1  cython biom-format biopython pybedtools bioconductor-edger ucsc-bedgraphtobigwig -c conda-forge -c bioconda -c r -c anaconda
+conda create -n interactomeseq python=2.7 matplotlib=1.5.3 trimmomatic=0.36 kallisto=0.46.0 cutadapt=1.12 blast r-base=3.4.1 pandas=0.21.0 samtools=0.1.19  cython biom-format biopython pybedtools bioconductor-edger ucsc-bedgraphtobigwig -c conda-forge -c bioconda -c r -c anaconda
 ```
 
 ### Activate your InteractomeSeq environment and test your installation
