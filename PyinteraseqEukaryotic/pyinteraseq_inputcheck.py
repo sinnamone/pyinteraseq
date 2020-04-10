@@ -32,7 +32,7 @@ class InputCheck(object):
         self.count = 0
         self.out = self.outputfolder + self.outputid
         self.cutadapt = 'cutadapt'
-        self.trimmomatic = '/opt/Trimmomatic-0.36/trimmomatic-0.36.jar'
+        self.trimmomatic = 'trimmomatic'
         self.samtools = 'samtools'
         self.cutadaptversion = "1.12"
         # check if input forward file is gz
