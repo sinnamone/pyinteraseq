@@ -1,3 +1,4 @@
+![](https://github.com/sinnamone/InteractomeSeq/blob/master/log.png.png)
 ### 1) Data download 
 
 ### Remenber to activate conda interactomeseq env 
