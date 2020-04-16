@@ -152,7 +152,7 @@ cd $WorkingDir
 ls
 ```
 
-    [0m[01;34mInteractomeSeq[0m  [01;34moutput[0m  [01;31mProkaryote_Hp26695.zip[0m  [01;34mrawdata[0m
+   
 
 
 
@@ -161,10 +161,10 @@ git clone https://github.com/sinnamone/InteractomeSeq
 ```
 
     Cloning into 'InteractomeSeq'...
-    remote: Enumerating objects: 34, done.[K
-    remote: Counting objects: 100% (34/34), done.[K
-    remote: Compressing objects: 100% (26/26), done.[K
-    remote: Total 581 (delta 13), reused 22 (delta 8), pack-reused 547[K
+    remote: Enumerating objects: 34, done.
+    remote: Counting objects: 100% (34/34), done.
+    remote: Compressing objects: 100% (26/26), done.
+    remote: Total 581 (delta 13), reused 22 (delta 8), pack-reused 547[K
     Ricezione degli oggetti: 100% (581/581), 263.09 KiB | 0 bytes/s, done.
     Risoluzione dei delta: 100% (423/423), done.
 
@@ -174,8 +174,7 @@ git clone https://github.com/sinnamone/InteractomeSeq
 ls 
 ```
 
-    [0m[01;34mInteractomeSeq[0m  [01;34moutput[0m  [01;31mProkaryote_Hp26695.zip[0m  [01;34mrawdata[0m
-
+    
 
 Reference files (FASTA and GFF) are downloaded from https://www.ncbi.nlm.nih.gov/genome/ , before to launch the script fasta index should be indexed while gff should be parsed. For parsing we provide a custom script call gff_parser_ncbi_newformat.py
 
