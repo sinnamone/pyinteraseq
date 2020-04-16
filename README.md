@@ -88,22 +88,6 @@ If you decide later that you don’t want the environment or its packages anymor
 
 Then install qiime1 version 1.91.1
 
-This should be launched as control 
-
-
-```bash
-conda install -c bioconda pysam -y
-```
-
-    Collecting package metadata (current_repodata.json): done
-    Solving environment: done
-    
-    # All requested packages already installed.
-    
-    (interactomeseq) 
-
-
-
 
 ```bash
 conda install -c conda-forge readline=6.2 -y
