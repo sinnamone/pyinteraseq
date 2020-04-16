@@ -156,4 +156,4 @@ conda install -c conda-forge readline=6.2 -y
 git clone https://github.com/sinnamone/InteractomeSeq
 ```
 
-[link to Google!](http://google.com)
+[link to Google!](https://github.com/sinnamone/InteractomeSeq/blob/master/TutorialInteractomeSeqCLI_Prokaryotic.md)
