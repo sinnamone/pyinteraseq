@@ -82,7 +82,6 @@ cd $WorkingDir
 ls 
 ```
 
-    [0m[01;31mProkaryote_Hp26695.zip[0m
 
 
 
