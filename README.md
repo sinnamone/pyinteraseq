@@ -157,5 +157,6 @@ git clone https://github.com/sinnamone/InteractomeSeq
 ```
 ### Tutorials
 
-[link to Prokaryotic Tutorial!](https://github.com/sinnamone/InteractomeSeq/blob/master/TutorialInteractomeSeqCLI_Prokaryotic.md)
-[link to Eukariotyc Tutorial!](https://github.com/sinnamone/InteractomeSeq/blob/master/TutorialInteractomeSeqCLI_Eucaryotic.md)
+[Prokaryotic Tutorial](https://github.com/sinnamone/InteractomeSeq/blob/master/TutorialInteractomeSeqCLI_Prokaryotic.md)
+
+[Eukariotyc Tutorial](https://github.com/sinnamone/InteractomeSeq/blob/master/TutorialInteractomeSeqCLI_Eucaryotic.md)
