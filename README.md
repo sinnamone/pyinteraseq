@@ -1,4 +1,4 @@
-![](https://github.com/sinnamone/InteractomeSeq/blob/master/InteractomeSeq.png)
+![](https://github.com/sinnamone/InteractomeSeq/blob/master/log.png.png)
 # InteractomeSeq
 
 ### A web server for the identification and profiling of domains and epitopes from Phage Display and Next Generation Sequencing data.
