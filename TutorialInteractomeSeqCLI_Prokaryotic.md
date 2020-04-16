@@ -1,3 +1,4 @@
+![](https://github.com/sinnamone/InteractomeSeq/blob/master/log.png.png)
 # InteractomeSeq CLI pipeline with Prokaryotic dataset
 
 ### 1) Download Prokaryotic dataset
