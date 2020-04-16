@@ -55,10 +55,10 @@ echo $WorkingDir
 
 
 ```bash
-time wget http://interactomeseq.ba.itb.cnr.it/data/_uploaded/file/Prokaryote_Hp26695.zip -P $WorkingDir
+time wget http://interactomeseq.ba.itb.cnr.it/services/InteractomeSeq/Prokaryote.Uploading/Prokaryote_Hp26695.zip -P $WorkingDir
 ```
 
-    --2020-04-09 17:09:54--  http://interactomeseq.ba.itb.cnr.it/data/_uploaded/file/Prokaryote_Hp26695.zip
+    --2020-04-09 17:09:54--  http://interactomeseq.ba.itb.cnr.it/services/InteractomeSeq/Prokaryote.Uploading/Prokaryote_Hp26695.zip
     Risoluzione di interactomeseq.ba.itb.cnr.it (interactomeseq.ba.itb.cnr.it)... 150.145.82.8
     Connessione a interactomeseq.ba.itb.cnr.it (interactomeseq.ba.itb.cnr.it)|150.145.82.8|:80... connesso.
     Richiesta HTTP inviata, in attesa di risposta... 200 OK
