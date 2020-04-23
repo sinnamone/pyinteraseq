@@ -117,8 +117,7 @@ cd $WorkingDir
 ls 
 ```
 
-    (interactomeseq) [0m[01;31mEukaryote_RnaBindProt.zip[0m  [01;31mHomo_sapiens.GRCh38.99.zip[0m
-    (interactomeseq) 
+  
 
 
 
@@ -311,9 +310,7 @@ cd "$WorkingDir"
 ls 
 ```
 
-    [0m[01;31mEukaryote_RnaBindProt.zip[0m   [01;34mInteractomeSeq[0m  [01;34mreferences[0m
-    [01;31mHomo_sapiens.GRCh38.99.zip[0m  [01;34mrawdata[0m
-    (interactomeseq) 
+
 
 
 
