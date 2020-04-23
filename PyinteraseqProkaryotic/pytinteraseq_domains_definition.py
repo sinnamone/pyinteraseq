@@ -222,7 +222,7 @@ class DomainsDefinition(InputCheckDomainDefinition):
         """
         try:
             with open(self.out + '_cluster_count.txt', 'w') as f:
-                subprocess.check_call(['awk', 'BEGIN{FS="\t";OFS="\t"}{print $1,NF}', pickotusout], stdout=f)
+                subprocess.check_call(['nawk', 'BEGIN{FS="\t";OFS="\t"}{print $1,NF}', pickotusout], stdout=f)
         except subprocess.CalledProcessError:
             self.filelogerrorwrite(msg106)
         else:

@@ -82,7 +82,7 @@ class BlastNlucleotide(Trimming):
         fnull = open(os.devnull, 'w')
         try:
             with open( ("/").join([self.out, ('').join([self.outputid, '_filtered.sam'])]), 'w') as filtsam:
-            	subprocess.check_call(['awk','''BEGIN{FS=OFS="\t"}{if($3!=\"*\") print $0} ''', samfile], stderr=fnull, stdout=filtsam)
+            	subprocess.check_call(['nawk','''BEGIN{FS=OFS="\t"}{if($3!=\"*\") print $0} ''', samfile], stderr=fnull, stdout=filtsam)
         except traceback:
             self.filelog.write(msg82)
             sys.exit(1)
