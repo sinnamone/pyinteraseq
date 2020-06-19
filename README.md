@@ -146,3 +146,5 @@ git clone https://github.com/sinnamone/InteractomeSeq
 
 [Eukaryotic Tutorial](https://github.com/sinnamone/InteractomeSeq/blob/master/TutorialInteractomeSeqCLI_Eucaryotic.md)
 
+Please cite this paper: https://academic.oup.com/nar/advance-article/doi/10.1093/nar/gkaa363/5836767
+
