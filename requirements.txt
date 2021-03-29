@@ -37,7 +37,7 @@ ptyprocess==0.5.2
 pybedtools==0.7.10
 pycosat==0.6.2
 pycparser==2.18
-Pygments==2.2.0
+Pygments==2.7.4
 pynast==1.2.2
 pyOpenSSL==17.2.0
 pyparsing==2.2.0
